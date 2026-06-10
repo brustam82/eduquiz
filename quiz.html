@@ -541,6 +541,7 @@ select.form-input option { background: var(--bg2); color: #fff; }
       <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
         <button class="btn btn-primary" onclick="restartQuiz()" style="flex:1;">🔁 <span id="btn-restart">Qayta boshlash</span></button>
         <button class="btn btn-secondary" onclick="shareResult()" style="flex:1;">📤 <span id="btn-share">Ulashish</span></button>
+        <button class="btn" id="btn-cert" onclick="downloadCertificate()" style="flex:1;background:linear-gradient(135deg,#FFD166,#FF6584);color:#fff;border:none;display:none;">🏆 <span id="btn-cert-label">Sertifikat</span></button>
       </div>
       <div class="sheet-note" id="save-status">💾 Natijalar Google Sheets'ga saqlanmoqda...</div>
     </div>
@@ -565,7 +566,7 @@ const T = {
     lbl_timer_set: "⏱ Har savol uchun vaqt (soniya)", lbl_qlang: "🌐 Savol tili",
     btn_start2: "Imtihonni boshlash", btn_next_q: "Keyingi savol →",
     fact_label: "💡 Qiziqarli fakt:", result_emoji: "🎉 Natija!", btn_restart: "Qayta boshlash",
-    btn_share: "Ulashish", lbl_correct: "To'g'ri", lbl_wrong: "Xato", lbl_total: "Jami",
+    btn_share: "Ulashish", btn_cert: "Sertifikat", lbl_correct: "To'g'ri", lbl_wrong: "Xato", lbl_total: "Jami",
     lbl_analysis: "Mavzu tahlili", lbl_recs: "Tavsiyalar", lbl_review: "Javoblar sharhi",
     saving: "💾 Natijalar Google Sheets'ga saqlanmoqda...", saved: "✅ Natijalar saqlandi!",
     grade_labels: ["", "", "Qoniqarsiz", "Qoniqarli", "Yaxshi", "A'lo"],
@@ -583,7 +584,7 @@ const T = {
     lbl_timer_set: "⏱ Время на каждый вопрос (сек)", lbl_qlang: "🌐 Язык вопросов",
     btn_start2: "Начать экзамен", btn_next_q: "Следующий вопрос →",
     fact_label: "💡 Интересный факт:", result_emoji: "🎉 Результат!", btn_restart: "Начать заново",
-    btn_share: "Поделиться", lbl_correct: "Верно", lbl_wrong: "Ошибки", lbl_total: "Всего",
+    btn_share: "Поделиться", btn_cert: "Сертификат", lbl_correct: "Верно", lbl_wrong: "Ошибки", lbl_total: "Всего",
     lbl_analysis: "Анализ по темам", lbl_recs: "Рекомендации", lbl_review: "Разбор ответов",
     saving: "💾 Сохранение в Google Sheets...", saved: "✅ Результаты сохранены!",
     grade_labels: ["","","Неудовл.","Удовл.","Хорошо","Отлично"],
@@ -957,6 +958,11 @@ function showResults() {
   document.getElementById('lbl-review').textContent = t.lbl_review;
   document.getElementById('btn-restart').textContent = t.btn_restart;
   document.getElementById('btn-share').textContent = t.btn_share;
+  document.getElementById('btn-cert-label').textContent = t.btn_cert;
+  // Show certificate button only for grade 3+
+  document.getElementById('btn-cert').style.display = grade >= 3 ? '' : 'none';
+  // Store results globally for certificate
+  window._certData = { student, subject: SUBJECTS.find(s=>s.id===selectedSubject)?.[lang]||selectedSubject, pct, grade, gradeLabel: T[lang].grade_labels[grade], correct, total: questions.length, lang, date: new Date() };
 
   // Topic analysis
   const topicEl = document.getElementById('topic-analysis');
@@ -1066,6 +1072,190 @@ function restartQuiz() {
 
 // ─── INIT ─────────────────────────────────────────────────────────────
 applyLang();
+
+// ─── CERTIFICATE GENERATOR ────────────────────────────────────────────
+function downloadCertificate() {
+  const d = window._certData;
+  if (!d) return;
+
+  const isRu = d.lang === 'ru';
+  const dateStr = d.date.toLocaleDateString(isRu ? 'ru-RU' : 'uz-UZ', { day:'numeric', month:'long', year:'numeric' });
+  const certId = 'EQ-' + Date.now().toString(36).toUpperCase().slice(-8);
+
+  const gradeColor = d.grade === 5 ? '#06D6A0' : d.grade === 4 ? '#A89CFF' : '#FFD166';
+  const gradeGlow  = d.grade === 5 ? 'rgba(6,214,160,0.4)' : d.grade === 4 ? 'rgba(108,99,255,0.4)' : 'rgba(255,209,102,0.4)';
+
+  const titleText  = isRu ? 'СЕРТИФИКАТ' : 'SERTIFIKAT';
+  const subTitle   = isRu ? 'об успешном прохождении тестирования' : 'muvaffaqiyatli test topshirganligi uchun';
+  const givenTo    = isRu ? 'Настоящим подтверждается, что' : 'Ushbu sertifikat berildi';
+  const subjectLbl = isRu ? 'Предмет:' : 'Fan:';
+  const scoreLbl   = isRu ? 'Результат:' : 'Natija:';
+  const dateLbl    = isRu ? 'Дата:' : 'Sana:';
+  const gradeLbl   = isRu ? 'Оценка:' : 'Baho:';
+  const platformTxt= 'EduQuiz Platform';
+  const footerTxt  = isRu ? 'Платформа проверки знаний • Узбекистан' : 'Bilim tekshirish platformasi • O\'zbekiston';
+  const idTxt      = isRu ? 'ID сертификата:' : 'Sertifikat ID:';
+
+  const W = 900, H = 636;
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const c = canvas.getContext('2d');
+
+  // ── BG dark gradient ──
+  const bgGrad = c.createLinearGradient(0, 0, W, H);
+  bgGrad.addColorStop(0,   '#0B0A24');
+  bgGrad.addColorStop(0.5, '#13103A');
+  bgGrad.addColorStop(1,   '#0F0E2B');
+  c.fillStyle = bgGrad;
+  c.fillRect(0, 0, W, H);
+
+  // ── Decorative circles ──
+  [[- 60, -60, 220, '#6C63FF', 0.18], [W+40, H+40, 260, '#FF6584', 0.14], [W/2, -30, 180, '#FFD166', 0.08]].forEach(([x,y,r,col,a]) => {
+    const rg = c.createRadialGradient(x,y,0,x,y,r);
+    rg.addColorStop(0, col); rg.addColorStop(1, 'transparent');
+    c.globalAlpha = a; c.fillStyle = rg; c.beginPath(); c.arc(x,y,r,0,Math.PI*2); c.fill();
+  });
+  c.globalAlpha = 1;
+
+  // ── Outer border (double) ──
+  const borderGrad = c.createLinearGradient(0,0,W,H);
+  borderGrad.addColorStop(0,'#6C63FF'); borderGrad.addColorStop(0.5,'#FF6584'); borderGrad.addColorStop(1,'#FFD166');
+  c.strokeStyle = borderGrad; c.lineWidth = 3;
+  roundRect(c, 18, 18, W-36, H-36, 20); c.stroke();
+  c.strokeStyle = 'rgba(255,255,255,0.06)'; c.lineWidth = 1;
+  roundRect(c, 26, 26, W-52, H-52, 16); c.stroke();
+
+  // ── Corner ornaments ──
+  [[36,36], [W-36,36], [36,H-36], [W-36,H-36]].forEach(([x,y]) => {
+    c.strokeStyle = gradeColor; c.lineWidth = 2; c.globalAlpha = 0.7;
+    c.beginPath(); c.moveTo(x-14,y); c.lineTo(x,y); c.lineTo(x,y + (y<H/2?14:-14)); c.stroke();
+    c.beginPath(); c.moveTo(x+(x<W/2?14:-14),y); c.lineTo(x,y); c.lineTo(x,y+(y<H/2?-14:14)); c.stroke();
+  });
+  c.globalAlpha = 1;
+
+  // ── Top banner ──
+  const bannerGrad = c.createLinearGradient(0,0,W,0);
+  bannerGrad.addColorStop(0,'rgba(108,99,255,0.35)'); bannerGrad.addColorStop(1,'rgba(255,101,132,0.2)');
+  c.fillStyle = bannerGrad;
+  c.fillRect(36, 36, W-72, 72);
+
+  // ── Platform name in banner ──
+  c.font = 'bold 15px Arial'; c.fillStyle = 'rgba(255,255,255,0.5)'; c.textAlign = 'center';
+  c.fillText(platformTxt, W/2, 62);
+  c.font = '11px Arial'; c.fillStyle = 'rgba(255,255,255,0.3)';
+  c.fillText(footerTxt, W/2, 80);
+
+  // ── Seal circle ──
+  const cx = W/2, sealY = 148;
+  const sealGrad = c.createRadialGradient(cx, sealY, 0, cx, sealY, 42);
+  sealGrad.addColorStop(0, gradeColor); sealGrad.addColorStop(1, gradeGlow.replace('0.4','0.1'));
+  c.fillStyle = sealGrad;
+  c.shadowColor = gradeGlow; c.shadowBlur = 24;
+  c.beginPath(); c.arc(cx, sealY, 42, 0, Math.PI*2); c.fill();
+  c.shadowBlur = 0;
+  c.strokeStyle = gradeColor; c.lineWidth = 2.5;
+  c.beginPath(); c.arc(cx, sealY, 46, 0, Math.PI*2); c.stroke();
+  // Grade number in seal
+  c.font = 'bold 38px Arial'; c.fillStyle = '#0B0A24'; c.textAlign = 'center';
+  c.fillText(d.grade, cx, sealY + 13);
+
+  // ── SERTIFIKAT title ──
+  c.font = 'bold 42px Arial'; c.textAlign = 'center';
+  const titleGrad = c.createLinearGradient(W/2-180, 0, W/2+180, 0);
+  titleGrad.addColorStop(0,'#A89CFF'); titleGrad.addColorStop(0.5,'#FFFFFF'); titleGrad.addColorStop(1,'#FF6584');
+  c.fillStyle = titleGrad;
+  c.fillText(titleText, W/2, 224);
+
+  // Subtitle
+  c.font = '15px Arial'; c.fillStyle = 'rgba(255,255,255,0.45)';
+  c.fillText(subTitle, W/2, 248);
+
+  // Divider line
+  const divGrad = c.createLinearGradient(W/2-200,0,W/2+200,0);
+  divGrad.addColorStop(0,'transparent'); divGrad.addColorStop(0.5,gradeColor); divGrad.addColorStop(1,'transparent');
+  c.strokeStyle = divGrad; c.lineWidth = 1; c.globalAlpha = 0.6;
+  c.beginPath(); c.moveTo(W/2-200, 262); c.lineTo(W/2+200, 262); c.stroke();
+  c.globalAlpha = 1;
+
+  // ── Given to ──
+  c.font = '13px Arial'; c.fillStyle = 'rgba(255,255,255,0.4)'; c.textAlign = 'center';
+  c.fillText(givenTo, W/2, 290);
+
+  // ── Student name ──
+  c.font = 'bold 32px Arial';
+  const nameGrad = c.createLinearGradient(W/2-150,0,W/2+150,0);
+  nameGrad.addColorStop(0, '#A89CFF'); nameGrad.addColorStop(1,'#FFD166');
+  c.fillStyle = nameGrad;
+  c.fillText(d.student.fio, W/2, 330);
+
+  // Class / Teacher
+  c.font = '14px Arial'; c.fillStyle = 'rgba(255,255,255,0.5)';
+  const classTeacher = [d.student.klass, d.student.teacher].filter(Boolean).join(' · ');
+  c.fillText(classTeacher, W/2, 354);
+
+  // ── Stats row ──
+  const stats = [
+    [subjectLbl, d.subject],
+    [scoreLbl, d.correct + '/' + d.total + ' (' + d.pct + '%)'],
+    [gradeLbl, d.gradeLabel],
+    [dateLbl, dateStr],
+  ];
+  const boxW = 180, boxH = 58, gap = 12;
+  const totalW = stats.length * boxW + (stats.length-1) * gap;
+  let sx = (W - totalW) / 2;
+  stats.forEach(([lbl, val]) => {
+    c.fillStyle = 'rgba(255,255,255,0.05)';
+    roundRect(c, sx, 374, boxW, boxH, 10); c.fill();
+    c.strokeStyle = 'rgba(255,255,255,0.1)'; c.lineWidth = 1;
+    roundRect(c, sx, 374, boxW, boxH, 10); c.stroke();
+    c.font = '11px Arial'; c.fillStyle = 'rgba(255,255,255,0.4)'; c.textAlign = 'center';
+    c.fillText(lbl, sx + boxW/2, 392);
+    c.font = 'bold 14px Arial'; c.fillStyle = gradeColor;
+    c.fillText(val, sx + boxW/2, 413);
+    sx += boxW + gap;
+  });
+
+  // ── Cert ID ──
+  c.font = '11px Arial'; c.fillStyle = 'rgba(255,255,255,0.2)'; c.textAlign = 'center';
+  c.fillText(idTxt + ' ' + certId, W/2, 458);
+
+  // ── Bottom wave decoration ──
+  c.strokeStyle = 'rgba(108,99,255,0.2)'; c.lineWidth = 1;
+  for (let i = 0; i < 5; i++) {
+    c.globalAlpha = 0.04 + i*0.02;
+    c.beginPath();
+    c.moveTo(0, H - 60 + i*8);
+    for (let x2 = 0; x2 <= W; x2 += 20) {
+      c.lineTo(x2, H - 60 + i*8 + Math.sin(x2/40)*6);
+    }
+    c.stroke();
+  }
+  c.globalAlpha = 1;
+
+  // ── Signature line ──
+  c.strokeStyle = 'rgba(255,255,255,0.15)'; c.lineWidth = 1;
+  c.beginPath(); c.moveTo(W/2-80, H-60); c.lineTo(W/2+80, H-60); c.stroke();
+  c.font = 'bold 12px Arial'; c.fillStyle = 'rgba(255,255,255,0.4)'; c.textAlign = 'center';
+  c.fillText('EduQuiz', W/2, H-44);
+  c.font = '10px Arial'; c.fillStyle = 'rgba(255,255,255,0.2)';
+  c.fillText(isRu ? 'Платформа проверки знаний' : 'Bilim tekshirish platformasi', W/2, H-30);
+
+  // ── Download ──
+  const link = document.createElement('a');
+  link.download = 'EduQuiz_Certificate_' + d.student.fio.replace(/\s+/g,'_') + '.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y); ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w, y+h-r); ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r, y+h); ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x, y+r); ctx.arcTo(x,y,x+r,y,r);
+  ctx.closePath();
+}
 </script>
 </body>
 </html>
