@@ -551,7 +551,7 @@ select.form-input option { background: var(--bg2); color: #fff; }
 <script>
 // ─── CONFIG ───────────────────────────────────────────────────────────
 // Replace this URL with your deployed Google Apps Script Web App URL
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbypd24Bf8ufZ-lDPbvWnrklgBo8MqB4eEunXEtLIkSm1-jVB6NlSjq3ijf3tWsUqw/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhhUIFRLl0vyAuwQB5hnU9BP4ygu2ChWFAw6hfW98jLX1ZDgTbNlfug1iOxkptQtJF/exec";
 // Your Google Sheets ID (for reference)
 const SHEET_ID = "";
 
@@ -1024,8 +1024,6 @@ function showResults() {
 
   // Save to Google Sheets
   saveToSheets({ student, subject: selectedSubject, score, pct, grade, correct, wrong, total, date: new Date().toLocaleString() });
-  // Send Telegram notification
-  sendTelegram({ student, subject: selectedSubject, pct, grade, correct, total });
 }
 
 // ─── SAVE TO SHEETS ───────────────────────────────────────────────────
@@ -1048,22 +1046,6 @@ async function saveToSheets(data) {
   } catch(e) {
     statusEl.textContent = '⚠️ ' + (lang === 'uz' ? 'Saqlashda xatolik' : 'Ошибка сохранения');
   }
-}
-
-// ─── TELEGRAM NOTIFICATION ────────────────────────────────────────────
-async function sendTelegram({ student, subject, pct, grade, correct, total }) {
-  const BOT_TOKEN = '7976910673:AAHXWBdPTPa85MSft-vtXw2gn4JYkk6wvWE';
-  const CHAT_ID   = '1690459120';
-  const subName   = SUBJECTS.find(s => s.id === subject)?.ru || subject;
-  const emoji     = grade === "A'lo" ? '🏆' : grade === 'Yaxshi' ? '✅' : grade === 'Qoniqarli' ? '📘' : '❌';
-  const text = `${emoji} <b>Yangi natija | EduQuiz</b>\n\n👤 <b>${student.fio}</b>\n🏫 ${student.school || '—'} | ${student.class || '—'}\n👨‍🏫 ${student.teacher || '—'}\n📚 ${subName}\n✅ ${correct}/${total} (${pct}%) — <b>${grade}</b>\n📅 ${new Date().toLocaleString('ru-RU')}`;
-  try {
-    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: CHAT_ID, text, parse_mode: 'HTML' })
-    });
-  } catch(e) { console.log('Telegram error:', e); }
 }
 
 // ─── SHARE ────────────────────────────────────────────────────────────
