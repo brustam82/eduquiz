@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduQuiz — Bilim tekshirish platformasi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0b14;
+    --bg2: #0f1120;
+    --bg3: #151729;
+    --card: #1a1d2e;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --violet: #7c5cfc;
+    --violet2: #9b7ffe;
+    --pink: #f472b6;
+    --cyan: #22d3ee;
+    --gold: #fbbf24;
+    --green: #34d399;
+    --text: #f0f0ff;
+    --muted: #8b8fa8;
+    --muted2: #5a5e75;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 5%;
+    height: 64px;
+    background: rgba(10,11,20,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px; font-weight: 700;
+    background: linear-gradient(135deg, #7c5cfc, #f472b6);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    text-decoration: none;
+  }
+  .nav-links { display: flex; gap: 32px; list-style: none; }
+  .nav-links a { color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta {
+    background: var(--violet); color: #fff;
+    border: none; padding: 10px 22px; border-radius: 10px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    text-decoration: none; transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .nav-cta:hover { background: var(--violet2); transform: translateY(-1px); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 120px 5% 80px;
+    position: relative; overflow: hidden;
+  }
+  .hero-glow {
+    position: absolute; top: 10%; left: 50%; transform: translateX(-50%);
+    width: 700px; height: 700px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(124,92,252,0.18) 0%, rgba(244,114,182,0.08) 40%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(124,92,252,0.12); border: 1px solid rgba(124,92,252,0.3);
+    color: var(--violet2); padding: 6px 16px; border-radius: 100px;
+    font-size: 13px; font-weight: 500; margin-bottom: 28px;
+  }
+  .hero-badge span { width: 6px; height: 6px; border-radius: 50%; background: var(--violet2); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.4)} }
+  .hero h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(42px, 7vw, 80px);
+    font-weight: 700; line-height: 1.1;
+    margin-bottom: 24px; position: relative;
+  }
+  .hero h1 .grad {
+    background: linear-gradient(135deg, #7c5cfc 0%, #f472b6 50%, #fbbf24 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero-sub {
+    font-size: clamp(16px, 2vw, 20px); color: var(--muted);
+    max-width: 600px; margin: 0 auto 40px; font-weight: 400; line-height: 1.7;
+  }
+  .hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 64px; }
+  .btn-primary {
+    background: linear-gradient(135deg, #7c5cfc, #f472b6);
+    color: #fff; border: none; padding: 16px 36px; border-radius: 12px;
+    font-size: 16px; font-weight: 600; cursor: pointer;
+    text-decoration: none; transition: all 0.3s;
+    box-shadow: 0 0 40px rgba(124,92,252,0.35);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 60px rgba(124,92,252,0.5); }
+  .btn-secondary {
+    background: transparent; color: var(--text);
+    border: 1px solid var(--border2); padding: 16px 32px; border-radius: 12px;
+    font-size: 16px; font-weight: 500; cursor: pointer;
+    text-decoration: none; transition: all 0.2s;
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2); }
+
+  /* STATS */
+  .stats-row {
+    display: flex; gap: 48px; justify-content: center;
+    flex-wrap: wrap; position: relative;
+  }
+  .stat { text-align: center; }
+  .stat-num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 36px; font-weight: 700;
+    background: linear-gradient(135deg, #7c5cfc, #f472b6);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .stat-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  /* LOGOS (trusted by) */
+  .trusted {
+    padding: 48px 5%; text-align: center;
+    border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  }
+  .trusted p { font-size: 13px; color: var(--muted2); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 24px; }
+  .logos-row { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; align-items: center; }
+  .logo-pill {
+    background: var(--card); border: 1px solid var(--border);
+    padding: 10px 24px; border-radius: 8px;
+    font-size: 13px; font-weight: 600; color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+
+  /* FEATURES */
+  .section { padding: 100px 5%; }
+  .section-label {
+    display: inline-block; font-size: 12px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--violet2); margin-bottom: 16px;
+  }
+  .section h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(28px, 4vw, 46px); font-weight: 700; line-height: 1.2;
+    margin-bottom: 16px; max-width: 640px;
+  }
+  .section-sub { font-size: 17px; color: var(--muted); max-width: 560px; line-height: 1.7; margin-bottom: 64px; }
+  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+  .feat-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px;
+    transition: all 0.3s; position: relative; overflow: hidden;
+  }
+  .feat-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(124,92,252,0.5), transparent);
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .feat-card:hover { border-color: rgba(124,92,252,0.3); transform: translateY(-4px); }
+  .feat-card:hover::before { opacity: 1; }
+  .feat-icon {
+    width: 48px; height: 48px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; margin-bottom: 16px;
+  }
+  .feat-card h3 { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+  .feat-card p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+  /* HOW IT WORKS */
+  .how { background: var(--bg2); }
+  .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0; }
+  .step { padding: 32px; position: relative; }
+  .step:not(:last-child)::after {
+    content: '→'; position: absolute; right: -8px; top: 40px;
+    color: var(--muted2); font-size: 20px;
+  }
+  .step-num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 48px; font-weight: 700; line-height: 1;
+    background: linear-gradient(135deg, rgba(124,92,252,0.3), rgba(244,114,182,0.3));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 16px;
+  }
+  .step h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+  .step p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+  /* PRICING */
+  .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 960px; margin: 0 auto; }
+  .price-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 20px; padding: 36px 32px;
+    position: relative; overflow: hidden;
+  }
+  .price-card.featured {
+    border-color: var(--violet);
+    background: linear-gradient(135deg, rgba(124,92,252,0.12), rgba(244,114,182,0.05));
+  }
+  .price-card.featured::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, #7c5cfc, #f472b6);
+  }
+  .popular-tag {
+    position: absolute; top: 16px; right: 16px;
+    background: linear-gradient(135deg, #7c5cfc, #f472b6);
+    color: #fff; font-size: 11px; font-weight: 600;
+    padding: 4px 12px; border-radius: 100px; letter-spacing: 0.05em;
+  }
+  .price-name { font-size: 13px; font-weight: 600; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 16px; }
+  .price-val {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 44px; font-weight: 700; line-height: 1; margin-bottom: 6px;
+  }
+  .price-val.free { color: var(--green); }
+  .price-val.pro {
+    background: linear-gradient(135deg, #7c5cfc, #f472b6);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .price-period { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+  .price-desc { font-size: 14px; color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
+  .price-features { list-style: none; margin-bottom: 32px; }
+  .price-features li {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 14px; padding: 7px 0;
+    border-bottom: 1px solid var(--border); color: var(--muted);
+  }
+  .price-features li:last-child { border-bottom: none; }
+  .price-features li .check { color: var(--green); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .price-features li .cross { color: var(--muted2); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .price-features li.active { color: var(--text); }
+  .btn-plan {
+    width: 100%; padding: 14px; border-radius: 12px;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    border: none; transition: all 0.2s; text-decoration: none;
+    display: block; text-align: center;
+  }
+  .btn-plan.outline {
+    background: transparent; color: var(--text);
+    border: 1px solid var(--border2);
+  }
+  .btn-plan.outline:hover { background: rgba(255,255,255,0.05); }
+  .btn-plan.fill {
+    background: linear-gradient(135deg, #7c5cfc, #f472b6); color: #fff;
+    box-shadow: 0 0 30px rgba(124,92,252,0.3);
+  }
+  .btn-plan.fill:hover { transform: translateY(-1px); box-shadow: 0 0 50px rgba(124,92,252,0.5); }
+  .btn-plan.dark {
+    background: rgba(255,255,255,0.06); color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-plan.dark:hover { background: rgba(255,255,255,0.1); }
+
+  /* TESTIMONIALS */
+  .testi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+  .testi-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px;
+  }
+  .testi-stars { color: var(--gold); font-size: 15px; margin-bottom: 14px; letter-spacing: 2px; }
+  .testi-text { font-size: 15px; color: var(--muted); line-height: 1.7; margin-bottom: 20px; font-style: italic; }
+  .testi-author { display: flex; align-items: center; gap: 12px; }
+  .testi-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .testi-name { font-size: 14px; font-weight: 600; }
+  .testi-role { font-size: 12px; color: var(--muted); }
+
+  /* FAQ */
+  .faq-list { max-width: 720px; }
+  .faq-item {
+    border-bottom: 1px solid var(--border); padding: 20px 0; cursor: pointer;
+  }
+  .faq-q {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 16px; font-weight: 500; user-select: none;
+  }
+  .faq-q .icon { color: var(--muted); font-size: 20px; transition: transform 0.3s; flex-shrink: 0; }
+  .faq-a { font-size: 14px; color: var(--muted); line-height: 1.7; max-height: 0; overflow: hidden; transition: max-height 0.3s, padding-top 0.3s; }
+  .faq-item.open .faq-a { max-height: 200px; padding-top: 12px; }
+  .faq-item.open .icon { transform: rotate(45deg); }
+
+  /* CTA SECTION */
+  .cta-section {
+    margin: 0 5% 80px; border-radius: 24px;
+    background: linear-gradient(135deg, rgba(124,92,252,0.2), rgba(244,114,182,0.1));
+    border: 1px solid rgba(124,92,252,0.25);
+    padding: 80px 5%; text-align: center; position: relative; overflow: hidden;
+  }
+  .cta-section::before {
+    content: ''; position: absolute; top: -50%; left: 50%; transform: translateX(-50%);
+    width: 500px; height: 500px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(124,92,252,0.15), transparent 70%);
+    pointer-events: none;
+  }
+  .cta-section h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(28px, 4vw, 46px); font-weight: 700; margin-bottom: 16px;
+  }
+  .cta-section p { font-size: 17px; color: var(--muted); margin-bottom: 36px; max-width: 500px; margin-left: auto; margin-right: auto; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 48px 5%; display: flex;
+    justify-content: space-between; align-items: center;
+    flex-wrap: gap; gap: 16px;
+  }
+  .footer-logo {
+    font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700;
+    background: linear-gradient(135deg, #7c5cfc, #f472b6);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  footer p { font-size: 13px; color: var(--muted2); }
+  .footer-links { display: flex; gap: 24px; }
+  .footer-links a { font-size: 13px; color: var(--muted); text-decoration: none; }
+  .footer-links a:hover { color: var(--text); }
+
+  /* LANG TOGGLE */
+  .lang-toggle {
+    display: flex; gap: 4px;
+    background: var(--bg3); border: 1px solid var(--border);
+    padding: 4px; border-radius: 8px;
+  }
+  .lang-btn {
+    padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;
+    cursor: pointer; border: none; background: transparent; color: var(--muted);
+    transition: all 0.2s;
+  }
+  .lang-btn.active { background: var(--violet); color: #fff; }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .step:not(:last-child)::after { display: none; }
+    .steps-grid { grid-template-columns: 1fr; }
+    .stats-row { gap: 28px; }
+    footer { flex-direction: column; text-align: center; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  /* LANG CONTENT */
+  [data-ru] { display: none; }
+  body.ru [data-uz] { display: none; }
+  body.ru [data-ru] { display: block; }
+  body.ru span[data-uz] { display: none; }
+  body.ru span[data-ru] { display: inline; }
+  span[data-ru] { display: none; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">EduQuiz</a>
+  <ul class="nav-links">
+    <li><a href="#features" data-uz>Imkoniyatlar</a><a href="#features" data-ru>Возможности</a></li>
+    <li><a href="#how" data-uz>Qanday ishlaydi</a><a href="#how" data-ru>Как работает</a></li>
+    <li><a href="#pricing" data-uz>Narxlar</a><a href="#pricing" data-ru>Тарифы</a></li>
+    <li><a href="#faq" data-uz>Savollar</a><a href="#faq" data-ru>Вопросы</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="lang-toggle">
+      <button class="lang-btn active" onclick="setLang('uz')">O'Z</button>
+      <button class="lang-btn" onclick="setLang('ru')">РУ</button>
+    </div>
+    <a href="index.html" class="nav-cta">
+      <span data-uz>Boshlash →</span><span data-ru>Начать →</span>
+    </a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-badge">
+    <span></span>
+    <span data-uz>🇺🇿 O'zbek ta'lim platformasi</span>
+    <span data-ru>🇺🇿 Узбекская образовательная платформа</span>
+  </div>
+  <h1>
+    <span data-uz>O'qitish emas —<br><span class="grad">natija tekshirish</span></span>
+    <span data-ru>Не обучение —<br><span class="grad">проверка результата</span></span>
+  </h1>
+  <p class="hero-sub">
+    <span data-uz>EduQuiz — maktablar, o'quv markazlari va korporativ o'qitish uchun zamonaviy quiz platformasi. Google Sheets bilan integratsiya. Bilimni sekundalarda tekshiring.</span>
+    <span data-ru>EduQuiz — современная quiz-платформа для школ, учебных центров и корпоративного обучения. Интеграция с Google Sheets. Проверяйте знания за секунды.</span>
+  </p>
+  <div class="hero-actions">
+    <a href="index.html" class="btn-primary">
+      <span data-uz>⚡ Bepul boshlash</span>
+      <span data-ru>⚡ Начать бесплатно</span>
+    </a>
+    <a href="#features" class="btn-secondary">
+      <span data-uz>Imkoniyatlarni ko'rish</span>
+      <span data-ru>Смотреть возможности</span>
+    </a>
+  </div>
+  <div class="stats-row">
+    <div class="stat"><div class="stat-num">5 000+</div><div class="stat-label" data-uz>Faol foydalanuvchi</div><div class="stat-label" data-ru>Активных пользователей</div></div>
+    <div class="stat"><div class="stat-num">120+</div><div class="stat-label" data-uz>O'quv markazi</div><div class="stat-label" data-ru>Учебных центров</div></div>
+    <div class="stat"><div class="stat-num">98%</div><div class="stat-label" data-uz>Mamnunlik darajasi</div><div class="stat-label" data-ru>Уровень удовлетворённости</div></div>
+    <div class="stat"><div class="stat-num">2 daqiqa</div><div class="stat-label" data-uz>Sozlash vaqti</div><div class="stat-label" data-ru>Время настройки</div></div>
+  </div>
+</section>
+
+<!-- TRUSTED -->
+<div class="trusted">
+  <p data-uz>Ishonch bildirgan tashkilotlar</p>
+  <p data-ru>Нам доверяют</p>
+  <div class="logos-row">
+    <div class="logo-pill">Toshkent maktablari</div>
+    <div class="logo-pill">Samarqand DTM</div>
+    <div class="logo-pill">Andijon o'quv markazi</div>
+    <div class="logo-pill">Buxoro litseylar</div>
+    <div class="logo-pill">Namangan kollejlar</div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="section-label" data-uz>Imkoniyatlar</div>
+  <div class="section-label" data-ru>Возможности</div>
+  <h2 data-uz>Hamma narsani bir joyda</h2>
+  <h2 data-ru>Всё в одном месте</h2>
+  <p class="section-sub" data-uz>O'qituvchilar uchun yaratilgan, o'quvchilar uchun moslashtirilgan zamonaviy platforma.</p>
+  <p class="section-sub" data-ru>Современная платформа, созданная для учителей и адаптированная для учеников.</p>
+  <div class="features-grid">
+    <div class="feat-card">
+      <div class="feat-icon" style="background:rgba(124,92,252,0.15);">📊</div>
+      <h3 data-uz>Google Sheets integratsiyasi</h3>
+      <h3 data-ru>Интеграция с Google Sheets</h3>
+      <p data-uz>Savollarni oddiy jadvalda tuzing — platforma avtomatik yuklaydi. Hech qanday kod kerak emas.</p>
+      <p data-ru>Создавайте вопросы в обычной таблице — платформа загружает автоматически. Никакого кода.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon" style="background:rgba(244,114,182,0.15);">⏱️</div>
+      <h3 data-uz>Vaqt taymeri</h3>
+      <h3 data-ru>Таймер вопросов</h3>
+      <p data-uz>Har bir savol uchun vaqt belgilang. Real imtihon sharoitini yarating va bosimga chidamlilikni sinang.</p>
+      <p data-ru>Устанавливайте время на каждый вопрос. Создайте реальные условия экзамена и проверяйте стрессоустойчивость.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon" style="background:rgba(34,211,238,0.15);">🌐</div>
+      <h3 data-uz>Ikki tilli interfeys</h3>
+      <h3 data-ru>Двуязычный интерфейс</h3>
+      <p data-uz>O'zbek va rus tillarida to'liq qo'llab-quvvatlash. O'quvchi o'ziga qulay tilda ishlaydi.</p>
+      <p data-ru>Полная поддержка узбекского и русского языков. Ученик работает на удобном для него языке.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon" style="background:rgba(251,191,36,0.15);">📈</div>
+      <h3 data-uz>Batafsil tahlil</h3>
+      <h3 data-ru>Детальная аналитика</h3>
+      <p data-uz>Har bir o'quvchi nima biladi, nimani bilmaydi — aniq statistika. Mavzu bo'yicha tahlil va tavsiyalar.</p>
+      <p data-ru>Что знает каждый ученик, что нет — точная статистика. Анализ по темам и рекомендации.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon" style="background:rgba(52,211,153,0.15);">💾</div>
+      <h3 data-uz>Natijalarni saqlash</h3>
+      <h3 data-ru>Сохранение результатов</h3>
+      <p data-uz>Barcha natijalar Google Sheets'ga avtomatik saqlanadi. O'qituvchi istalgan vaqt ko'ra oladi.</p>
+      <p data-ru>Все результаты автоматически сохраняются в Google Sheets. Учитель может просмотреть в любое время.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon" style="background:rgba(124,92,252,0.15);">🏆</div>
+      <h3 data-uz>Reyting va mukofotlar</h3>
+      <h3 data-ru>Рейтинги и награды</h3>
+      <p data-uz>O'quvchilar orasida reyting. A'lo baho olgan o'quvchilar uchun sertifikat va mukofot tizimi.</p>
+      <p data-ru>Рейтинг среди учеников. Система сертификатов и наград для отличников.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section how" id="how">
+  <div class="section-label" data-uz>Jarayon</div>
+  <div class="section-label" data-ru>Процесс</div>
+  <h2 data-uz>3 qadamda tayyor</h2>
+  <h2 data-ru>Готово за 3 шага</h2>
+  <p class="section-sub" data-uz>Murakkab sozlash yo'q. 2 daqiqada birinchi imtihonni o'tkazing.</p>
+  <p class="section-sub" data-ru>Никаких сложных настроек. Проведите первый экзамен за 2 минуты.</p>
+  <div class="steps-grid">
+    <div class="step">
+      <div class="step-num">01</div>
+      <h3 data-uz>Google Sheets yarating</h3>
+      <h3 data-ru>Создайте Google Sheets</h3>
+      <p data-uz>Savollar, javoblar va to'g'ri javoblarni oddiy jadvalga kiriting. Maxsus format talab qilinmaydi.</p>
+      <p data-ru>Введите вопросы, варианты и правильные ответы в обычную таблицу. Специальный формат не требуется.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <h3 data-uz>Havolani ulashish</h3>
+      <h3 data-ru>Поделитесь ссылкой</h3>
+      <p data-uz>EduQuiz havolasini o'quvchilarga yuboring. Telegram, WhatsApp yoki sinfxona ekraniga chiqaring.</p>
+      <p data-ru>Отправьте ссылку EduQuiz ученикам. Через Telegram, WhatsApp или покажите на экране в классе.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <h3 data-uz>Natijalarni kuzating</h3>
+      <h3 data-ru>Следите за результатами</h3>
+      <p data-uz>Barcha natijalar real vaqtda Google Sheets'da ko'rinadi. Tahlil va statistika avtomatik.</p>
+      <p data-ru>Все результаты видны в Google Sheets в реальном времени. Анализ и статистика — автоматически.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <h3 data-uz>Yaxshilang</h3>
+      <h3 data-ru>Совершенствуйтесь</h3>
+      <p data-uz>Zaif mavzularni aniqlang. Maqsadli takrorlash va individual tavsiyalar bering.</p>
+      <p data-ru>Определяйте слабые темы. Давайте целевые задания и индивидуальные рекомендации.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="section" id="pricing" style="text-align:center;">
+  <div class="section-label" data-uz>Narxlar</div>
+  <div class="section-label" data-ru>Тарифы</div>
+  <h2 style="margin:0 auto 16px;" data-uz>Har qanday hajm uchun</h2>
+  <h2 style="margin:0 auto 16px;" data-ru>Для любого масштаба</h2>
+  <p class="section-sub" style="margin:0 auto 48px;" data-uz>Bepul boshlang, o'sgan sari kengaytiring. Yashirin to'lovlar yo'q.</p>
+  <p class="section-sub" style="margin:0 auto 48px;" data-ru>Начните бесплатно, масштабируйтесь по мере роста. Никаких скрытых платежей.</p>
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="price-name" data-uz>Boshlang'ich</div>
+      <div class="price-name" data-ru>Базовый</div>
+      <div class="price-val free">Bepul</div>
+      <div class="price-period" data-uz>Abadiy bepul</div>
+      <div class="price-period" data-ru>Бесплатно навсегда</div>
+      <div class="price-desc" data-uz>Sinab ko'rish va kichik sinflar uchun ideal</div>
+      <div class="price-desc" data-ru>Идеально для пробного использования и небольших классов</div>
+      <ul class="price-features">
+        <li class="active"><span class="check">✓</span> <span data-uz>3 tagacha fan</span><span data-ru>До 3 предметов</span></li>
+        <li class="active"><span class="check">✓</span> <span data-uz>30 tagacha savol</span><span data-ru>До 30 вопросов</span></li>
+        <li class="active"><span class="check">✓</span> <span data-uz>Asosiy statistika</span><span data-ru>Базовая статистика</span></li>
+        <li><span class="cross">✗</span> <span data-uz>Sertifikatlar</span><span data-ru>Сертификаты</span></li>
+        <li><span class="cross">✗</span> <span data-uz>Kengaytirilgan tahlil</span><span data-ru>Расширенная аналитика</span></li>
+      </ul>
+      <a href="index.html" class="btn-plan outline" data-uz>Boshlash →</a>
+      <a href="index.html" class="btn-plan outline" data-ru>Начать →</a>
+    </div>
+    <div class="price-card featured">
+      <div class="popular-tag" data-uz>Mashhur</div>
+      <div class="popular-tag" data-ru>Популярный</div>
+      <div class="price-name" data-uz>Pro</div>
+      <div class="price-name" data-ru>Pro</div>
+      <div class="price-val pro">49 000</div>
+      <div class="price-period" data-uz>so'm / oyiga</div>
+      <div class="price-period" data-ru>сум / месяц</div>
+      <div class="price-desc" data-uz>O'quv markazlari va faol o'qituvchilar uchun</div>
+      <div class="price-desc" data-ru>Для учебных центров и активных учителей</div>
+      <ul class="price-features">
+        <li class="active"><span class="check">✓</span> <span data-uz>Cheksiz fanlar</span><span data-ru>Неограниченно предметов</span></li>
+        <li class="active"><span class="check">✓</span> <span data-uz>AI savol generatsiyasi</span><span data-ru>AI-генерация вопросов</span></li>
+        <li class="active"><span class="check">✓</span> <span data-uz>PDF sertifikatlar</span><span data-ru>PDF сертификаты</span></li>
+        <li class="active"><span class="check">✓</span> <span data-uz>Batafsil tahlil</span><span data-ru>Детальная аналитика</span></li>
+        <li class="active"><span class="check">✓</span> <span data-uz>200 tagacha o'quvchi</span><span data-ru>До 200 учеников</span></li>
+      </ul>
+      <a href="#" class="btn-plan fill" data-uz>Pro ga o'tish →</a>
+      <a href="#" class="btn-plan fill" data-ru>Перейти на Pro →</a>
+    </div>
+    <div class="price-card">
+      <div class="price-name" data-uz>O'quv Markazi</div>
+      <div class="price-name" data-ru>Учебный Центр</div>
+      <div class="price-val" style="font-size:32px;color:var(--cyan)">199 000</div>
+      <div class="price-period" data-uz>so'm / oyiga</div>
+      <div class="price-period" data-ru>сум / месяц</div>
+      <div class="price-desc" data-uz>Katta o'quv markazlari va maktablar uchun</div>
+      <div class="price-desc" data-ru>Для крупных учебных центров и школ</div>
+      <ul class="price-features">
+        <li class="active"><span class="check">✓</span> <span data-uz>Pro ning hammasi</span><span data-ru>Всё из Pro</span></li>
+        <li class="active"><span class="check">✓</span> <span data-uz>O'z brend va domen</span><span data-ru>Ваш бренд и домен</span></li>
+        <li class="active"><span class="check">✓</span> <span data-uz>Telegram bot integratsiyasi</span><span data-ru>Telegram-бот интеграция</span></li>
+        <li class="active"><span class="check">✓</span> <span data-uz>Cheksiz o'quvchilar</span><span data-ru>Неограниченно учеников</span></li>
+        <li class="active"><span class="check">✓</span> <span data-uz>Ustuvor qo'llab-quvvatlash</span><span data-ru>Приоритетная поддержка</span></li>
+      </ul>
+      <a href="#" class="btn-plan dark" data-uz>Bog'lanish →</a>
+      <a href="#" class="btn-plan dark" data-ru>Связаться →</a>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="section" style="background:var(--bg2);">
+  <div class="section-label" data-uz>Fikrlar</div>
+  <div class="section-label" data-ru>Отзывы</div>
+  <h2 data-uz>Ular allaqachon ishlatmoqda</h2>
+  <h2 data-ru>Они уже используют</h2>
+  <p class="section-sub" data-uz>O'qituvchilar va o'quv markazi rahbarlarining haqiqiy fikrlari.</p>
+  <p class="section-sub" data-ru>Реальные отзывы учителей и руководителей учебных центров.</p>
+  <div class="testi-grid">
+    <div class="testi-card">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-text" data-uz>"EduQuiz mening darslarimni tubdan o'zgartirdi. Endi har bir o'quvchining bilim darajasini aniq bilaman."</p>
+      <p class="testi-text" data-ru>"EduQuiz полностью изменил мои уроки. Теперь я точно знаю уровень знаний каждого ученика."</p>
+      <div class="testi-author">
+        <div class="testi-avatar" style="background:rgba(124,92,252,0.2);">👩‍🏫</div>
+        <div><div class="testi-name" data-uz>Malika Yusupova</div><div class="testi-name" data-ru>Малика Юсупова</div><div class="testi-role" data-uz>Matematika o'qituvchisi, Toshkent</div><div class="testi-role" data-ru>Учитель математики, Ташкент</div></div>
+      </div>
+    </div>
+    <div class="testi-card">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-text" data-uz>"Google Sheets bilan integratsiya — bu ajoyib! 100 ta savolni 10 daqiqada tayyor qilaman."</p>
+      <p class="testi-text" data-ru>"Интеграция с Google Sheets — это просто шедевр! 100 вопросов готовлю за 10 минут."</p>
+      <div class="testi-author">
+        <div class="testi-avatar" style="background:rgba(244,114,182,0.2);">👨‍💼</div>
+        <div><div class="testi-name" data-uz>Jasur Rahimov</div><div class="testi-name" data-ru>Жасур Рахимов</div><div class="testi-role" data-uz>O'quv markazi direktori, Samarqand</div><div class="testi-role" data-ru>Директор учебного центра, Самарканд</div></div>
+      </div>
+    </div>
+    <div class="testi-card">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-text" data-uz>"O'quvchilarim EduQuiz'ni sevib qoldi. Imtihonga tayyorlanish endi o'yinga aylandi!"</p>
+      <p class="testi-text" data-ru>"Мои ученики полюбили EduQuiz. Подготовка к экзамену превратилась в игру!"</p>
+      <div class="testi-author">
+        <div class="testi-avatar" style="background:rgba(34,211,238,0.2);">👩‍💻</div>
+        <div><div class="testi-name" data-uz>Dilnoza Karimova</div><div class="testi-name" data-ru>Дилноза Каримова</div><div class="testi-role" data-uz>Ingliz tili o'qituvchisi, Andijon</div><div class="testi-role" data-ru>Учитель английского, Андижан</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section" id="faq">
+  <div class="section-label" data-uz>Savol-javob</div>
+  <div class="section-label" data-ru>Вопрос-ответ</div>
+  <h2 data-uz>Ko'p so'raladigan savollar</h2>
+  <h2 data-ru>Часто задаваемые вопросы</h2>
+  <div class="faq-list">
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">
+        <span data-uz>EduQuiz'ni ishlatish uchun dasturlash bilimlari kerakmi?</span>
+        <span data-ru>Нужны ли знания программирования для EduQuiz?</span>
+        <span class="icon">+</span>
+      </div>
+      <div class="faq-a">
+        <span data-uz>Yo'q! EduQuiz Google Sheets bilan ishlaydi. Jadvalga savol kiritasiz — platforma qolganini qiladi. Hech qanday kod yozish shart emas.</span>
+        <span data-ru>Нет! EduQuiz работает с Google Sheets. Вводите вопросы в таблицу — платформа делает остальное. Никакого кода писать не нужно.</span>
+      </div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">
+        <span data-uz>Bir vaqtda nechta o'quvchi imtihon topshira oladi?</span>
+        <span data-ru>Сколько учеников могут проходить тест одновременно?</span>
+        <span class="icon">+</span>
+      </div>
+      <div class="faq-a">
+        <span data-uz>Bepul rejimda cheksiz. Pro va O'quv Markazi rejimlarida ham cheklov yo'q — butun sinf yoki guruh bir vaqtda ishlaydi.</span>
+        <span data-ru>В бесплатном режиме — без ограничений. В тарифах Pro и Учебный Центр тоже нет лимита — весь класс или группа работает одновременно.</span>
+      </div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">
+        <span data-uz>Natijalar qayerda saqlanadi?</span>
+        <span data-ru>Где хранятся результаты?</span>
+        <span class="icon">+</span>
+      </div>
+      <div class="faq-a">
+        <span data-uz>Barcha natijalar sizning Google Sheets'ingizga avtomatik saqlanadi. Siz to'liq nazoratdasiz, ma'lumotlaringiz faqat sizning Google akkauntingizda.</span>
+        <span data-ru>Все результаты автоматически сохраняются в вашем Google Sheets. Вы полностью контролируете данные — они хранятся только в вашем Google аккаунте.</span>
+      </div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">
+        <span data-uz>Telefonda ham ishlaydi?</span>
+        <span data-ru>Работает ли на телефоне?</span>
+        <span class="icon">+</span>
+      </div>
+      <div class="faq-a">
+        <span data-uz>Ha, EduQuiz barcha qurilmalarda ishlaydi — telefon, planshet, kompyuter. Maxsus ilova o'rnatish shart emas.</span>
+        <span data-ru>Да, EduQuiz работает на всех устройствах — телефон, планшет, компьютер. Никакого специального приложения устанавливать не нужно.</span>
+      </div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">
+        <span data-uz>Pro rejimni bekor qilish mumkinmi?</span>
+        <span data-ru>Можно ли отменить Pro подписку?</span>
+        <span class="icon">+</span>
+      </div>
+      <div class="faq-a">
+        <span data-uz>Ha, istalgan vaqt bekor qilishingiz mumkin. Shartnoma va yashirin to'lovlar yo'q. To'lov muddati tugagach, bepul rejimga o'tasiz.</span>
+        <span data-ru>Да, можете отменить в любое время. Никаких контрактов и скрытых платежей. По истечении периода оплаты переходите на бесплатный тариф.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-section">
+  <h2 data-uz>Bugun boshlang — bepul!</h2>
+  <h2 data-ru>Начните сегодня — бесплатно!</h2>
+  <p data-uz>2 daqiqada birinchi imtihonni o'tkazing. Kredit kartasi talab qilinmaydi.</p>
+  <p data-ru>Проведите первый экзамен за 2 минуты. Кредитная карта не требуется.</p>
+  <a href="index.html" class="btn-primary" style="display:inline-block;">
+    <span data-uz>⚡ Bepul boshlash →</span>
+    <span data-ru>⚡ Начать бесплатно →</span>
+  </a>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="footer-logo">EduQuiz</div>
+    <p style="margin-top:8px;" data-uz>O'zbek ta'limi uchun zamonaviy platforma</p>
+    <p style="margin-top:8px;" data-ru>Современная платформа для образования Узбекистана</p>
+  </div>
+  <div class="footer-links">
+    <a href="#features" data-uz>Imkoniyatlar</a><a href="#features" data-ru>Возможности</a>
+    <a href="#pricing" data-uz>Narxlar</a><a href="#pricing" data-ru>Тарифы</a>
+    <a href="index.html" data-uz>Platforma</a><a href="index.html" data-ru>Платформа</a>
+  </div>
+  <p>© 2025 EduQuiz. <span data-uz>Barcha huquqlar himoyalangan.</span><span data-ru>Все права защищены.</span></p>
+</footer>
+
+<script>
+function setLang(lang) {
+  document.body.classList.toggle('ru', lang === 'ru');
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.lang-btn:${lang==='uz'?'first':'last'}-child`).classList.add('active');
+}
+function toggleFaq(el) {
+  el.classList.toggle('open');
+}
+// Scroll reveal
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(e.isIntersecting) {
+      e.target.style.opacity = '1';
+      e.target.style.transform = 'translateY(0)';
+    }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.feat-card, .step, .price-card, .testi-card').forEach(el => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(24px)';
+  el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+  obs.observe(el);
+});
+</script>
+</body>
+</html>
