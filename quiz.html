@@ -551,7 +551,7 @@ select.form-input option { background: var(--bg2); color: #fff; }
 <script>
 // ─── CONFIG ───────────────────────────────────────────────────────────
 // Replace this URL with your deployed Google Apps Script Web App URL
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhhUIFRLl0vyAuwQB5hnU9BP4ygu2ChWFAw6hfW98jLX1ZDgTbNlfug1iOxkptQtJF/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbypd24Bf8ufZ-lDPbvWnrklgBo8MqB4eEunXEtLIkSm1-jVB6NlSjq3ijf3tWsUqw/exec";
 // Your Google Sheets ID (for reference)
 const SHEET_ID = "";
 
@@ -1038,9 +1038,9 @@ async function saveToSheets(data) {
   try {
     await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(data),
+      redirect: 'follow'
     });
     statusEl.textContent = T[lang].saved;
   } catch(e) {
@@ -1256,6 +1256,6 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.lineTo(x, y+r); ctx.arcTo(x,y,x+r,y,r);
   ctx.closePath();
 }
-</script> 
+</script>
 </body>
 </html>
