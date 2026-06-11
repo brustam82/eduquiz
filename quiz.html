@@ -1,293 +1,309 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uz">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EduQuiz — Bilim platformasi</title>
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif}
-body{background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;color:#1a1a2e}
-.wrap{max-width:760px;margin:0 auto;padding:20px}
-.card{background:#fff;border-radius:20px;padding:28px;box-shadow:0 12px 40px rgba(0,0,0,.2);margin-bottom:18px}
-h1{text-align:center;color:#fff;margin:18px 0;font-size:30px}
-h2{color:#5a3d8a;margin-bottom:16px}
-.btn{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:0;padding:14px 22px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;width:100%;margin-top:10px;transition:.2s}
-.btn:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(102,126,234,.4)}
-.btn.alt{background:#f0eeff;color:#5a3d8a}
-input,select,textarea{width:100%;padding:12px;border:2px solid #e0e0f0;border-radius:10px;font-size:15px;margin-bottom:12px}
-input:focus,select:focus,textarea:focus{outline:0;border-color:#764ba2}
-label{display:block;font-weight:600;margin-bottom:6px;font-size:14px;color:#444}
-.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.role{background:#f0eeff;border-radius:16px;padding:30px 16px;text-align:center;cursor:pointer;border:3px solid transparent;transition:.2s}
-.role:hover{border-color:#764ba2;transform:translateY(-3px)}
-.role .ico{font-size:48px}
-.role .t{font-weight:700;margin-top:8px;font-size:18px;color:#5a3d8a}
-.hidden{display:none}
-.q-card{background:#faf9ff;border-radius:14px;padding:20px;margin-bottom:14px}
-.q-num{color:#764ba2;font-weight:700;font-size:13px}
-.q-text{font-size:18px;font-weight:600;margin:8px 0 14px}
-.opt{display:block;background:#fff;border:2px solid #e0e0f0;border-radius:10px;padding:13px;margin-bottom:9px;cursor:pointer;transition:.15s}
-.opt:hover{border-color:#764ba2;background:#f5f3ff}
-.opt.sel{border-color:#764ba2;background:#ede9ff}
-.opt.correct{border-color:#22c55e;background:#dcfce7}
-.opt.wrong{border-color:#ef4444;background:#fee2e2}
-.msg{padding:12px;border-radius:10px;margin:10px 0;font-weight:600;text-align:center}
-.msg.err{background:#fee2e2;color:#b91c1c}
-.msg.ok{background:#dcfce7;color:#15803d}
-.msg.load{background:#fef9c3;color:#854d0e}
-.row{display:flex;gap:12px}
-.row>*{flex:1}
-.back{background:none;border:0;color:#764ba2;cursor:pointer;font-weight:600;margin-bottom:14px;font-size:14px}
-.result-big{font-size:54px;font-weight:800;text-align:center;color:#764ba2}
-#qrbox{display:flex;justify-content:center;margin:16px 0}
-.spin{display:inline-block;width:18px;height:18px;border:3px solid #fff;border-top-color:transparent;border-radius:50%;animation:sp 1s linear infinite;vertical-align:middle}
-@keyframes sp{to{transform:rotate(360deg)}}
-.fade{animation:fd .4s ease}
-@keyframes fd{from{opacity:0;transform:translateY(10px)}to{opacity:1}}
-.bar{height:10px;background:#e0e0f0;border-radius:6px;overflow:hidden;margin-bottom:16px}
-.bar>i{display:block;height:100%;background:linear-gradient(90deg,#667eea,#764ba2);transition:.3s}
-small{color:#888}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduQuiz — Bilim platformasi</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body { font-family: 'Nunito', sans-serif; background: #f0f2f5; }
+        .correct { background-color: #10B981 !important; color: white; animation: pulse 0.5s; }
+        .wrong { background-color: #EF4444 !important; color: white; animation: shake 0.5s; }
+        @keyframes pulse { 0% {transform: scale(1);} 50% {transform: scale(1.05);} 100% {transform: scale(1);} }
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+    </style>
 </head>
-<body>
-<div class="wrap">
-<h1>🎓 EduQuiz</h1>
+<body class="p-4 md:p-8">
 
-<!-- ВЫБОР РОЛИ -->
-<div id="screen-home" class="card fade">
-  <h2>Войдите в систему</h2>
-  <div class="role-grid">
-    <div class="role" onclick="show('login-teacher')">
-      <div class="ico">👨‍🏫</div><div class="t">Учитель</div>
+    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-6">
+        <div class="flex justify-between items-center border-b pb-4 mb-6">
+            <h1 class="text-2xl font-bold text-indigo-600" onclick="location.reload()"><i class="fas fa-graduation-cap"></i> EduQuiz</h1>
+            <span id="role-badge" class="hidden px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-semibold"></span>
+        </div>
+
+        <div id="screen-auth" class="space-y-6 text-center py-10">
+            <h2 class="text-3xl font-extrabold text-gray-800">Welcome to EduQuiz</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                <button onclick="showRoleModal('teacher')" class="p-6 border-2 border-indigo-500 rounded-xl hover:bg-indigo-50 transition cursor-pointer group">
+                    <i class="fas fa-chalkboard-teacher text-5xl text-indigo-500 mb-4 group-hover:scale-110 transition"></i>
+                    <h3 class="text-xl font-bold text-gray-700">O'qituvchi (Учитель)</h3>
+                </button>
+                <button onclick="showRoleModal('student')" class="p-6 border-2 border-emerald-500 rounded-xl hover:bg-emerald-50 transition cursor-pointer group">
+                    <i class="fas fa-user-graduate text-5xl text-emerald-500 mb-4 group-hover:scale-110 transition"></i>
+                    <h3 class="text-xl font-bold text-gray-700">O'quvchi (Ученик)</h3>
+                </button>
+            </div>
+        </div>
+
+        <div id="auth-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl relative">
+                <h3 id="modal-title" class="text-xl font-bold mb-4">Kirish</h3>
+                <div id="modal-inputs" class="space-y-4"></div>
+                <div class="flex justify-end gap-2 mt-6">
+                    <button onclick="closeModal()" class="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg cursor-pointer">Yopish</button>
+                    <button onclick="submitAuth()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 cursor-pointer">Kirish</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-teacher" class="hidden space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-xl">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Fan (Предмет)</label>
+                    <select id="quiz-subject" class="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-white">
+                        <option value="Matematika">Matematika</option>
+                        <option value="Fizika">Fizika</option>
+                        <option value="Kimyo">Kimyo</option>
+                        <option value="Biologiya">Biologiya</option>
+                        <option value="Ona tili">Ona tili</option>
+                        <option value="Elektrik">Elektrik</option>
+                        <option value="Avto-mexanik">Avto-mexanik</option>
+                        <option value="Buxgalteriya">Buxgalteriya</option>
+                        <option value="Dasturlash">Dasturlash</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Mavzu (Тема)</label>
+                    <input type="text" id="quiz-topic" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Savollar soni</label>
+                    <select id="quiz-count" class="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-white">
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="15">15</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-3">
+                <button onclick="generateQuiz(false)" id="btn-gen-new" class="flex-1 bg-indigo-600 text-white py-3 px-4 rounded-xl font-bold hover:bg-indigo-700 transition cursor-pointer flex justify-center items-center gap-2">
+                    <i class="fas fa-robot"></i> Yangi test yaratish (Gemini AI)
+                </button>
+                <button onclick="generateQuiz(true)" id="btn-gen-exist" class="bg-amber-500 text-white py-3 px-6 rounded-xl font-bold hover:bg-amber-600 transition cursor-pointer flex justify-center items-center gap-2">
+                    <i class="fas fa-database"></i> Mavjud testdan foydalanish
+                </button>
+            </div>
+
+            <div id="teacher-status" class="hidden p-4 rounded-xl text-center font-medium"></div>
+
+            <div id="share-panel" class="hidden bg-emerald-50 p-6 rounded-xl border border-emerald-200 text-center space-y-4">
+                <h3 class="text-xl font-bold text-emerald-800">Yaratildi va Google Sheets'ga saqlandi!</h3>
+                <div class="flex justify-center"><div id="qrcode" class="p-2 bg-white rounded-lg shadow-md"></div></div>
+                <p class="text-xs text-gray-400"><a id="share-link" href="#" target="_blank" class="text-indigo-600 underline"></a></p>
+            </div>
+        </div>
+
+        <div id="screen-quiz" class="hidden space-y-6">
+            <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg text-sm text-gray-600">
+                <span>O'quvchi: <b id="student-name-display"></b></span>
+                <span>Fan: <b id="student-subject-display"></b></span>
+                <span class="font-bold text-indigo-600" id="quiz-progress">0/0</span>
+            </div>
+            <div class="space-y-4">
+                <div class="bg-indigo-50 p-5 rounded-xl border-l-4 border-indigo-500">
+                    <h3 id="question-text" class="text-lg font-bold text-gray-800 leading-relaxed"></h3>
+                </div>
+                <div class="grid grid-cols-1 gap-3" id="answers-container"></div>
+            </div>
+            <div class="flex justify-end">
+                <button id="btn-next" onclick="nextQuestion()" class="hidden bg-gray-800 text-white px-6 py-2 rounded-lg font-semibold hover:bg-gray-900 cursor-pointer">Keyingisi</button>
+            </div>
+        </div>
+
+        <div id="screen-results" class="hidden text-center space-y-6 py-8">
+            <div class="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-4xl shadow-inner"><i class="fas fa-check-double"></i></div>
+            <h2 class="text-3xl font-extrabold text-gray-800">Natija</h2>
+            <p class="text-xl text-gray-600"><span id="res-score" class="font-bold text-indigo-600">0</span> / <span id="res-total">0</span> (<span id="res-percent">0</span>%)</p>
+            <button onclick="location.reload()" class="mt-4 px-6 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 cursor-pointer">Boshiga qaytish</button>
+        </div>
     </div>
-    <div class="role" onclick="show('login-student')">
-      <div class="ico">👨‍🎓</div><div class="t">Ученик</div>
-    </div>
-  </div>
-</div>
 
-<!-- ВХОД УЧИТЕЛЬ -->
-<div id="screen-login-teacher" class="card hidden fade">
-  <button class="back" onclick="show('home')">← Назад</button>
-  <h2>Вход учителя</h2>
-  <label>PIN-код учителя</label>
-  <input id="tpin" placeholder="TEACH-4821" value="TEACH-4821">
-  <small>Демо-PIN: TEACH-4821</small>
-  <button class="btn" onclick="loginTeacher()">Войти</button>
-</div>
+    <script>
+        const GEMINI_KEY = "AQ.Ab8RN6Lolg576e1nqFjeltVFaHuhnogL8ESulOpv_AnpejHvig"; 
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby2XjM5-xn0gy7M-JdhyUgiKGZ2R7xpNOJ0CaYIFrsaHeuKXw_xH7USdd07HoT4rVXG/exec";
+        const TEACHER_PIN = "1234";
 
-<!-- ВХОД УЧЕНИК -->
-<div id="screen-login-student" class="card hidden fade">
-  <button class="back" onclick="show('home')">← Назад</button>
-  <h2>Вход ученика</h2>
-  <label>Имя и фамилия</label>
-  <input id="sname" placeholder="Иван Иванов">
-  <label>Код класса</label>
-  <input id="scode" placeholder="Например: Биология">
-  <small>Код выдаёт учитель (= название предмета/теста)</small>
-  <button class="btn" onclick="loginStudent()">Начать тест</button>
-</div>
+        let currentQuestions = [], currentQuestionIdx = 0, score = 0, selectedAuthRole = '';
+        let sessionData = { name: '', group: '', teacher: 'AI', subject: '' };
 
-<!-- ПАНЕЛЬ УЧИТЕЛЯ -->
-<div id="screen-teacher" class="card hidden fade">
-  <button class="back" onclick="logout()">← Выйти</button>
-  <h2>🛠 Панель учителя</h2>
-  <label>Предмет / Категория</label>
-  <select id="gsubject">
-    <optgroup label="Школьные предметы">
-      <option>Математика</option><option>Физика</option><option>Химия</option>
-      <option>Биология</option><option>История</option><option>География</option>
-      <option>Литература</option><option>Английский язык</option><option>Информатика</option>
-    </optgroup>
-    <optgroup label="Профессии">
-      <option>Программирование</option><option>Электрика</option><option>Строительство</option>
-      <option>Бухгалтерия</option><option>Кулинария</option><option>Автодело</option>
-      <option>Медицина (база)</option>
-    </optgroup>
-  </select>
-  <label>Тема</label>
-  <input id="gtopic" placeholder="Например: Фотосинтез">
-  <div class="row">
-    <div><label>Кол-во вопросов</label><input id="gcount" type="number" value="5" min="1" max="20"></div>
-    <div><label>Сложность</label>
-      <select id="glevel"><option>Лёгкая</option><option selected>Средняя</option><option>Сложная</option></select>
-    </div>
-  </div>
-  <label>Язык вопросов</label>
-  <select id="glang"><option>Русский</option><option>O'zbekcha</option><option>English</option></select>
-  <button class="btn" onclick="generate(false)">✨ Сгенерировать новый тест</button>
-  <button class="btn alt" onclick="loadExisting()">📂 Использовать существующий</button>
-  <div id="gmsg"></div>
-  <div id="gpreview"></div>
-  <div id="qrsection" class="hidden">
-    <h2 style="margin-top:20px">🔗 Доступ для учеников</h2>
-    <p>Код класса: <b id="classcode"></b></p>
-    <div id="qrbox"></div>
-    <small>Ученики сканируют QR или вводят код вручную</small>
-  </div>
-</div>
+        window.onload = () => {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('subject')) showRoleModal('student', params.get('subject'));
+        };
 
-<!-- ТЕСТ (УЧЕНИК) -->
-<div id="screen-quiz" class="card hidden fade">
-  <div class="bar"><i id="progbar" style="width:0%"></i></div>
-  <div id="quizbody"></div>
-</div>
+        function showRoleModal(role, autoSubject = '') {
+            selectedAuthRole = role;
+            const container = document.getElementById('modal-inputs');
+            container.innerHTML = '';
+            
+            if (role === 'teacher') {
+                container.innerHTML = `<div><label class="block text-sm font-medium text-gray-700">PIN kod</label><input type="password" id="auth-pin" class="mt-1 block w-full p-2 border border-gray-300 rounded-md text-center text-lg font-bold"></div>`;
+            } else {
+                container.innerHTML = `
+                    <div><label class="block text-sm font-medium text-gray-700">Ism va Familiya</label><input type="text" id="auth-name" class="mt-1 block w-full p-2 border border-gray-300 rounded-md"></div>
+                    <div><label class="block text-sm font-medium text-gray-700">Sinf / Guruh</label><input type="text" id="auth-group" class="mt-1 block w-full p-2 border border-gray-300 rounded-md"></div>
+                    <div><label class="block text-sm font-medium text-gray-700">Fan</label><select id="auth-subject" class="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-white" ${autoSubject?'disabled':''}>
+                        <option value="Matematika" ${autoSubject=='Matematika'?'selected':''}>Matematika</option>
+                        <option value="Fizika" ${autoSubject=='Fizika'?'selected':''}>Fizika</option>
+                        <option value="Kimyo" ${autoSubject=='Kimyo'?'selected':''}>Kimyo</option>
+                        <option value="Biologiya" ${autoSubject=='Biologiya'?'selected':''}>Biologiya</option>
+                        <option value="Ona tili" ${autoSubject=='Ona tili'?'selected':''}>Ona tili</option>
+                        <option value="Elektrik" ${autoSubject=='Elektrik'?'selected':''}>Elektrik</option>
+                        <option value="Avto-mexanik" ${autoSubject=='Avto-mexanik'?'selected':''}>Avto-mexanik</option>
+                        <option value="Buxgalteriya" ${autoSubject=='Buxgalteriya'?'selected':''}>Buxgalteriya</option>
+                        <option value="Dasturlash" ${autoSubject=='Dasturlash'?'selected':''}>Dasturlash</option>
+                    </select></div>`;
+            }
+            document.getElementById('auth-modal').classList.remove('hidden');
+        }
 
-<!-- РЕЗУЛЬТАТ -->
-<div id="screen-result" class="card hidden fade">
-  <h2 style="text-align:center">Результат</h2>
-  <div class="result-big" id="rscore"></div>
-  <p style="text-align:center;font-size:18px" id="rtext"></p>
-  <button class="btn" onclick="location.reload()">🏠 На главную</button>
-</div>
+        function closeModal() { document.getElementById('auth-modal').classList.add('hidden'); }
 
-</div>
-<script>
-/* ===== КОНФИГ ===== */
-const API_URL = "https://script.google.com/macros/s/AKfycby2XjM5-xn0gy7M-JdhyUgiKGZ2R7xpNOJ0CaYIFrsaHeuKXw_xH7USdd07HoT4rVXG/exec";
-const GEMINI_KEY = "ВСТАВЬ_СЮДА_КЛЮЧ_AIza";   // ← замени на ключ с aistudio.google.com
-const TEACHER_PIN = "TEACH-4821";
+        function submitAuth() {
+            if (selectedAuthRole === 'teacher') {
+                if (document.getElementById('auth-pin').value === TEACHER_PIN) {
+                    closeModal(); switchScreen('screen-teacher', 'O\'qituvchi');
+                } else alert('Xato PIN!');
+            } else {
+                const name = document.getElementById('auth-name').value.trim();
+                const group = document.getElementById('auth-group').value.trim();
+                const subj = document.getElementById('auth-subject').value;
+                if (!name || !group) return alert('Ma\'lumotlarni to\'ldiring!');
+                sessionData = { name, group, teacher: 'AI System', subject: subj };
+                closeModal(); loadQuizForStudent(subj);
+            }
+        }
 
-let state = {questions:[], idx:0, answers:[], subject:"", student:""};
+        function switchScreen(screenId, badgeText) {
+            ['screen-auth', 'screen-teacher', 'screen-quiz', 'screen-results'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById(screenId).classList.remove('hidden');
+            const badge = document.getElementById('role-badge');
+            badge.innerText = badgeText; badge.classList.remove('hidden');
+        }
 
-/* ===== НАВИГАЦИЯ ===== */
-function show(id){
-  document.querySelectorAll('.card').forEach(c=>c.classList.add('hidden'));
-  document.getElementById('screen-'+id).classList.remove('hidden');
-}
-function logout(){location.reload()}
+        async function generateQuiz(useExisting) {
+            const subject = document.getElementById('quiz-subject').value;
+            const topic = document.getElementById('quiz-topic').value.trim() || "Umumiy";
+            const count = parseInt(document.getElementById('quiz-count').value);
+            const statusDiv = document.getElementById('teacher-status');
+            
+            statusDiv.className = "p-4 rounded-xl text-center font-medium bg-amber-100 text-amber-800";
+            statusDiv.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Kuting...`;
+            statusDiv.classList.remove('hidden');
 
-/* ===== ВХОД ===== */
-function loginTeacher(){
-  if(document.getElementById('tpin').value.trim()===TEACHER_PIN){show('teacher')}
-  else alert('Неверный PIN');
-}
-function loginStudent(){
-  const n=document.getElementById('sname').value.trim();
-  const c=document.getElementById('scode').value.trim();
-  if(!n||!c){alert('Заполните имя и код');return}
-  state.student=n; state.subject=c;
-  startQuizForStudent(c);
-}
+            if (useExisting) {
+                try {
+                    const response = await fetch(`${APPS_SCRIPT_URL}?type=get_questions&subject=${encodeURIComponent(subject)}`);
+                    const resData = await response.json();
+                    if (resData.questions?.length > 0) {
+                        showSharePanel(subject);
+                        statusDiv.className = "p-4 rounded-xl text-center font-medium bg-emerald-100 text-emerald-800";
+                        statusDiv.innerHTML = `Google Sheets'dan ${resData.questions.length} ta savol yuklandi.`;
+                    } else {
+                        statusDiv.className = "p-4 rounded-xl text-center font-medium bg-red-100 text-red-800";
+                        statusDiv.innerHTML = `Tayyor savollar topilmadi.`;
+                    }
+                } catch (e) { statusDiv.innerText = "Ulanish xatosi."; }
+                return;
+            }
 
-/* QR авто-вход по ссылке ?class=Биология */
-window.addEventListener('load',()=>{
-  const p=new URLSearchParams(location.search).get('class');
-  if(p){show('login-student');document.getElementById('scode').value=p;}
-});
+            const prompt = `Сгенерируй тест на узбекском языке по предмету "${subject}" на тему "${topic}". Количество вопросов: ${count}. К каждому вопросу предоставь ровно 4 варианта ответа (A, B, C, D) и укажи правильный буквой (A, B, C или D). Ответ верни строго в формате JSON массива объектов без лишнего текста или markdown-разметки. Структура объекта: {"question": "текст", "a": "вариант A", "b": "вариант B", "c": "вариант C", "d": "вариант D", "answer": "буква правильного ответа", "topic": "${topic}"}`;
 
-/* ===== GEMINI ГЕНЕРАЦИЯ ===== */
-async function generate(){
-  const subject=document.getElementById('gsubject').value;
-  const topic=document.getElementById('gtopic').value.trim()||subject;
-  const count=document.getElementById('gcount').value;
-  const level=document.getElementById('glevel').value;
-  const lang=document.getElementById('glang').value;
-  const msg=document.getElementById('gmsg');
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+                const json = await res.json();
+                let rawText = json.candidates[0].content.parts[0].text.trim().replace(/^```json/, '').replace(/```$/, '').trim();
+                const questions = JSON.parse(rawText);
 
-  if(GEMINI_KEY.startsWith("ВСТАВЬ")){msg.innerHTML='<div class="msg err">⚠️ Вставьте Gemini API-ключ в код (строка GEMINI_KEY)</div>';return}
-  msg.innerHTML='<div class="msg load"><span class="spin"></span> Генерация через Gemini...</div>';
+                await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'save_questions', subject, questions })
+                });
 
-  const prompt=`Сгенерируй ${count} тестовых вопросов по предмету "${subject}", тема "${topic}", сложность ${level}, язык ${lang}. У каждого вопроса 4 варианта (a,b,c,d) и один правильный. Верни ТОЛЬКО валидный JSON массив без markdown: [{"question":"...","a":"...","b":"...","c":"...","d":"...","answer":"a","topic":"${topic}"}]`;
+                statusDiv.className = "p-4 rounded-xl text-center font-medium bg-emerald-100 text-emerald-800";
+                statusDiv.innerHTML = `Yangi test saqlandi!`;
+                showSharePanel(subject);
+            } catch (err) {
+                statusDiv.className = "p-4 rounded-xl text-center font-medium bg-red-100 text-red-800";
+                statusDiv.innerText = "Xatolik yuz berdi.";
+            }
+        }
 
-  try{
-    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})
-    });
-    const d=await r.json();
-    let txt=d.candidates[0].content.parts[0].text.replace(/```json|```/g,'').trim();
-    const questions=JSON.parse(txt);
-    state.questions=questions;
-    previewQuestions(questions);
-    msg.innerHTML='<div class="msg load"><span class="spin"></span> Сохраняю в Google Sheets...</div>';
-    await fetch(API_URL,{method:'POST',body:JSON.stringify({type:'save_questions',subject,questions})});
-    msg.innerHTML='<div class="msg ok">✅ Готово! '+questions.length+' вопросов сохранено</div>';
-    showQR(subject);
-  }catch(e){
-    msg.innerHTML='<div class="msg err">Ошибка: '+e.message+'. Проверьте ключ Gemini.</div>';
-  }
-}
+        function showSharePanel(subject) {
+            document.getElementById('share-panel').classList.remove('hidden');
+            const link = `${window.location.origin}${window.location.pathname}?subject=${encodeURIComponent(subject)}`;
+            document.getElementById('share-link').href = link; document.getElementById('share-link').innerText = link;
+            const qrDiv = document.getElementById('qrcode'); qrDiv.innerHTML = '';
+            new QRCode(qrDiv, { text: link, width: 128, height: 128 });
+        }
 
-async function loadExisting(){
-  const subject=document.getElementById('gsubject').value;
-  const msg=document.getElementById('gmsg');
-  msg.innerHTML='<div class="msg load"><span class="spin"></span> Загрузка из таблицы...</div>';
-  try{
-    const r=await fetch(API_URL,{method:'POST',body:JSON.stringify({type:'get_questions',subject})});
-    const d=await r.json();
-    if(!d.questions||!d.questions.length){msg.innerHTML='<div class="msg err">Нет сохранённых тестов по этому предмету</div>';return}
-    state.questions=d.questions;
-    previewQuestions(d.questions);
-    msg.innerHTML='<div class="msg ok">✅ Загружено '+d.questions.length+' вопросов</div>';
-    showQR(subject);
-  }catch(e){msg.innerHTML='<div class="msg err">Ошибка: '+e.message+'</div>'}
-}
+        async function loadQuizForStudent(subject) {
+            switchScreen('screen-quiz', 'O\'quvchi');
+            document.getElementById('student-name-display').innerText = sessionData.name;
+            document.getElementById('student-subject-display').innerText = subject;
+            document.getElementById('question-text').innerText = "Yuklanmoqda...";
 
-function previewQuestions(qs){
-  let h='<h2 style="margin-top:18px">Предпросмотр</h2>';
-  qs.forEach((q,i)=>{h+='<div class="q-card"><div class="q-num">Вопрос '+(i+1)+'</div><div class="q-text">'+q.question+'</div><small>✓ Ответ: '+q.answer.toUpperCase()+'</small></div>'});
-  document.getElementById('gpreview').innerHTML=h;
-}
+            try {
+                const response = await fetch(`${APPS_SCRIPT_URL}?type=get_questions&subject=${encodeURIComponent(subject)}`);
+                const resData = await response.json();
+                currentQuestions = resData.questions;
+                if(!currentQuestions?.length) { alert('Test topilmadi!'); location.reload(); return; }
+                currentQuestionIdx = 0; score = 0; renderQuestion();
+            } catch (e) { alert('Xatolik.'); }
+        }
 
-function showQR(subject){
-  document.getElementById('qrsection').classList.remove('hidden');
-  document.getElementById('classcode').textContent=subject;
-  const link=location.origin+location.pathname+'?class='+encodeURIComponent(subject);
-  document.getElementById('qrbox').innerHTML='';
-  new QRCode(document.getElementById('qrbox'),{text:link,width:170,height:170});
-}
+        function renderQuestion() {
+            document.getElementById('btn-next').classList.add('hidden');
+            const q = currentQuestions[currentQuestionIdx];
+            document.getElementById('quiz-progress').innerText = `${currentQuestionIdx + 1}/${currentQuestions.length}`;
+            document.getElementById('question-text').innerText = q.question;
 
-/* ===== ТЕСТ ДЛЯ УЧЕНИКА ===== */
-async function startQuizForStudent(subject){
-  show('quiz');
-  document.getElementById('quizbody').innerHTML='<div class="msg load"><span class="spin"></span> Загрузка теста...</div>';
-  try{
-    const r=await fetch(API_URL,{method:'POST',body:JSON.stringify({type:'get_questions',subject})});
-    const d=await r.json();
-    if(!d.questions||!d.questions.length){document.getElementById('quizbody').innerHTML='<div class="msg err">Тест не найден. Проверьте код класса.</div>';return}
-    state.questions=d.questions; state.idx=0; state.answers=[];
-    renderQuestion();
-  }catch(e){document.getElementById('quizbody').innerHTML='<div class="msg err">Ошибка загрузки</div>'}
-}
+            const container = document.getElementById('answers-container'); container.innerHTML = '';
+            [{k:'A',t:q.a},{k:'B',t:q.b},{k:'C',t:q.c},{k:'D',t:q.d}].forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 border border-gray-200 rounded-xl hover:bg-gray-50 font-medium cursor-pointer bg-white flex items-center justify-between option-btn";
+                btn.innerHTML = `<span><b>${opt.k}:</b> ${opt.t}</span>`;
+                btn.onclick = () => handleAnswer(btn, opt.k, q.answer.toUpperCase());
+                container.appendChild(btn);
+            });
+        }
 
-function renderQuestion(){
-  const q=state.questions[state.idx];
-  const n=state.questions.length;
-  document.getElementById('progbar').style.width=((state.idx)/n*100)+'%';
-  let h='<div class="q-num">Вопрос '+(state.idx+1)+' из '+n+'</div>';
-  h+='<div class="q-text">'+q.question+'</div>';
-  ['a','b','c','d'].forEach(k=>{h+='<div class="opt" data-k="'+k+'" onclick="pick(this,\''+k+'\')"><b>'+k.toUpperCase()+'.</b> '+q[k]+'</div>'});
-  document.getElementById('quizbody').innerHTML=h;
-}
+        function handleAnswer(selectedBtn, chosenKey, correctKey) {
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(b => b.disabled = true);
+            if (chosenKey === correctKey) {
+                selectedBtn.classList.add('correct'); score++;
+            } else {
+                selectedBtn.classList.add('wrong');
+                buttons.forEach(b => { if(b.innerText.startsWith(correctKey + ':')) b.classList.add('correct'); });
+            }
+            document.getElementById('btn-next').classList.remove('hidden');
+        }
 
-function pick(el,k){
-  const q=state.questions[state.idx];
-  document.querySelectorAll('.opt').forEach(o=>o.style.pointerEvents='none');
-  if(k===q.answer.toLowerCase()){el.classList.add('correct');state.answers.push(1)}
-  else{el.classList.add('wrong');state.answers.push(0);
-    document.querySelector('.opt[data-k="'+q.answer.toLowerCase()+'"]').classList.add('correct')}
-  setTimeout(next,900);
-}
+        function nextQuestion() {
+            currentQuestionIdx++;
+            if (currentQuestionIdx < currentQuestions.length) renderQuestion(); else finishQuiz();
+        }
 
-function next(){
-  state.idx++;
-  if(state.idx<state.questions.length){renderQuestion()}
-  else finishQuiz();
-}
+        async function finishQuiz() {
+            switchScreen('screen-results', 'Natija');
+            const pct = Math.round((score / currentQuestions.length) * 100);
+            document.getElementById('res-score').innerText = score;
+            document.getElementById('res-total').innerText = currentQuestions.length;
+            document.getElementById('res-percent').innerText = pct;
 
-async function finishQuiz(){
-  const score=state.answers.reduce((a,b)=>a+b,0);
-  const total=state.questions.length;
-  const pct=Math.round(score/total*100);
-  show('result');
-  document.getElementById('rscore').textContent=score+' / '+total;
-  let emo=pct>=80?'🏆 Отлично!':pct>=50?'👍 Хорошо!':'📚 Нужно повторить';
-  document.getElementById('rtext').textContent=emo+' ('+pct+'%)';
-  // сохраняем результат
-  fetch(API_URL,{method:'POST',body:JSON.stringify({type:'save_result',name:state.student,group:state.subject,teacher:TEACHER_PIN,subject:state.subject,score,total,percent:pct})});
-}
-</script>
+            await fetch(APPS_SCRIPT_URL, {
+                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'save_result', name: sessionData.name, group: sessionData.group, teacher: sessionData.teacher, subject: sessionData.subject, score, total: currentQuestions.length, percent: pct })
+            });
+        }
+    </script>
 </body>
 </html>
