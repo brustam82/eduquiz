@@ -1,44 +1,386 @@
-function generateQuizAI() {
-    const subject = document.getElementById("quiz-subject").value;
-    const topic = document.getElementById("quiz-topic").value.trim() || "Umumiy";
-    const count = document.getElementById("quiz-count").value;
-    const statusDiv = document.getElementById("teacher-status");
-    statusDiv.innerHTML = `<span class="text-indigo-600"><i class="fas fa-spinner fa-spin"></i> Gemini AI ${subject} bo'yicha test yaratmoqda...</span>`;
-    const prompt = `Yaratish professional test tizimi uchun. Fan: ${subject}. Mavzu: ${topic}. Savollar soni: ${count}. 
-    Javobni faqat va faqat quyidagi JSON formatda qaytar, boshqa hech qanday matn qo'shma, \`\`\`json belgisini ham qo'shma:
-    {"questions": [{"question": "Savol matni?", "a": "A varianti", "b": "B varianti", "c": "C varianti", "d": "D varianti", "answer": "a", "topic": "${topic}"}]}`;
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduQuiz — Bilim platformasi</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body { font-family: 'Nunito', sans-serif; background: #f0f2f5; }
+        .correct { background-color: #10B981 !important; color: white; animation: pulse 0.5s; }
+        .wrong { background-color: #EF4444 !important; color: white; animation: shake 0.5s; }
+        @keyframes pulse { 0% {transform: scale(1);} 50% {transform: scale(1.05);} 100% {transform: scale(1);} }
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+    </style>
+</head>
+<body class="p-4 md:p-8">
 
-    fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`, {
-        method: "POST",
-        headers: { 
-            "Content-Type": "application/json",
-            "x-goog-api-key": TOKEN 
-        },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    })
-    .then(res => {
-        if(!res.ok) throw new Error("API ulanish xatosi " + res.status);
-        return res.json();
-    })
-    .then(data => {
-        let aiText = data.candidates[0].content.parts[0].text.trim();
-        aiText = aiText.replace(/^```json/, "").replace(/```$/, "").trim();
-        const parsedData = JSON.parse(aiText);
-        statusDiv.innerText = "Yaratildi! Google Jadvalga saqlanmoqda...";
-        return fetch(API_URL, {
-            method: "POST",
-            body: JSON.stringify({
-                type: "save_questions",
-                subject: subject,
-                questions: parsedData.questions
+    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-6">
+        <div class="flex justify-between items-center border-b pb-4 mb-6">
+            <h1 class="text-2xl font-bold text-indigo-600 cursor-pointer" onclick="location.reload()"><i class="fas fa-graduation-cap"></i> EduQuiz</h1>
+            <span id="role-badge" class="hidden px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-semibold"></span>
+        </div>
+
+        <div id="screen-auth" class="space-y-6 text-center py-10">
+            <h2 class="text-3xl font-extrabold text-gray-800">Welcome to EduQuiz</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                <button onclick="showRoleModal('teacher')" class="p-6 border-2 border-indigo-500 rounded-xl hover:bg-indigo-50 transition cursor-pointer group">
+                    <i class="fas fa-chalkboard-teacher text-5xl text-indigo-500 mb-4 group-hover:scale-110 transition"></i>
+                    <h3 class="text-xl font-bold text-gray-700">O'qituvchi (Учитель)</h3>
+                </button>
+                <button onclick="showRoleModal('student')" class="p-6 border-2 border-emerald-500 rounded-xl hover:bg-emerald-50 transition cursor-pointer group">
+                    <i class="fas fa-user-graduate text-5xl text-emerald-500 mb-4 group-hover:scale-110 transition"></i>
+                    <h3 class="text-xl font-bold text-gray-700">O'quvchi (Ученик)</h3>
+                </button>
+            </div>
+        </div>
+
+        <div id="auth-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl relative">
+                <h3 id="modal-title" class="text-xl font-bold mb-4">Kirish</h3>
+                <div id="modal-inputs" class="space-y-4"></div>
+                <div class="flex justify-end gap-2 mt-6">
+                    <button onclick="closeModal()" class="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg cursor-pointer">Yopish</button>
+                    <button onclick="submitAuth()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 cursor-pointer">Kirish</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-teacher" class="hidden space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-xl">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Fan (Предмет)</label>
+                    <select id="quiz-subject" class="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-white">
+                        <option value="Matematika">Matematika</option>
+                        <option value="Ona tili">Ona tili</option>
+                        <option value="Ingliz tili">Ingliz tili</option>
+                        <option value="Mantiq">Mantiq</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Mavzu (Тема)</label>
+                    <input type="text" id="quiz-topic" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" placeholder="Masalan: Tenglamalar">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Savollar soni</label>
+                    <select id="quiz-count" class="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-white">
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="15">15</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-4 w-full">
+                <button onclick="generateQuizAI()" id="btn-gen-new" class="w-full bg-indigo-600 text-white py-4 px-4 rounded-xl font-bold hover:bg-indigo-700 transition cursor-pointer flex justify-center items-center gap-2 shadow-md">
+                    <i class="fas fa-magic"></i> Yangi test yaratish (Avto-generatsiya Gemini AI)
+                </button>
+                <button onclick="checkExistingDatabase()" id="btn-gen-exist" class="w-full bg-amber-500 text-white py-4 px-4 rounded-xl font-bold hover:bg-amber-600 transition cursor-pointer flex justify-center items-center gap-2 shadow-md">
+                    <i class="fas fa-database"></i> Mavjud bazadan yuklash
+                </button>
+            </div>
+            
+            <div id="teacher-status" class="text-center text-sm font-semibold text-gray-600 mt-2"></div>
+        </div>
+
+        <div id="screen-student" class="hidden space-y-6">
+            <div id="quiz-area" class="space-y-4">
+                <div class="flex justify-between items-center bg-indigo-50 p-3 rounded-xl font-bold text-indigo-700">
+                    <span id="progress-text">Savol: 0/0</span>
+                    <span id="timer-text"><i class="fas fa-clock"></i> 00:00</span>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                    <h3 id="question-text" class="text-xl font-bold text-gray-800"></h3>
+                </div>
+                <div id="options-area" class="grid grid-cols-1 gap-3"></div>
+            </div>
+
+            <div id="result-area" class="hidden text-center space-y-4 py-6">
+                <h2 class="text-3xl font-black text-gray-800">Sizning Natijangiz!</h2>
+                <p id="result-score" class="text-5xl font-extrabold text-indigo-600"></p>
+                <p id="result-percent" class="text-xl text-gray-600"></p>
+                <div id="qrcode" class="flex justify-center pt-4"></div>
+                <button onclick="location.reload()" class="mt-4 px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 cursor-pointer">Boshiga qaytish</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycby2XjM5-xn0gy7M-JdhyUgiKGZ2R7xpNOJ0CaYIFrsaHeuKXw_xH7USdd07HoT4rVXG/exec";
+        const TOKEN = "AQ.Ab8RN6Jsb9Q70fr6XI17ayU6RhtAWDu4pYC6DBVnwUwbXL7wpw"; 
+        
+        let currentRole = "";
+        let userProfile = {};
+        let loadedQuestions = [];
+        let currentQuestionIndex = 0;
+        let correctAnswersCount = 0;
+        let quizTimer = null;
+        let secondsLeft = 0;
+
+        function showRoleModal(role) {
+            currentRole = role;
+            const modal = document.getElementById("auth-modal");
+            const title = document.getElementById("modal-title");
+            const inputs = document.getElementById("modal-inputs");
+            
+            modal.classList.remove("hidden");
+            inputs.innerHTML = "";
+
+            if (role === 'teacher') {
+                title.innerText = "O'qituvchi sifatida kirish";
+                inputs.innerHTML = `
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Ism va Familiyangiz</label>
+                        <input type="text" id="auth-name" class="mt-1 block w-full p-2 border rounded-md" placeholder="F.I.O.">
+                    </div>
+                `;
+            } else {
+                title.innerText = "O'quvchi sifatida kirish";
+                inputs.innerHTML = `
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Ismingiz va Familiyangiz</label>
+                        <input type="text" id="auth-name" class="mt-1 block w-full p-2 border rounded-md" placeholder="Ism Familiya">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Sinf / Guruh</label>
+                        <input type="text" id="auth-group" class="mt-1 block w-full p-2 border rounded-md" placeholder="Masalan: 9-A">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">O'qituvchi F.I.O</label>
+                        <input type="text" id="auth-teacher" class="mt-1 block w-full p-2 border rounded-md" placeholder="O'qituvchingiz ismi">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Fan (Предмет)</label>
+                        <select id="auth-subject" class="mt-1 block w-full p-2 border rounded-md bg-white">
+                            <option value="Matematika">Matematika</option>
+                            <option value="Ona tili">Ona tili</option>
+                            <option value="Ingliz tili">Ingliz tili</option>
+                            <option value="Mantiq">Mantiq</option>
+                        </select>
+                    </div>
+                `;
+            }
+        }
+
+        function closeModal() {
+            document.getElementById("auth-modal").classList.add("hidden");
+        }
+
+        function submitAuth() {
+            const nameInput = document.getElementById("auth-name").value.trim();
+            if(!nameInput) { alert("Iltimos, ismingizni kiriting!"); return; }
+
+            userProfile.name = nameInput;
+            document.getElementById("auth-modal").classList.add("hidden");
+            document.getElementById("screen-auth").classList.add("hidden");
+            
+            const badge = document.getElementById("role-badge");
+            badge.classList.remove("hidden");
+
+            if (currentRole === 'teacher') {
+                badge.innerText = `O'qituvchi: ${userProfile.name}`;
+                document.getElementById("screen-teacher").classList.remove("hidden");
+            } else {
+                userProfile.group = document.getElementById("auth-group").value.trim();
+                userProfile.teacher = document.getElementById("auth-teacher").value.trim();
+                userProfile.subject = document.getElementById("auth-subject").value;
+                
+                badge.innerText = `O'quvchi: ${userProfile.name} (${userProfile.group})`;
+                document.getElementById("screen-student").classList.remove("hidden");
+                
+                startStudentQuiz();
+            }
+        }
+
+        function generateQuizAI() {
+            const subject = document.getElementById("quiz-subject").value;
+            const topic = document.getElementById("quiz-topic").value.trim() || "Umumiy";
+            const count = document.getElementById("quiz-count").value;
+            const statusDiv = document.getElementById("teacher-status");
+
+            statusDiv.innerHTML = `<span class="text-indigo-600"><i class="fas fa-spinner fa-spin"></i> Gemini AI ${subject} bo'yicha test yaratmoqda...</span>`;
+
+            const prompt = `Yaratish professional test tizimi uchun. Fan: ${subject}. Mavzu: ${topic}. Savollar soni: ${count}. 
+            Javobni faqat va faqat quyidagi JSON formatda qaytar, boshqa hech qanday matn qo'shma, \`\`\`json belgisini ham qo'shma:
+            {"questions": [{"question": "Savol matni?", "a": "A varianti", "b": "B varianti", "c": "C varianti", "d": "D varianti", "answer": "a", "topic": "${topic}"}]}`;
+
+            fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${TOKEN}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
             })
-        });
-    })
-    .then(() => {
-        statusDiv.innerHTML = `<span class="text-emerald-600"><i class="fas fa-check-circle"></i> Muvaffaqiyatli saqlandi!</span>`;
-    })
-    .catch(err => {
-        console.error(err);
-        statusDiv.innerHTML = `<span class="text-red-600"><i class="fas fa-times-circle"></i> Xatolik yuz berdi. Ключ API или сеть отклонили запрос.</span>`;
-    });
-}
+            .then(res => {
+                if(!res.ok) throw new Error("API ulanish xatosi");
+                return res.json();
+            })
+            .then(data => {
+                let aiText = data.candidates[0].content.parts[0].text.trim();
+                aiText = aiText.replace(/^```json/, "").replace(/```$/, "").trim();
+                const parsedData = JSON.parse(aiText);
+                
+                statusDiv.innerText = "Yaratildi! Google Jadvalga saqlanmoqda...";
+                
+                return fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        type: "save_questions",
+                        subject: subject,
+                        questions: parsedData.questions
+                    })
+                });
+            })
+            .then(() => {
+                statusDiv.innerHTML = `<span class="text-emerald-600"><i class="fas fa-check-circle"></i> Muvaffaqiyatli saqlandi!</span>`;
+            })
+            .catch(err => {
+                console.error(err);
+                statusDiv.innerHTML = `<span class="text-red-600"><i class="fas fa-times-circle"></i> Xatolik yuz berdi. Google Script-ga saqlab bo'lmadi.</span>`;
+            });
+        }
+
+        function checkExistingDatabase() {
+            const subject = document.getElementById("quiz-subject").value;
+            const statusDiv = document.getElementById("teacher-status");
+            statusDiv.innerText = `Bazani tekshirish: ${subject}...`;
+            
+            fetch(`${API_URL}?subject=${encodeURIComponent(subject)}`)
+            .then(res => res.json())
+            .then(data => {
+                if(data.questions && data.questions.length > 0) {
+                    statusDiv.innerHTML = `<span class="text-emerald-600"><i class="fas fa-check-circle"></i> ${subject} fanidan baza faol! Jami savollar: ${data.questions.length} ta.</span>`;
+                } else {
+                    statusDiv.innerHTML = `<span class="text-amber-600"><i class="fas fa-exclamation-triangle"></i> Baza bo'sh. Testni avto-generatsiya qiling.</span>`;
+                }
+            })
+            .catch(() => { statusDiv.innerText = "Baza bilan aloqa o'rnatilmadi."; });
+        }
+
+        function startStudentQuiz() {
+            const statusArea = document.getElementById("question-text");
+            statusArea.innerText = "Savollar yuklanmoqda, iltimos kuting...";
+            
+            fetch(`${API_URL}?subject=${encodeURIComponent(userProfile.subject)}`)
+            .then(res => res.json())
+            .then(data => {
+                if(!data.questions || data.questions.length === 0) {
+                    statusArea.innerText = "Ushbu fan bo'yicha bazada savollar topilmadi.";
+                    return;
+                }
+                
+                loadedQuestions = data.questions.sort(() => 0.5 - Math.random()).slice(0, 10);
+                currentQuestionIndex = 0;
+                correctAnswersCount = 0;
+                
+                secondsLeft = loadedQuestions.length * 45;
+                startTimer();
+                showQuestion();
+            })
+            .catch(err => {
+                console.error(err);
+                statusArea.innerText = "Xatolik yuz berdi. Google Script-dan ma'lumot olib bo'lmadi.";
+            });
+        }
+
+        function startTimer() {
+            clearInterval(quizTimer);
+            quizTimer = setInterval(() => {
+                secondsLeft--;
+                const mins = Math.floor(secondsLeft / 60).toString().padStart(2, '0');
+                const secs = (secondsLeft % 60).toString().padStart(2, '0');
+                document.getElementById("timer-text").innerHTML = `<i class="fas fa-clock"></i> ${mins}:${secs}`;
+                
+                if(secondsLeft <= 0) {
+                    clearInterval(quizTimer);
+                    finishQuiz();
+                }
+            }, 1000);
+        }
+
+        function showQuestion() {
+            if(currentQuestionIndex >= loadedQuestions.length) {
+                finishQuiz();
+                return;
+            }
+
+            document.getElementById("progress-text").innerText = `Savol: ${currentQuestionIndex + 1}/${loadedQuestions.length}`;
+            const q = loadedQuestions[currentQuestionIndex];
+            document.getElementById("question-text").innerText = q.question;
+            
+            const optionsArea = document.getElementById("options-area");
+            optionsArea.innerHTML = "";
+
+            const options = [
+                { key: 'A', text: q.a },
+                { key: 'B', text: q.b },
+                { key: 'C', text: q.c },
+                { key: 'D', text: q.d }
+            ];
+
+            options.forEach(opt => {
+                const btn = document.createElement("button");
+                btn.className = "w-full p-4 text-left bg-white border-2 border-gray-200 rounded-xl hover:border-indigo-500 transition font-medium cursor-pointer text-gray-700";
+                btn.innerText = `${opt.key}) ${opt.text}`;
+                btn.onclick = () => checkAnswer(btn, opt.key, q.answer);
+                optionsArea.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedBtn, chosenKey, correctKey) {
+            const buttons = document.getElementById("options-area").getElementsByTagName("button");
+            for(let b of buttons) b.disabled = true;
+
+            if(chosenKey.toLowerCase() === correctKey.toLowerCase()) {
+                selectedBtn.classList.add("correct");
+                correctAnswersCount++;
+            } else {
+                selectedBtn.classList.add("wrong");
+                for(let b of buttons) {
+                    if(b.innerText.startsWith(`${correctKey.toUpperCase()})`)) {
+                        b.classList.add("correct");
+                    }
+                }
+            }
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                showQuestion();
+            }, 1200);
+        }
+
+        function finishQuiz() {
+            clearInterval(quizTimer);
+            document.getElementById("quiz-area").classList.add("hidden");
+            const resultArea = document.getElementById("result-area");
+            resultArea.classList.remove("hidden");
+
+            const percent = Math.round((correctAnswersCount / loadedQuestions.length) * 100);
+            document.getElementById("result-score").innerText = `${correctAnswersCount} / ${loadedQuestions.length}`;
+            document.getElementById("result-percent").innerText = `To'g'ri javoblar ko'rsatkichi: ${percent}%`;
+
+            document.getElementById("qrcode").innerHTML = "";
+            new QRCode(document.getElementById("qrcode"), {
+                text: `EduQuiz: ${userProfile.name}, Natija: ${correctAnswersCount}/${loadedQuestions.length}`,
+                width: 168,
+                height: 168
+            });
+
+            fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify({
+                    type: "save_result",
+                    name: userProfile.name,
+                    group: userProfile.group,
+                    teacher: userProfile.teacher,
+                    subject: userProfile.subject,
+                    score: correctAnswersCount,
+                    total: loadedQuestions.length,
+                    percent: percent
+                })
+            }).catch(e => console.log("Xatolik:", e));
+        }
+    </script>
+</body>
+</html>
