@@ -19,7 +19,7 @@
 
     <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-6">
         <div class="flex justify-between items-center border-b pb-4 mb-6">
-            <h1 class="text-2xl font-bold text-indigo-600" onclick="location.reload()"><i class="fas fa-graduation-cap"></i> EduQuiz</h1>
+            <h1 class="text-2xl font-bold text-indigo-600 cursor-pointer" onclick="location.reload()"><i class="fas fa-graduation-cap"></i> EduQuiz</h1>
             <span id="role-badge" class="hidden px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-semibold"></span>
         </div>
 
@@ -37,7 +37,7 @@
             </div>
         </div>
 
-        <div id="auth-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4">
+        <div id="auth-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
             <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl relative">
                 <h3 id="modal-title" class="text-xl font-bold mb-4">Kirish</h3>
                 <div id="modal-inputs" class="space-y-4"></div>
@@ -66,7 +66,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Mavzu (Тема)</label>
-                    <input type="text" id="quiz-topic" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+                    <input type="text" id="quiz-topic" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" placeholder="Masalan: Tenglamalar">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Savollar soni</label>
@@ -80,6 +80,205 @@
 
             <div class="flex flex-wrap gap-3">
                 <button onclick="generateQuiz(false)" id="btn-gen-new" class="flex-1 bg-indigo-600 text-white py-3 px-4 rounded-xl font-bold hover:bg-indigo-700 transition cursor-pointer flex justify-center items-center gap-2">
-                    <i class="fas fa-magic"></i> Yangi test yaratish (Avto-generatsiya)
+                    <i class="fas fa-magic"></i> Mavjud bazadan yuklash
                 </button>
-                <button onclick="generateQuiz(true)" id="btn-gen-exist" class="bg-amber-500 text-white py-3 px-6 rounded-xl font-bold hover:bg-amber-600 transition
+            </div>
+            
+            <div id="teacher-status" class="text-center text-sm font-semibold text-gray-600 mt-2"></div>
+        </div>
+
+        <div id="screen-student" class="hidden space-y-6">
+            <div id="quiz-area" class="space-y-4">
+                <div class="flex justify-between items-center bg-indigo-50 p-3 rounded-xl font-bold text-indigo-700">
+                    <span id="progress-text">Savol: 0/0</span>
+                    <span id="timer-text"><i class="fas fa-clock"></i> 00:00</span>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                    <h3 id="question-text" class="text-xl font-bold text-gray-800"></h3>
+                </div>
+                <div id="options-area" class="grid grid-cols-1 gap-3"></div>
+            </div>
+
+            <div id="result-area" class="hidden text-center space-y-4 py-6">
+                <h2 class="text-3xl font-black text-gray-800">Sizning natijangiz!</h2>
+                <p id="result-score" class="text-5xl font-extrabold text-indigo-600"></p>
+                <p id="result-percent" class="text-xl text-gray-600"></p>
+                <div id="qrcode" class="flex justify-center pt-4"></div>
+                <button onclick="location.reload()" class="mt-4 px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 cursor-pointer">Boshiga qaytish</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycby2XjM5-xn0gy7M-JdhyUgiKGZ2R7xpNOJ0CaYIFrsaHeuKXw_xH7USdd07HoT4rVXG/exec";
+        
+        let currentRole = "";
+        let userProfile = {};
+        let loadedQuestions = [];
+        let currentQuestionIndex = 0;
+        let correctAnswersCount = 0;
+        let quizTimer = null;
+        let secondsLeft = 0;
+
+        // Открытие модального окна выбора роли
+        function showRoleModal(role) {
+            currentRole = role;
+            const modal = document.getElementById("auth-modal");
+            const title = document.getElementById("modal-title");
+            const inputs = document.getElementById("modal-inputs");
+            
+            modal.classList.remove("hidden");
+            inputs.innerHTML = "";
+
+            if (role === 'teacher') {
+                title.innerText = "O'qituvchi sifatida kirish";
+                inputs.innerHTML = `
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Ism va Familiyangiz</label>
+                        <input type="text" id="auth-name" class="mt-1 block w-full p-2 border rounded-md" placeholder="F.I.O.">
+                    </div>
+                `;
+            } else {
+                title.innerText = "O'quvchi sifatida kirish";
+                inputs.innerHTML = `
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Ismingiz va Familiyangiz</label>
+                        <input type="text" id="auth-name" class="mt-1 block w-full p-2 border rounded-md" placeholder="Ism Familiya">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Sinf / Guruh</label>
+                        <input type="text" id="auth-group" class="mt-1 block w-full p-2 border rounded-md" placeholder="Masalan: 9-A">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">O'qituvchi F.I.O</label>
+                        <input type="text" id="auth-teacher" class="mt-1 block w-full p-2 border rounded-md" placeholder="O'qituvchingiz ismi">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Fan (Предмет)</label>
+                        <select id="auth-subject" class="mt-1 block w-full p-2 border rounded-md bg-white">
+                            <option value="Matematika">Matematika</option>
+                            <option value="Fizika">Fizika</option>
+                            <option value="Kimyo">Kimyo</option>
+                            <option value="Biologiya">Biologiya</option>
+                            <option value="Ona tili">Ona tili</option>
+                            <option value="Elektrik">Elektrik</option>
+                            <option value="Avto-mexanik">Avto-mexanik</option>
+                            <option value="Buxgalteriya">Buxgalteriya</option>
+                            <option value="Dasturlash">Dasturlash</option>
+                        </select>
+                    </div>
+                `;
+            }
+        }
+
+        function closeModal() {
+            document.getElementById("auth-modal").add("hidden");
+        }
+
+        // Подтверждение входа в систему
+        function submitAuth() {
+            const nameInput = document.getElementById("auth-name").value.trim();
+            if(!nameInput) { alert("Iltimos, ismingizni kiriting!"); return; }
+
+            userProfile.name = nameInput;
+            document.getElementById("auth-modal").classList.add("hidden");
+            document.getElementById("screen-auth").classList.add("hidden");
+            
+            const badge = document.getElementById("role-badge");
+            badge.classList.remove("hidden");
+
+            if (currentRole === 'teacher') {
+                badge.innerText = `O'qituvchi: ${userProfile.name}`;
+                document.getElementById("screen-teacher").classList.remove("hidden");
+            } else {
+                userProfile.group = document.getElementById("auth-group").value.trim();
+                userProfile.teacher = document.getElementById("auth-teacher").value.trim();
+                userProfile.subject = document.getElementById("auth-subject").value;
+                
+                badge.innerText = `O'quvchi: ${userProfile.name} (${userProfile.group})`;
+                document.getElementById("screen-student").classList.remove("hidden");
+                
+                // Автоматически загружаем вопросы для ученика
+                startStudentQuiz();
+            }
+        }
+
+        // Логика Ученика: Загрузка вопросов из Google Таблицы (GET-запрос)
+        function startStudentQuiz() {
+            const statusArea = document.getElementById("question-text");
+            statusArea.innerText = "Savollar yuklanmoqda, iltimos kuting...";
+            
+            fetch(`${API_URL}?subject=${encodeURIComponent(userProfile.subject)}`, {
+                method: "GET"
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(!data.questions || data.questions.length === 0) {
+                    statusArea.innerText = "Ushbu fan bo'yicha bazada savollar topilmadi.";
+                    return;
+                }
+                
+                // Перемешиваем и берем максимум 10 вопросов
+                loadedQuestions = data.questions.sort(() => 0.5 - Math.random()).slice(0, 10);
+                currentQuestionIndex = 0;
+                correctAnswersCount = 0;
+                
+                // Запуск таймера на тест (по 45 секунд на вопрос)
+                secondsLeft = loadedQuestions.length * 45;
+                startTimer();
+                
+                showQuestion();
+            })
+            .catch(err => {
+                console.error(err);
+                statusArea.innerText = "Xatolik yuz berdi. Internetni tekshiring yoki qayta urining.";
+            });
+        }
+
+        function startTimer() {
+            clearInterval(quizTimer);
+            quizTimer = setInterval(() => {
+                secondsLeft--;
+                const mins = Math.floor(secondsLeft / 60).toString().padStart(2, '0');
+                const secs = (secondsLeft % 60).toString().padStart(2, '0');
+                document.getElementById("timer-text").innerHTML = `<i class="fas fa-clock"></i> ${mins}:${secs}`;
+                
+                if(secondsLeft <= 0) {
+                    clearInterval(quizTimer);
+                    finishQuiz();
+                }
+            }, 1000);
+        }
+
+        // Показ вопроса на экране
+        function showQuestion() {
+            if(currentQuestionIndex >= loadedQuestions.length) {
+                finishQuiz();
+                return;
+            }
+
+            document.getElementById("progress-text").innerText = `Savol: ${currentQuestionIndex + 1}/${loadedQuestions.length}`;
+            const q = loadedQuestions[currentQuestionIndex];
+            document.getElementById("question-text").innerText = q.question;
+            
+            const optionsArea = document.getElementById("options-area");
+            optionsArea.innerHTML = "";
+
+            const options = [
+                { key: 'A', text: q.a },
+                { key: 'B', text: q.b },
+                { key: 'C', text: q.c },
+                { key: 'D', text: q.d }
+            ];
+
+            options.forEach(opt => {
+                const btn = document.createElement("button");
+                btn.className = "w-full p-4 text-left bg-white border-2 border-gray-200 rounded-xl hover:border-indigo-500 transition font-medium cursor-pointer text-gray-700";
+                btn.innerText = `${opt.key}) ${opt.text}`;
+                btn.onclick = () => checkAnswer(btn, opt.key, q.answer);
+                optionsArea.appendChild(btn);
+            });
+        }
+
+        //
