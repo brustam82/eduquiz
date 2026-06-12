@@ -79,8 +79,8 @@
             </div>
 
             <div class="flex flex-wrap gap-3">
-                <button onclick="generateQuiz(false)" id="btn-gen-new" class="flex-1 bg-indigo-600 text-white py-3 px-4 rounded-xl font-bold hover:bg-indigo-700 transition cursor-pointer flex justify-center items-center gap-2">
-                    <i class="fas fa-magic"></i> Mavjud bazadan yuklash
+                <button onclick="generateQuiz()" id="btn-gen-new" class="flex-1 bg-indigo-600 text-white py-3 px-4 rounded-xl font-bold hover:bg-indigo-700 transition cursor-pointer flex justify-center items-center gap-2">
+                    <i class="fas fa-database"></i> Mavjud bazadan yuklash
                 </button>
             </div>
             
@@ -100,7 +100,7 @@
             </div>
 
             <div id="result-area" class="hidden text-center space-y-4 py-6">
-                <h2 class="text-3xl font-black text-gray-800">Sizning natijangiz!</h2>
+                <h2 class="text-3xl font-black text-gray-800">Sizning Natijangiz!</h2>
                 <p id="result-score" class="text-5xl font-extrabold text-indigo-600"></p>
                 <p id="result-percent" class="text-xl text-gray-600"></p>
                 <div id="qrcode" class="flex justify-center pt-4"></div>
@@ -121,7 +121,7 @@
         let quizTimer = null;
         let secondsLeft = 0;
 
-        // Открытие модального окна выбора роли
+        // Показ модального окна входа
         function showRoleModal(role) {
             currentRole = role;
             const modal = document.getElementById("auth-modal");
@@ -172,11 +172,12 @@
             }
         }
 
+        // Закрытие модального окна (Исправлено!)
         function closeModal() {
-            document.getElementById("auth-modal").add("hidden");
+            document.getElementById("auth-modal").classList.add("hidden");
         }
 
-        // Подтверждение входа в систему
+        // Кнопка авторизации в модалке
         function submitAuth() {
             const nameInput = document.getElementById("auth-name").value.trim();
             if(!nameInput) { alert("Iltimos, ismingizni kiriting!"); return; }
@@ -199,12 +200,11 @@
                 badge.innerText = `O'quvchi: ${userProfile.name} (${userProfile.group})`;
                 document.getElementById("screen-student").classList.remove("hidden");
                 
-                // Автоматически загружаем вопросы для ученика
                 startStudentQuiz();
             }
         }
 
-        // Логика Ученика: Загрузка вопросов из Google Таблицы (GET-запрос)
+        // Получение вопросов через GET-запрос (Решает проблему CORS)
         function startStudentQuiz() {
             const statusArea = document.getElementById("question-text");
             statusArea.innerText = "Savollar yuklanmoqda, iltimos kuting...";
@@ -219,20 +219,17 @@
                     return;
                 }
                 
-                // Перемешиваем и берем максимум 10 вопросов
                 loadedQuestions = data.questions.sort(() => 0.5 - Math.random()).slice(0, 10);
                 currentQuestionIndex = 0;
                 correctAnswersCount = 0;
                 
-                // Запуск таймера на тест (по 45 секунд на вопрос)
                 secondsLeft = loadedQuestions.length * 45;
                 startTimer();
-                
                 showQuestion();
             })
             .catch(err => {
                 console.error(err);
-                statusArea.innerText = "Xatolik yuz berdi. Internetni tekshiring yoki qayta urining.";
+                statusArea.innerText = "Xatolik yuz berdi. Internet aloqasini tekshiring.";
             });
         }
 
@@ -251,7 +248,6 @@
             }, 1000);
         }
 
-        // Показ вопроса на экране
         function showQuestion() {
             if(currentQuestionIndex >= loadedQuestions.length) {
                 finishQuiz();
@@ -281,4 +277,84 @@
             });
         }
 
-        //
+        function checkAnswer(selectedBtn, chosenKey, correctKey) {
+            const buttons = document.getElementById("options-area").getElementsByTagName("button");
+            for(let b of buttons) b.disabled = true;
+
+            if(chosenKey.toLowerCase() === correctKey.toLowerCase()) {
+                selectedBtn.classList.add("correct");
+                correctAnswersCount++;
+            } else {
+                selectedBtn.classList.add("wrong");
+                for(let b of buttons) {
+                    if(b.innerText.startsWith(`${correctKey.toUpperCase()})`)) {
+                        b.classList.add("correct");
+                    }
+                }
+            }
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                showQuestion();
+            }, 1200);
+        }
+
+        // Отправка результатов через POST-запрос
+        function finishQuiz() {
+            clearInterval(quizTimer);
+            document.getElementById("quiz-area").classList.add("hidden");
+            const resultArea = document.getElementById("result-area");
+            resultArea.classList.remove("hidden");
+
+            const percent = Math.round((correctAnswersCount / loadedQuestions.length) * 100);
+            document.getElementById("result-score").innerText = `${correctAnswersCount} / ${loadedQuestions.length}`;
+            document.getElementById("result-percent").innerText = `To'g'ri javoblar ko'rsatkichi: ${percent}%`;
+
+            document.getElementById("qrcode").innerHTML = "";
+            new QRCode(document.getElementById("qrcode"), {
+                text: `EduQuiz: ${userProfile.name}, Guruh: ${userProfile.group}, Natija: ${correctAnswersCount}/${loadedQuestions.length}`,
+                width: 168,
+                height: 168
+            });
+
+            fetch(API_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    type: "save_result",
+                    name: userProfile.name,
+                    group: userProfile.group,
+                    teacher: userProfile.teacher,
+                    subject: userProfile.subject,
+                    score: correctAnswersCount,
+                    total: loadedQuestions.length,
+                    percent: percent
+                })
+            }).catch(e => console.log("Xatolik:", e));
+        }
+
+        // Проверка базы данных для учителя
+        function generateQuiz() {
+            const subject = document.getElementById("quiz-subject").value;
+            const statusDiv = document.getElementById("teacher-status");
+            statusDiv.innerText = `Bazani tekshirish: ${subject}...`;
+            
+            fetch(`${API_URL}?subject=${encodeURIComponent(subject)}`, {
+                method: "GET"
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.questions && data.questions.length > 0) {
+                    statusDiv.innerHTML = `<span class="text-emerald-600"><i class="fas fa-check-circle"></i> ${subject} fanidan baza faol! Jami savollar soni: ${data.questions.length} ta.</span>`;
+                } else {
+                    statusDiv.innerHTML = `<span class="text-amber-600"><i class="fas fa-exclamation-triangle"></i> Таблица '${subject}' пустая или не существует.</span>`;
+                }
+            })
+            .catch(() => {
+                statusDiv.innerText = "Baza bilan aloqa o'rnatilmadi.";
+            });
+        }
+    </script>
+</body>
+</html>
