@@ -54,14 +54,9 @@
                     <label class="block text-sm font-medium text-gray-700">Fan (Предмет)</label>
                     <select id="quiz-subject" class="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-white">
                         <option value="Matematika">Matematika</option>
-                        <option value="Fizika">Fizika</option>
-                        <option value="Kimyo">Kimyo</option>
-                        <option value="Biologiya">Biologiya</option>
                         <option value="Ona tili">Ona tili</option>
-                        <option value="Elektrik">Elektrik</option>
-                        <option value="Avto-mexanik">Avto-mexanik</option>
-                        <option value="Buxgalteriya">Buxgalteriya</option>
-                        <option value="Dasturlash">Dasturlash</option>
+                        <option value="Ingliz tili">Ingliz tili</option>
+                        <option value="Mantiq">Mantiq</option>
                     </select>
                 </div>
                 <div>
@@ -79,10 +74,10 @@
             </div>
 
             <div class="flex flex-col gap-4 w-full">
-                <button onclick="generateQuizAI()" id="btn-gen-new" class="w-full bg-indigo-600 text-white py-4 px-4 rounded-xl font-bold hover:bg-indigo-700 transition cursor-pointer flex justify-center items-center gap-2 shadow-md block">
+                <button onclick="generateQuizAI()" id="btn-gen-new" class="w-full bg-indigo-600 text-white py-4 px-4 rounded-xl font-bold hover:bg-indigo-700 transition cursor-pointer flex justify-center items-center gap-2 shadow-md">
                     <i class="fas fa-magic"></i> Yangi test yaratish (Avto-generatsiya Gemini AI)
                 </button>
-                <button onclick="checkExistingDatabase()" id="btn-gen-exist" class="w-full bg-amber-500 text-white py-4 px-4 rounded-xl font-bold hover:bg-amber-600 transition cursor-pointer flex justify-center items-center gap-2 shadow-md block">
+                <button onclick="checkExistingDatabase()" id="btn-gen-exist" class="w-full bg-amber-500 text-white py-4 px-4 rounded-xl font-bold hover:bg-amber-600 transition cursor-pointer flex justify-center items-center gap-2 shadow-md">
                     <i class="fas fa-database"></i> Mavjud bazadan yuklash
                 </button>
             </div>
@@ -115,6 +110,7 @@
 
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycby2XjM5-xn0gy7M-JdhyUgiKGZ2R7xpNOJ0CaYIFrsaHeuKXw_xH7USdd07HoT4rVXG/exec";
+        const TOKEN = "AQ.Ab8RN6Jsb9Q70fr6XI17ayU6RhtAWDu4pYC6DBVnwUwbXL7wpw"; 
         
         let currentRole = "";
         let userProfile = {};
@@ -160,14 +156,9 @@
                         <label class="block text-sm font-medium text-gray-700">Fan (Предмет)</label>
                         <select id="auth-subject" class="mt-1 block w-full p-2 border rounded-md bg-white">
                             <option value="Matematika">Matematika</option>
-                            <option value="Fizika">Fizika</option>
-                            <option value="Kimyo">Kimyo</option>
-                            <option value="Biologiya">Biologiya</option>
                             <option value="Ona tili">Ona tili</option>
-                            <option value="Elektrik">Elektrik</option>
-                            <option value="Avto-mexanik">Avto-mexanik</option>
-                            <option value="Buxgalteriya">Buxgalteriya</option>
-                            <option value="Dasturlash">Dasturlash</option>
+                            <option value="Ingliz tili">Ingliz tili</option>
+                            <option value="Mantiq">Mantiq</option>
                         </select>
                     </div>
                 `;
@@ -210,24 +201,43 @@
             const count = document.getElementById("quiz-count").value;
             const statusDiv = document.getElementById("teacher-status");
 
-            statusDiv.innerHTML = `<span class="text-indigo-600"><i class="fas fa-spinner fa-spin"></i> Server orqali Gemini AI test yaratmoqda...</span>`;
+            statusDiv.innerHTML = `<span class="text-indigo-600"><i class="fas fa-spinner fa-spin"></i> Gemini AI ${subject} bo'yicha test yaratmoqda...</span>`;
 
-            fetch(API_URL, {
+            const prompt = `Yaratish professional test tizimi uchun. Fan: ${subject}. Mavzu: ${topic}. Savollar soni: ${count}. 
+            Javobni faqat va faqat quyidagi JSON formatda qaytar, boshqa hech qanday matn qo'shma, \`\`\`json belgisini ham qo'shma:
+            {"questions": [{"question": "Savol matni?", "a": "A varianti", "b": "B varianti", "c": "C varianti", "d": "D varianti", "answer": "a", "topic": "${topic}"}]}`;
+
+            fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${TOKEN}`, {
                 method: "POST",
-                mode: "no-cors",
-                body: JSON.stringify({
-                    type: "generate_via_ai",
-                    subject: subject,
-                    topic: topic,
-                    count: count
-                })
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            })
+            .then(res => {
+                if(!res.ok) throw new Error("API ulanish xatosi");
+                return res.json();
+            })
+            .then(data => {
+                let aiText = data.candidates[0].content.parts[0].text.trim();
+                aiText = aiText.replace(/^```json/, "").replace(/```$/, "").trim();
+                const parsedData = JSON.parse(aiText);
+                
+                statusDiv.innerText = "Yaratildi! Google Jadvalga saqlanmoqda...";
+                
+                return fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        type: "save_questions",
+                        subject: subject,
+                        questions: parsedData.questions
+                    })
+                });
             })
             .then(() => {
-                statusDiv.innerHTML = `<span class="text-emerald-600"><i class="fas fa-check-circle"></i> Yangi test muvaffaqiyatli yaratildi va bazaga saqlandi!</span>`;
+                statusDiv.innerHTML = `<span class="text-emerald-600"><i class="fas fa-check-circle"></i> Muvaffaqiyatli saqlandi!</span>`;
             })
             .catch(err => {
                 console.error(err);
-                statusDiv.innerHTML = `<span class="text-red-600"><i class="fas fa-times-circle"></i> Xatolik yuz berdi. Server sozlamalarini tekshiring.</span>`;
+                statusDiv.innerHTML = `<span class="text-red-600"><i class="fas fa-times-circle"></i> Xatolik yuz berdi. Google Script-ga saqlab bo'lmadi.</span>`;
             });
         }
 
@@ -236,7 +246,7 @@
             const statusDiv = document.getElementById("teacher-status");
             statusDiv.innerText = `Bazani tekshirish: ${subject}...`;
             
-            fetch(`${API_URL}?subject=${encodeURIComponent(subject)}`, { method: "GET" })
+            fetch(`${API_URL}?subject=${encodeURIComponent(subject)}`)
             .then(res => res.json())
             .then(data => {
                 if(data.questions && data.questions.length > 0) {
@@ -252,7 +262,7 @@
             const statusArea = document.getElementById("question-text");
             statusArea.innerText = "Savollar yuklanmoqda, iltimos kuting...";
             
-            fetch(`${API_URL}?subject=${encodeURIComponent(userProfile.subject)}`, { method: "GET" })
+            fetch(`${API_URL}?subject=${encodeURIComponent(userProfile.subject)}`)
             .then(res => res.json())
             .then(data => {
                 if(!data.questions || data.questions.length === 0) {
@@ -270,7 +280,7 @@
             })
             .catch(err => {
                 console.error(err);
-                statusArea.innerText = "Xatolik yuz berdi. Internet aloqasini tekshiring.";
+                statusArea.innerText = "Xatolik yuz berdi. Google Script-dan ma'lumot olib bo'lmadi.";
             });
         }
 
@@ -352,15 +362,13 @@
 
             document.getElementById("qrcode").innerHTML = "";
             new QRCode(document.getElementById("qrcode"), {
-                text: `EduQuiz: ${userProfile.name}, Guruh: ${userProfile.group}, Natija: ${correctAnswersCount}/${loadedQuestions.length}`,
+                text: `EduQuiz: ${userProfile.name}, Natija: ${correctAnswersCount}/${loadedQuestions.length}`,
                 width: 168,
                 height: 168
             });
 
             fetch(API_URL, {
                 method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     type: "save_result",
                     name: userProfile.name,
