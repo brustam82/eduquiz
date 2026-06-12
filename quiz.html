@@ -115,7 +115,6 @@
 
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycby2XjM5-xn0gy7M-JdhyUgiKGZ2R7xpNOJ0CaYIFrsaHeuKXw_xH7USdd07HoT4rVXG/exec";
-        const TOKEN = "AQ.Ab8RN6Jsb9Q70fr6XI17ayU6RhtAWDu4pYC6DBVnwUwbXL7wpw"; 
         
         let currentRole = "";
         let userProfile = {};
@@ -211,44 +210,24 @@
             const count = document.getElementById("quiz-count").value;
             const statusDiv = document.getElementById("teacher-status");
 
-            statusDiv.innerHTML = `<span class="text-indigo-600"><i class="fas fa-spinner fa-spin"></i> Gemini AI ${subject} (${topic}) bo'yicha ${count}ta yangi test yaratmoqda...</span>`;
+            statusDiv.innerHTML = `<span class="text-indigo-600"><i class="fas fa-spinner fa-spin"></i> Server orqali Gemini AI test yaratmoqda...</span>`;
 
-            const prompt = `Yaratish professional test tizimi uchun. Fan: ${subject}. Mavzu: ${topic}. Savollar soni: ${count}. 
-            Javobni faqat va faqat quyidagi JSON formatda qaytar, hech qanday matn qo'shma, \`\`\`json belgisini ham qo'shma:
-            {"questions": [{"question": "Savol matni", "a": "A varianti", "b": "B varianti", "c": "C varianti", "d": "D varianti", "answer": "a", "topic": "${topic}"}]}`;
-
-            fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent", {
+            fetch(API_URL, {
                 method: "POST",
-                headers: { 
-                    "Content-Type": "application/json",
-                    "Authorization": "Bearer " + TOKEN
-                },
-                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-            })
-            .then(res => res.json())
-            .then(data => {
-                let aiText = data.candidates[0].content.parts[0].text.trim();
-                aiText = aiText.replace(/^```json/, "").replace(/```$/, "").trim();
-                
-                const parsedData = JSON.parse(aiText);
-                
-                statusDiv.innerText = "Yaratildi! Google Jadvalga saqlanmoqda...";
-                return fetch(API_URL, {
-                    method: "POST",
-                    mode: "no-cors",
-                    body: JSON.stringify({
-                        type: "save_questions",
-                        subject: subject,
-                        questions: parsedData.questions
-                    })
-                });
+                mode: "no-cors",
+                body: JSON.stringify({
+                    type: "generate_via_ai",
+                    subject: subject,
+                    topic: topic,
+                    count: count
+                })
             })
             .then(() => {
-                statusDiv.innerHTML = `<span class="text-emerald-600"><i class="fas fa-check-circle"></i> Yangi test muvaffaqiyatli saqlandi va tizimga kiritildi!</span>`;
+                statusDiv.innerHTML = `<span class="text-emerald-600"><i class="fas fa-check-circle"></i> Yangi test muvaffaqiyatli yaratildi va bazaga saqlandi!</span>`;
             })
             .catch(err => {
                 console.error(err);
-                statusDiv.innerHTML = `<span class="text-red-600"><i class="fas fa-times-circle"></i> Xatolik: Server javob bermadi.</span>`;
+                statusDiv.innerHTML = `<span class="text-red-600"><i class="fas fa-times-circle"></i> Xatolik yuz berdi. Server sozlamalarini tekshiring.</span>`;
             });
         }
 
@@ -263,7 +242,7 @@
                 if(data.questions && data.questions.length > 0) {
                     statusDiv.innerHTML = `<span class="text-emerald-600"><i class="fas fa-check-circle"></i> ${subject} fanidan baza faol! Jami savollar: ${data.questions.length} ta.</span>`;
                 } else {
-                    statusDiv.innerHTML = `<span class="text-amber-600"><i class="fas fa-exclamation-triangle"></i> Таблица '${subject}' пустая. Сгенерируйте test кнопкой выше.</span>`;
+                    statusDiv.innerHTML = `<span class="text-amber-600"><i class="fas fa-exclamation-triangle"></i> Baza bo'sh. Testni avto-generatsiya qiling.</span>`;
                 }
             })
             .catch(() => { statusDiv.innerText = "Baza bilan aloqa o'rnatilmadi."; });
