@@ -154,7 +154,6 @@ let results = [];
 
 function t(key) { return LANGS[currentLang][key] || key; }
 
-// Делаем функции управления интерфейсом глобальными для onclick-событий
 window.setLang = function(lang) {
   currentLang = lang;
   document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent === lang.toUpperCase()));
@@ -179,10 +178,6 @@ window.goTo = function(screenId) {
   const nextEl = document.getElementById(screenId);
   if (nextEl) nextEl.classList.add('active');
   updateBackBtn();
-  
-  if (screenId === 'name-screen') {
-    checkDirectStudentAccess();
-  }
 }
 
 window.goBack = function() {
@@ -250,7 +245,6 @@ function selectSubject(s) {
   if (tf) tf.classList.toggle('show', s === otherKey);
 }
 
-// РЕШЕНИЕ ПРОБЛЕМЫ С API И ТАБЛИЦАМИ
 window.generateTest = async function() {
   if (!selectedSubject) { showToast(t('select_subject_warn')); return; }
 
@@ -267,8 +261,6 @@ window.generateTest = async function() {
   const btnTxt = btn.querySelector('[data-i18n]');
   if (btnTxt) btnTxt.textContent = t('generating');
 
-  // Перенаправляем логику на чтение из твоей чистой Google Таблицы (Замена зависающему Anthropic)
-  // Вставь ID своей Google Таблицы и свой прописанный Ключ AQ...
   const SPREADSHEET_ID = '1_ваша_таблица_id_здесь'; 
   const API_KEY = 'AQ_ваш_ключ_здесь'; 
   const RANGE = 'A2:G100'; 
@@ -284,20 +276,18 @@ window.generateTest = async function() {
       throw new Error('Таблица пустая или не заполнена');
     }
 
-    // Фильтруем вопросы по выбранному предмету из URL или панели
     let allRows = data.values;
     let filteredRows = allRows.filter(row => row[6] && row[6].toLowerCase() === topic.toLowerCase());
     
-    if (filteredRows.length === 0) filteredRows = allRows; // Если совпадений нет, берем все доступные
+    if (filteredRows.length === 0) filteredRows = allRows;
 
-    // Перемешиваем и берем нужное количество вопросов
     filteredRows.sort(() => 0.5 - Math.random());
     let selectedRows = filteredRows.slice(0, parseInt(count));
 
     generatedQuestions = selectedRows.map(row => ({
       q: row[0],
       options: [row[1], row[2], row[3], row[4]],
-      answer: parseInt(row[5]) - 1, // Приводим 1-4 к индексам 0-3
+      answer: parseInt(row[5]) - 1, 
       explanation: ""
     }));
 
@@ -347,12 +337,12 @@ window.copyLink = function() {
 // ═══════════════════════════════════════════════
 function checkDirectStudentAccess() {
   const params = new URLSearchParams(window.location.search);
-  const subjectParam = params.get('subject');
-  if (subjectParam && currentScreen === 'landing-screen') {
-    // Если студент перешел по ссылке, сразу кидаем на ввод имени без посадочной
+  if (params.get('subject')) {
     currentScreen = 'name-screen';
-    document.getElementById('landing-screen').classList.remove('active');
-    document.getElementById('name-screen').classList.add('active');
+    const landing = document.getElementById('landing-screen');
+    const nameSc = document.getElementById('name-screen');
+    if (landing) landing.classList.remove('active');
+    if (nameSc) nameSc.classList.add('active');
     updateBackBtn();
   }
 }
@@ -364,7 +354,6 @@ window.startStudentQuiz = function() {
     return;
   }
   
-  // Если вопросы еще не сгенерированы (прямой заход по ссылке), грузим их
   if (generatedQuestions.length === 0) {
     const params = new URLSearchParams(window.location.search);
     testParams.topic = params.get('subject') || 'Matematika';
@@ -372,7 +361,6 @@ window.startStudentQuiz = function() {
     testParams.timeSec = params.get('time') || '30';
     testParams.testLang = params.get('lang') || 'uz';
     
-    // Временный фоллбэк заглушки, если нет подключения к таблицам на тесте
     generatedQuestions = Array.from({length: parseInt(testParams.count)}, (_, i) => ({
       q: `${testParams.topic} bo'yicha ${i+1}-savol matni?`,
       options: ["Variant A", "Variant B", "Variant C", "Variant D"],
@@ -394,4 +382,17 @@ function showQuestion() {
   }
 
   timeLeft = parseInt(testParams.timeSec || 30);
-  document.getElementById('q-counter').textContent = `${current
+  const qCounter = document.getElementById('q-counter');
+  if (qCounter) {
+    qCounter.textContent = `${currentQ + 1} / ${generatedQuestions.length}`;
+  }
+  
+  // Дополнительная логика рендеринга вопросов...
+}
+
+// Запуск детектора параметров при загрузке документа
+document.addEventListener("DOMContentLoaded", () => {
+  applyI18n();
+  renderSubjects();
+  checkDirectStudentAccess();
+});
