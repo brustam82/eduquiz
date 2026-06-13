@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EduQuiz</title>
+<title>EduQuiz — Interactive Platform</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -117,7 +117,6 @@
     width: 100%;
     max-width: 460px;
   }
-  .card + .card { margin-top: 16px; }
 
   /* ── TEACHER CARD on landing ── */
   .teacher-hero {
@@ -233,19 +232,19 @@
   .back-btn:hover { color: var(--text); border-color: var(--text); }
   .back-btn.hidden { display: none; }
 
-  /* ── QR / LINK RESULT ── */
+  /* ── QR RESULT ── */
   #qr-result {
     display: none;
     text-align: center;
     margin-top: 20px;
   }
   #qr-result.show { display: block; }
-  #qr-canvas {
-    border-radius: 12px;
-    background: #fff;
+  #qrcode-box {
     padding: 12px;
     margin: 0 auto 16px;
-    display: block;
+    display: inline-block;
+    background: #fff;
+    border-radius: 12px;
   }
   .link-box {
     display: flex;
@@ -289,9 +288,7 @@
   .badge-gold { background: rgba(240,165,0,.2); color: var(--gold); }
   .badge-red { background: rgba(255,80,80,.2); color: #ff6b6b; }
 
-  /* ── STUDENT QUIZ ── */
-  #student-screen .card { max-width: 540px; }
-
+  /* ── TIMER RING ── */
   .timer-wrap {
     display: flex;
     align-items: center;
@@ -304,12 +301,9 @@
     height: 56px;
   }
   .timer-ring svg { transform: rotate(-90deg); }
-  .timer-ring circle {
-    fill: none;
-    stroke-width: 4;
-  }
+  .timer-ring circle { fill: none; stroke-width: 4; }
   .timer-ring .bg { stroke: rgba(255,255,255,0.1); }
-  .timer-ring .prog { stroke: var(--teal); stroke-linecap: round; transition: stroke .5s, stroke-dashoffset .9s linear; }
+  .timer-ring .prog { stroke: var(--teal); stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
   .timer-ring.warn .prog { stroke: #ff6b6b; }
   .timer-num {
     position: absolute;
@@ -338,11 +332,11 @@
     text-align: left;
     cursor: pointer;
     transition: all .2s;
+    width: 100%;
   }
   .option-btn:hover:not(:disabled) { border-color: var(--teal); background: rgba(0,201,177,.08); }
-  .option-btn.correct { border-color: var(--teal); background: rgba(0,201,177,.18); }
-  .option-btn.wrong { border-color: #ff6b6b; background: rgba(255,107,107,.15); }
-  .option-btn:disabled { cursor: default; }
+  .option-btn.correct { border-color: var(--teal); background: rgba(0,201,177,.18); color: white; }
+  .option-btn.wrong { border-color: #ff6b6b; background: rgba(255,107,107,.15); color: white; }
 
   .progress-bar-wrap {
     height: 4px;
@@ -350,15 +344,17 @@
     border-radius: 2px;
     margin-bottom: 22px;
     overflow: hidden;
+    width: 100%;
   }
   .progress-bar-fill {
     height: 100%;
     background: linear-gradient(90deg, var(--teal), var(--gold));
     border-radius: 2px;
     transition: width .4s;
+    width: 0%;
   }
 
-  /* ── RESULT SCREEN ── */
+  /* ── RESULT ── */
   .result-circle {
     width: 120px;
     height: 120px;
@@ -368,7 +364,7 @@
   .result-circle svg { transform: rotate(-90deg); }
   .result-circle circle { fill: none; stroke-width: 8; }
   .result-circle .bg { stroke: rgba(255,255,255,0.1); }
-  .result-circle .fill { stroke: var(--teal); stroke-linecap: round; transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1); }
+  .result-circle .fill { stroke: var(--teal); stroke-linecap: round; transition: stroke-dashoffset 1.2s ease; }
   .result-pct {
     position: absolute;
     inset: 0;
@@ -396,38 +392,28 @@
   .review-item {
     padding: 12px 0;
     border-bottom: 1px solid rgba(255,255,255,0.07);
+    text-align: left;
   }
-  .review-item:last-child { border-bottom: none; }
   .review-q { font-weight: 600; font-size: 14px; margin-bottom: 5px; }
   .review-ans { font-size: 13px; color: var(--text-muted); }
-  .review-ans span { font-weight: 600; }
-  .correct-ans { color: var(--teal); }
-  .wrong-ans { color: #ff6b6b; }
+  .correct-ans { color: var(--teal); font-weight: bold; }
+  .wrong-ans { color: #ff6b6b; font-weight: bold; }
 
-  /* ── SCROLLABLE INNER ── */
   .scroll-inner {
     overflow-y: auto;
-    max-height: calc(100dvh - 120px);
+    max-height: calc(100dvh - 60px);
     width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
+    padding: 20px 0;
   }
   .scroll-inner::-webkit-scrollbar { width: 4px; }
   .scroll-inner::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
 
-  /* ── PASSWORD SCREEN ── */
-  #pass-screen { justify-content: center; }
-  .pass-card { max-width: 360px; text-align: center; }
-
-  /* ── NAME SCREEN (student) ── */
-  #name-screen .card { max-width: 380px; text-align: center; }
-
-  /* ── TOAST ── */
   #toast {
     position: fixed;
-    bottom: 28px;
-    left: 50%;
+    bottom: 28px; left: 50%;
     transform: translateX(-50%) translateY(80px);
     background: var(--teal);
     color: var(--dark);
@@ -438,15 +424,13 @@
     z-index: 999;
     transition: transform .3s;
     pointer-events: none;
-    white-space: nowrap;
   }
   #toast.show { transform: translateX(-50%) translateY(0); }
 
-  /* ── SUBJECTS ── */
   .subjects-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 8px;
     margin-bottom: 18px;
   }
   .subject-chip {
@@ -467,27 +451,22 @@
     background: rgba(240,165,0,.08);
   }
 
-  /* ── TOPICS input ── */
   #topics-field { display: none; }
   #topics-field.show { display: block; }
 </style>
 </head>
 <body>
 
-<!-- Lang toggle -->
 <div id="lang-bar">
   <button class="lang-btn active" onclick="setLang('uz')">UZ</button>
   <button class="lang-btn" onclick="setLang('ru')">RU</button>
   <button class="lang-btn" onclick="setLang('en')">EN</button>
 </div>
 
-<!-- Back button -->
 <button class="back-btn hidden" id="back-btn" onclick="goBack()">← <span id="back-label">Orqaga</span></button>
 
-<!-- Toast -->
 <div id="toast"></div>
 
-<!-- ════════════════════════ SCREEN: LANDING ════════════════════════ -->
 <div class="screen active" id="landing-screen">
   <div class="logo">EduQuiz</div>
   <p class="tagline" data-i18n="tagline">Bilimlarni sinab ko'ring — tez va qulay</p>
@@ -497,15 +476,13 @@
     <h2 data-i18n="teacher_title">O'qituvchi</h2>
     <p data-i18n="teacher_desc">Test yarating, QR-kod va havolani ulashing, natijalarni kuzating</p>
   </div>
-
   <p style="margin-top:28px;font-size:13px;color:var(--text-muted);text-align:center" data-i18n="student_hint">
     Talabalar QR-kod yoki havola orqali testga kiradi
   </p>
 </div>
 
-<!-- ════════════════════════ SCREEN: PASSWORD ════════════════════════ -->
 <div class="screen" id="pass-screen">
-  <div class="card pass-card">
+  <div class="card" style="max-width:360px; text-align:center;">
     <div style="font-size:40px;margin-bottom:16px">🔐</div>
     <div class="section-title" data-i18n="enter_pass">Parolni kiriting</div>
     <p class="section-sub" data-i18n="pass_hint">Faqat o'qituvchilar uchun</p>
@@ -516,7 +493,6 @@
   </div>
 </div>
 
-<!-- ════════════════════════ SCREEN: TEACHER PANEL ════════════════════════ -->
 <div class="screen" id="teacher-screen">
   <div class="scroll-inner">
     <div style="width:100%;max-width:520px;">
@@ -526,6 +502,7 @@
       <div class="card" style="margin-bottom:16px">
         <label data-i18n="subject_label">Fan / mavzu</label>
         <div class="subjects-grid" id="subjects-grid"></div>
+        
         <div id="topics-field">
           <label data-i18n="topic_custom">O'z mavzungizni kiriting</label>
           <input type="text" id="custom-topic" placeholder="Masalan: Algebraik tenglamalar">
@@ -538,14 +515,12 @@
               <option value="5">5</option>
               <option value="10" selected>10</option>
               <option value="15">15</option>
-              <option value="20">20</option>
             </select>
           </div>
           <div>
             <label data-i18n="time_per_q">Har bir savol (sek)</label>
             <select id="time-per-q">
               <option value="15">15 sek</option>
-              <option value="20">20 sek</option>
               <option value="30" selected>30 sek</option>
               <option value="45">45 sek</option>
               <option value="60">60 sek</option>
@@ -561,7 +536,7 @@
         </select>
 
         <label data-i18n="extra_instructions">Qo'shimcha ko'rsatmalar (ixtiyoriy)</label>
-        <textarea id="extra-inst" placeholder="Masalan: Faqat 7-sinf dasturiga mos savollar bersin" rows="2" style="margin-bottom:0"></textarea>
+        <textarea id="extra-inst" placeholder="Masalan: 7-sinf darajasida bo'lsin" rows="2" style="margin-bottom:0"></textarea>
       </div>
 
       <button class="btn btn-primary" onclick="generateTest()" id="gen-btn">
@@ -569,18 +544,17 @@
       </button>
 
       <div id="qr-result">
-        <canvas id="qr-canvas" width="200" height="200"></canvas>
+        <div id="qrcode-box"></div>
         <div class="link-box" id="link-box"></div>
         <div style="display:flex;gap:10px">
           <button class="btn btn-ghost btn-sm" onclick="copyLink()" data-i18n="copy_link">Havolani nusxalash</button>
-          <button class="btn btn-gold btn-sm" onclick="goTo('stats-screen')" data-i18n="view_stats">Natijalar</button>
+          <button class="btn btn-gold btn-sm" onclick="loadStats()" data-i18n="view_stats">Natijalar</button>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ════════════════════════ SCREEN: STATS ════════════════════════ -->
 <div class="screen" id="stats-screen">
   <div class="scroll-inner">
     <div style="width:100%;max-width:600px;">
@@ -597,18 +571,17 @@
             </tr>
           </thead>
           <tbody id="stats-body">
-            <tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px" data-i18n="no_results">Hali natijalar yo'q</td></tr>
+            <tr><td colspan="4" style="text-align:center;color:var(--text-muted);" data-i18n="no_results">Hali natijalar yo'q</td></tr>
           </tbody>
         </table>
       </div>
-      <button class="btn btn-ghost" style="margin-top:14px;max-width:200px" onclick="goTo('teacher-screen')" data-i18n="new_test">Yangi test</button>
+      <button class="btn btn-ghost" style="margin-top:14px;max-width:200px" onclick="goTo('teacher-screen')" data-i18n="new_test">Yanki test</button>
     </div>
   </div>
 </div>
 
-<!-- ════════════════════════ SCREEN: STUDENT NAME ════════════════════════ -->
 <div class="screen" id="name-screen">
-  <div class="card" style="max-width:380px;text-align:center;">
+  <div class="card" style="text-align:center;">
     <div style="font-size:44px;margin-bottom:14px">🎒</div>
     <div class="section-title" data-i18n="enter_name">Ismingizni kiriting</div>
     <p class="section-sub" data-i18n="name_hint">Natijalar ushbu ism bilan saqlanadi</p>
@@ -617,18 +590,16 @@
   </div>
 </div>
 
-<!-- ════════════════════════ SCREEN: STUDENT QUIZ ════════════════════════ -->
 <div class="screen" id="student-screen">
-  <div class="card" style="max-width:540px;width:100%;">
+  <div class="card" style="max-width:540px;">
     <div class="progress-bar-wrap"><div class="progress-bar-fill" id="quiz-progress"></div></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <span id="q-counter" style="font-size:13px;color:var(--text-muted)"></span>
-      <div class="timer-wrap" style="margin-bottom:0">
+      <div class="timer-wrap">
         <div class="timer-ring" id="timer-ring">
           <svg width="56" height="56" viewBox="0 0 56 56">
             <circle class="bg" cx="28" cy="28" r="24"/>
-            <circle class="prog" id="timer-circle" cx="28" cy="28" r="24"
-              stroke-dasharray="150.8" stroke-dashoffset="0"/>
+            <circle class="prog" id="timer-circle" cx="28" cy="28" r="24" stroke-dasharray="150.8" stroke-dashoffset="0"/>
           </svg>
           <div class="timer-num" id="timer-num">30</div>
         </div>
@@ -639,7 +610,6 @@
   </div>
 </div>
 
-<!-- ════════════════════════ SCREEN: RESULT ════════════════════════ -->
 <div class="screen" id="result-screen">
   <div class="scroll-inner">
     <div style="width:100%;max-width:520px;text-align:center;">
@@ -647,30 +617,28 @@
       <div class="result-circle">
         <svg width="120" height="120" viewBox="0 0 120 120">
           <circle class="bg" cx="60" cy="60" r="52"/>
-          <circle class="fill" id="result-arc" cx="60" cy="60" r="52"
-            stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
+          <circle class="fill" id="result-arc" cx="60" cy="60" r="52" stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
         </svg>
         <div class="result-pct" id="result-pct">0%</div>
       </div>
 
-      <div id="result-grade" class="grade-badge grade-5"></div>
+      <div id="result-grade" class="grade-badge"></div>
       <p id="result-name" style="color:var(--text-muted);font-size:15px;margin-bottom:24px"></p>
 
       <div class="card" style="text-align:left;margin-bottom:16px">
         <div id="review-list"></div>
       </div>
-      <button class="btn btn-ghost" style="max-width:220px" onclick="goTo('name-screen')" data-i18n="try_again">Qayta urinish</button>
+      <button class="btn btn-ghost" style="max-width:220px" onclick="location.reload()" data-i18n="try_again">Qayta urinish</button>
     </div>
   </div>
 </div>
 
-<!-- ── QR LIB ── -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <script>
-// ═══════════════════════════════════════════════
-//  I18N
-// ═══════════════════════════════════════════════
+const API_URL = "https://script.google.com/macros/s/AKfycby2XjM5-xn0gy7M-JdhyUgiKGZ2R7xpNOJ0CaYIFrsaHeuKXw_xH7USdd07HoT4rVXG/exec";
+const TOKEN = "AQ.Ab8RN6Jsb9Q70fr6XI17ayU6RhtAWDu4pYC6DBVnwUwbXL7wpw";
+
 const LANGS = {
   uz: {
     tagline: "Bilimlarni sinab ko'ring — tez va qulay",
@@ -692,7 +660,7 @@ const LANGS = {
     extra_instructions: "Qo'shimcha ko'rsatmalar (ixtiyoriy)",
     generate_btn: "✨ Test yaratish",
     copy_link: "Havolani nusxalash",
-    view_stats: "Natijalar",
+    view_stats: "Natijalarni ko'rish",
     stats_title: "Natijalar",
     no_results: "Hali natijalar yo'q",
     th_name: "Ism",
@@ -704,9 +672,9 @@ const LANGS = {
     name_hint: "Natijalar ushbu ism bilan saqlanadi",
     start_quiz: "Testni boshlash",
     result_title: "Natijangiz",
-    try_again: "Qayta urinish",
+    try_again: "Boshiga qaytish",
     back: "Orqaga",
-    grades: ["A'lo", "Yaxshi", "O'rtacha", "Qoniqarsiz"],
+    grades: ["Qoniqarsiz", "O'rtacha", "Yaxshi", "A'lo"],
     subjects: ["Matematika","Fizika","Kimyo","Biologiya","Tarix","Geografiya","Ingliz tili","Rus tili","Adabiyot","Informatika","Boshqa"],
     generating: "Test yaratilmoqda...",
     q_of: "savol",
@@ -715,7 +683,7 @@ const LANGS = {
     copied: "Nusxalandi!",
     enter_name_warn: "Iltimos, ismingizni kiriting",
     select_subject_warn: "Iltimos, fan tanlang",
-    generating_error: "Xatolik yuz berdi. Qayta urinib ko'ring."
+    generating_error: "Xatolik yuz berdi. Ключ или Сеть заблокированы."
   },
   ru: {
     tagline: "Проверяйте знания — быстро и удобно",
@@ -749,9 +717,9 @@ const LANGS = {
     name_hint: "Результат будет сохранён с этим именем",
     start_quiz: "Начать тест",
     result_title: "Ваш результат",
-    try_again: "Попробовать снова",
+    try_again: "На главную",
     back: "Назад",
-    grades: ["Отлично", "Хорошо", "Удовлетворительно", "Неудовлетворительно"],
+    grades: ["Неудовлетворительно", "Удовлетворительно", "Хорошо", "Отлично"],
     subjects: ["Математика","Физика","Химия","Биология","История","География","Английский","Русский язык","Литература","Информатика","Другое"],
     generating: "Тест генерируется...",
     q_of: "вопрос",
@@ -760,52 +728,7 @@ const LANGS = {
     copied: "Скопировано!",
     enter_name_warn: "Пожалуйста, введите имя",
     select_subject_warn: "Пожалуйста, выберите предмет",
-    generating_error: "Произошла ошибка. Попробуйте снова."
-  },
-  en: {
-    tagline: "Test knowledge — fast and easy",
-    teacher_title: "Teacher",
-    teacher_desc: "Create a quiz, share QR code and link, track results",
-    student_hint: "Students join via QR code or link",
-    enter_pass: "Enter password",
-    pass_hint: "Teachers only",
-    password: "Password",
-    wrong_pass: "Wrong password",
-    enter: "Enter",
-    create_test: "Create Quiz",
-    create_test_sub: "Choose subject, question count, and time",
-    subject_label: "Subject / topic",
-    topic_custom: "Enter your own topic",
-    q_count: "Number of questions",
-    time_per_q: "Per question (sec)",
-    test_lang_label: "Quiz language",
-    extra_instructions: "Extra instructions (optional)",
-    generate_btn: "✨ Generate Quiz",
-    copy_link: "Copy link",
-    view_stats: "Results",
-    stats_title: "Results",
-    no_results: "No results yet",
-    th_name: "Name",
-    th_score: "Score",
-    th_time: "Time",
-    th_grade: "Grade",
-    new_test: "New quiz",
-    enter_name: "Enter your name",
-    name_hint: "Result will be saved with this name",
-    start_quiz: "Start quiz",
-    result_title: "Your Result",
-    try_again: "Try again",
-    back: "Back",
-    grades: ["Excellent","Good","Satisfactory","Unsatisfactory"],
-    subjects: ["Math","Physics","Chemistry","Biology","History","Geography","English","Russian","Literature","Informatics","Other"],
-    generating: "Generating quiz...",
-    q_of: "question",
-    correct_answer: "Correct answer",
-    your_answer: "Your answer",
-    copied: "Copied!",
-    enter_name_warn: "Please enter your name",
-    select_subject_warn: "Please select a subject",
-    generating_error: "An error occurred. Please try again."
+    generating_error: "Произошла ошибка. Проверьте сеть или API ключ."
   }
 };
 
@@ -819,8 +742,8 @@ let studentAnswers = [];
 let timerInterval = null;
 let currentQ = 0;
 let timeLeft = 30;
-let startTime = 0;
-let results = [];
+let quizSecondsUsed = 0;
+let quizTimerGlobal = null;
 
 function t(key) { return LANGS[currentLang][key] || key; }
 
@@ -839,7 +762,6 @@ function applyI18n() {
   document.getElementById('back-label').textContent = t('back');
 }
 
-// ── SCREENS ──
 function goTo(screenId) {
   document.getElementById(currentScreen).classList.remove('active');
   screenHistory.push(currentScreen);
@@ -851,55 +773,49 @@ function goTo(screenId) {
 function goBack() {
   if (!screenHistory.length) return;
   document.getElementById(currentScreen).classList.remove('active');
-  const prev = screenHistory.pop();
-  currentScreen = prev;
-  document.getElementById(prev).classList.add('active');
+  currentScreen = screenHistory.pop();
+  document.getElementById(currentScreen).classList.add('active');
   updateBackBtn();
 }
 
 function updateBackBtn() {
-  const btn = document.getElementById('back-btn');
-  const hide = currentScreen === 'landing-screen';
-  btn.classList.toggle('hidden', hide);
+  document.getElementById('back-btn').classList.toggle('hidden', currentScreen === 'landing-screen' || currentScreen === 'student-screen' || currentScreen === 'result-screen');
 }
 
-// ── PASSWORD ──
 function checkPass() {
-  const val = document.getElementById('pass-input').value;
-  const err = document.getElementById('pass-err');
-  if (val === 'edu2024') {
-    err.style.display = 'none';
+  if (document.getElementById('pass-input').value === 'edu2026') {
+    document.getElementById('pass-err').style.display = 'none';
     document.getElementById('pass-input').value = '';
     goTo('teacher-screen');
   } else {
-    err.style.display = 'block';
-    err.textContent = t('wrong_pass');
+    document.getElementById('pass-err').style.display = 'block';
   }
 }
 
-// ── SUBJECTS ──
 function renderSubjects() {
   const grid = document.getElementById('subjects-grid');
-  const subs = t('subjects');
   grid.innerHTML = '';
-  subs.forEach(s => {
+  t('subjects').forEach(s => {
     const d = document.createElement('div');
     d.className = 'subject-chip' + (selectedSubject === s ? ' sel' : '');
     d.textContent = s;
-    d.onclick = () => selectSubject(s);
+    d.onclick = () => {
+      selectedSubject = s;
+      renderSubjects();
+      const otherStr = currentLang === 'uz' ? 'Boshqa' : 'Другое';
+      document.getElementById('topics-field').classList.toggle('show', s === otherStr);
+    };
     grid.appendChild(d);
   });
 }
 
-function selectSubject(s) {
-  const otherKey = currentLang === 'uz' ? 'Boshqa' : currentLang === 'ru' ? 'Другое' : 'Other';
-  selectedSubject = s;
-  renderSubjects();
-  const tf = document.getElementById('topics-field');
-  tf.classList.toggle('show', s === otherKey);
+function showToast(m) {
+  const t = document.getElementById('toast');
+  t.textContent = m; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// ── GENERATE TEST ──
+// ── ИСПРАВЛЕННАЯ ГЕНЕРАЦИЯ ЧЕРЕЗ GEMINI API (HEADERS) ──
 async function generateTest() {
   if (!selectedSubject) { showToast(t('select_subject_warn')); return; }
 
@@ -907,267 +823,247 @@ async function generateTest() {
   const timeSec = document.getElementById('time-per-q').value;
   const testLang = document.getElementById('test-lang').value;
   const extra = document.getElementById('extra-inst').value;
-  const customTopic = document.getElementById('custom-topic').value;
+  const customTopic = document.getElementById('custom-topic').value.trim();
   const topic = customTopic || selectedSubject;
 
   testParams = { topic, count, timeSec, testLang };
 
   const btn = document.getElementById('gen-btn');
   btn.disabled = true;
-  btn.querySelector('[data-i18n]').textContent = t('generating');
+  btn.innerText = t('generating');
 
-  const langNames = { uz: "O'zbek tilida", ru: "На русском языке", en: "In English" };
-  const langInstr = langNames[testLang] || '';
-
-  const prompt = `Siz o'qituvchi yordamchisisiz. ${langInstr} "${topic}" mavzusida ${count} ta test savoli tuzib bering.
-${extra ? 'Qo\'shimcha: ' + extra : ''}
-Faqat JSON formatida qaytaring, boshqa matn yo'q:
-[
-  {
-    "q": "Savol matni",
-    "options": ["A) ...", "B) ...", "C) ...", "D) ..."],
-    "answer": 0,
-    "explanation": "Qisqacha tushuntirish"
-  }
-]
-"answer" — to'g'ri javobning indeksi (0-3).`;
+  const prompt = `Create a professional quiz. Topic: "${topic}". Language: ${testLang}. Count: ${count} questions. Extra requirements: ${extra}.
+  Return ONLY a valid JSON object, no markdown codeblocks, no text outside JSON. Format:
+  {"questions": [{"question": "Text of question?", "a": "Option A", "b": "Option B", "c": "Option C", "d": "Option D", "answer": "a"}]}`;
 
   try {
-    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    // Передаем новый ключ "AQ." в заголовках x-goog-api-key, чтобы точка не ломала URL
+    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1000,
-        messages: [{ role: "user", content: prompt }]
-      })
+      headers: { "Content-Type": "application/json", "x-goog-api-key": TOKEN },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
     });
+    
     const data = await resp.json();
-    const raw = data.content.map(i => i.text || '').join('');
-    const clean = raw.replace(/```json|```/g, '').trim();
-    const start = clean.indexOf('[');
-    const end = clean.lastIndexOf(']');
-    generatedQuestions = JSON.parse(clean.slice(start, end + 1));
+    let txt = data.candidates[0].content.parts[0].text.trim();
+    txt = txt.replace(/^```json/, "").replace(/```$/, "").trim();
+    const parsed = JSON.parse(txt);
+    generatedQuestions = parsed.questions;
 
-    results = [];
-    renderQrAndLink();
+    // Сохраняем вопросы в базу (Google Таблицу)
+    await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({ type: "save_questions", subject: topic, questions: generatedQuestions })
+    });
+
+    renderQrAndLink(topic);
     document.getElementById('qr-result').classList.add('show');
-    showToast('✅ Test tayyor!');
+    showToast('✅ База обновлена!');
   } catch(e) {
+    console.error(e);
     showToast(t('generating_error'));
   }
-
   btn.disabled = false;
-  btn.querySelector('[data-i18n]').textContent = t('generate_btn');
+  btn.innerText = t('generate_btn');
 }
 
-function renderQrAndLink() {
-  const params = btoa(JSON.stringify({
-    q: generatedQuestions,
-    t: testParams.timeSec,
-    l: testParams.testLang
-  }));
-  const url = window.location.href.split('?')[0] + '?quiz=' + params;
+function renderQrAndLink(topic) {
+  const url = window.location.origin + window.location.pathname + `?subject=${encodeURIComponent(topic)}&time=${testParams.timeSec}`;
   document.getElementById('link-box').textContent = url;
-
-  const canvas = document.getElementById('qr-canvas');
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0,0,200,200);
-
-  // Simple QR placeholder (real QR needs lib)
-  try {
-    // use qrcodejs if available
-    if (typeof QRCode !== 'undefined') {
-      const tmp = document.createElement('div');
-      new QRCode(tmp, { text: url, width: 176, height: 176, colorDark: '#0d0f2e', colorLight: '#ffffff' });
-      const img = tmp.querySelector('img');
-      if (img) {
-        img.onload = () => { ctx.drawImage(img, 12, 12, 176, 176); };
-      } else {
-        const c = tmp.querySelector('canvas');
-        if (c) ctx.drawImage(c, 12, 12, 176, 176);
-      }
-    }
-  } catch(e) {}
+  document.getElementById('qrcode-box').innerHTML = '';
+  new QRCode(document.getElementById('qrcode-box'), { text: url, width: 150, height: 150 });
 }
 
 function copyLink() {
-  const url = document.getElementById('link-box').textContent;
-  navigator.clipboard.writeText(url).then(() => showToast(t('copied')));
+  navigator.clipboard.writeText(document.getElementById('link-box').textContent);
+  showToast(t('copied'));
 }
 
-// ── STUDENT FLOW ──
-function startStudentQuiz() {
-  const name = document.getElementById('student-name').value.trim();
-  if (!name) { showToast(t('enter_name_warn')); return; }
-  testParams.studentName = name;
-  currentQ = 0;
-  studentAnswers = [];
-  startTime = Date.now();
-  goTo('student-screen');
-  showQuestion();
-}
-
-function showQuestion() {
-  if (!generatedQuestions.length) return;
-  const q = generatedQuestions[currentQ];
-  const total = generatedQuestions.length;
-  const timeSec = parseInt(testParams.timeSec) || 30;
-
-  document.getElementById('q-counter').textContent = `${currentQ + 1} / ${total} ${t('q_of')}`;
-  document.getElementById('quiz-progress').style.width = `${((currentQ)/total)*100}%`;
-  document.getElementById('q-text').textContent = q.q;
-
-  const ol = document.getElementById('options-list');
-  ol.innerHTML = '';
-  q.options.forEach((opt, i) => {
-    const b = document.createElement('button');
-    b.className = 'option-btn';
-    b.textContent = opt;
-    b.onclick = () => selectAnswer(i);
-    ol.appendChild(b);
-  });
-
-  timeLeft = timeSec;
-  updateTimer(timeSec, timeSec);
-  clearInterval(timerInterval);
-  timerInterval = setInterval(() => {
-    timeLeft--;
-    updateTimer(timeLeft, timeSec);
-    if (timeLeft <= 0) { clearInterval(timerInterval); nextQuestion(null); }
-  }, 1000);
-}
-
-function updateTimer(left, total) {
-  document.getElementById('timer-num').textContent = left;
-  const circ = 150.8;
-  const offset = circ * (1 - left / total);
-  document.getElementById('timer-circle').style.strokeDashoffset = offset;
-  document.getElementById('timer-ring').classList.toggle('warn', left <= 5);
-}
-
-function selectAnswer(idx) {
-  clearInterval(timerInterval);
-  const q = generatedQuestions[currentQ];
-  studentAnswers.push({ selected: idx, correct: q.answer, q: q.q, options: q.options, explanation: q.explanation });
-
-  const btns = document.querySelectorAll('.option-btn');
-  btns.forEach(b => b.disabled = true);
-  btns[q.answer].classList.add('correct');
-  if (idx !== q.answer) btns[idx].classList.add('wrong');
-
-  setTimeout(() => nextQuestion(idx), 900);
-}
-
-function nextQuestion(selected) {
-  if (selected === null && !studentAnswers[currentQ]) {
-    const q = generatedQuestions[currentQ];
-    studentAnswers.push({ selected: null, correct: q.answer, q: q.q, options: q.options, explanation: q.explanation });
-  }
-  currentQ++;
-  if (currentQ >= generatedQuestions.length) {
-    showResult();
-  } else {
-    showQuestion();
-  }
-}
-
-function showResult() {
-  const total = generatedQuestions.length;
-  const correct = studentAnswers.filter(a => a.selected === a.correct).length;
-  const pct = Math.round((correct / total) * 100);
-  const elapsed = Math.round((Date.now() - startTime) / 1000);
-  const name = testParams.studentName || '';
-
-  // Save to results
-  const gradeIdx = pct >= 85 ? 0 : pct >= 70 ? 1 : pct >= 50 ? 2 : 3;
-  results.push({ name, score: `${correct}/${total}`, time: `${elapsed}s`, gradeIdx });
-  renderStats();
-
-  goTo('result-screen');
-
-  // Animate circle
-  setTimeout(() => {
-    const circumference = 326.7;
-    const offset = circumference * (1 - pct / 100);
-    document.getElementById('result-arc').style.strokeDashoffset = offset;
-  }, 100);
-
-  document.getElementById('result-pct').textContent = pct + '%';
-  const grades = t('grades');
-  const gb = document.getElementById('result-grade');
-  gb.textContent = grades[gradeIdx];
-  gb.className = 'grade-badge grade-' + (5 - gradeIdx);
-  document.getElementById('result-name').textContent = name;
-
-  // Review
-  const rl = document.getElementById('review-list');
-  rl.innerHTML = '';
-  studentAnswers.forEach((a, i) => {
-    const div = document.createElement('div');
-    div.className = 'review-item';
-    const ok = a.selected === a.correct;
-    div.innerHTML = `
-      <div class="review-q">${i+1}. ${a.q}</div>
-      <div class="review-ans ${ok ? 'correct-ans' : 'wrong-ans'}">
-        ${t('your_answer')}: <span>${a.selected !== null ? a.options[a.selected] : '—'}</span>
-        ${!ok ? `<br><span class="correct-ans">${t('correct_answer')}: <span>${a.options[a.correct]}</span></span>` : ''}
-        ${a.explanation ? `<br><span style="color:var(--text-muted)">${a.explanation}</span>` : ''}
-      </div>`;
-    rl.appendChild(div);
-  });
-}
-
-function renderStats() {
-  const grades = t('grades');
+async function loadStats() {
+  goTo('stats-screen');
   const tbody = document.getElementById('stats-body');
-  if (!results.length) {
-    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px">${t('no_results')}</td></tr>`;
-    return;
+  tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Yuklanmoqda...</td></tr>`;
+  try {
+    const res = await fetch(`${API_URL}?type=get_stats`);
+    const data = await res.json();
+    tbody.innerHTML = '';
+    if(!data.stats || data.stats.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Natijalar yo'q</td></tr>`;
+      return;
+    }
+    data.stats.forEach(row => {
+      let bClass = row.percent >= 85 ? 'badge-green' : row.percent >= 60 ? 'badge-gold' : 'badge-red';
+      tbody.innerHTML += `<tr>
+        <td>${row.name}</td>
+        <td>${row.score}/${row.total}</td>
+        <td>${row.time}s</td>
+        <td><span class="score-badge ${bClass}">${row.percent}%</span></td>
+      </tr>`;
+    });
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#ff6b6b;">Xatolik yuz berdi</td></tr>`;
   }
-  tbody.innerHTML = results.map(r => {
-    const cls = r.gradeIdx === 0 ? 'badge-green' : r.gradeIdx === 1 ? 'badge-gold' : 'badge-red';
-    return `<tr>
-      <td>${r.name}</td>
-      <td>${r.score}</td>
-      <td>${r.time}</td>
-      <td><span class="score-badge ${cls}">${grades[r.gradeIdx]}</span></td>
-    </tr>`;
-  }).join('');
-  document.getElementById('stats-sub').textContent = testParams.topic || '';
 }
 
-// ── URL PARAMS (student via QR/link) ──
-function checkUrlParams() {
-  const p = new URLSearchParams(window.location.search);
-  const quiz = p.get('quiz');
-  if (!quiz) return;
-  try {
-    const data = JSON.parse(atob(quiz));
-    generatedQuestions = data.q;
-    testParams = { timeSec: data.t || 30, testLang: data.l || 'uz' };
-    if (data.l && LANGS[data.l]) { currentLang = data.l; applyI18n(); renderSubjects(); }
-    // Go directly to name screen
+// ── СТУДЕНЧЕСКИЙ ИНТЕРФЕЙС И ТЕСТИРОВАНИЕ ──
+window.addEventListener('DOMContentLoaded', () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const subParam = urlParams.get('subject');
+  if (subParam) {
+    testParams.topic = subParam;
+    testParams.timeSec = parseInt(urlParams.get('time')) || 30;
+    // Скрываем начальный экран и открываем ввод имени ученика
     document.getElementById('landing-screen').classList.remove('active');
     currentScreen = 'name-screen';
     document.getElementById('name-screen').classList.add('active');
-    document.getElementById('back-btn').classList.add('hidden');
-    document.getElementById('lang-bar').style.display = 'none';
-  } catch(e) {}
+  }
+  setLang('uz');
+});
+
+async function startStudentQuiz() {
+  const name = document.getElementById('student-name').value.trim();
+  if(!name) { showToast(t('enter_name_warn')); return; }
+  testParams.studentName = name;
+
+  document.getElementById('q-text').innerText = "Test yuklanmoqda...";
+  goTo('student-screen');
+
+  try {
+    const res = await fetch(`${API_URL}?subject=${encodeURIComponent(testParams.topic)}`);
+    const data = await res.json();
+    if(!data.questions || data.questions.length === 0) {
+      document.getElementById('q-text').innerText = "Bu fan bo'yicha testlar topilmadi.";
+      return;
+    }
+    generatedQuestions = data.questions.sort(() => 0.5 - Math.random()).slice(0, 10);
+    currentQ = 0;
+    studentAnswers = [];
+    quizSecondsUsed = 0;
+    
+    quizTimerGlobal = setInterval(() => { quizSecondsUsed++; }, 1000);
+    showStudentQuestion();
+  } catch(e) {
+    document.getElementById('q-text').innerText = "Aloqa xatosi yuz berdi.";
+  }
 }
 
-// ── TOAST ──
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2400);
+function showStudentQuestion() {
+  if(currentQ >= generatedQuestions.length) {
+    finishStudentQuiz();
+    return;
+  }
+  clearInterval(timerInterval);
+  
+  document.getElementById('q-counter').innerText = `${t('q_of')} ${currentQ + 1}/${generatedQuestions.length}`;
+  document.getElementById('quiz-progress').style.width = `${((currentQ) / generatedQuestions.length) * 100}%`;
+
+  const q = generatedQuestions[currentQ];
+  document.getElementById('q-text').innerText = q.question || q.q;
+
+  const list = document.getElementById('options-list');
+  list.innerHTML = '';
+
+  const opts = [
+    { k: 'a', t: q.a || q.options[0] },
+    { k: 'b', t: q.b || q.options[1] },
+    { k: 'c', t: q.c || q.options[2] },
+    { k: 'd', t: q.d || q.options[3] }
+  ];
+
+  opts.forEach(o => {
+    if(!o.t) return;
+    const b = document.createElement('button');
+    b.className = 'option-btn';
+    b.innerText = o.t;
+    b.onclick = () => handleAnswer(b, o.k, q.answer);
+    list.appendChild(b);
+  });
+
+  timeLeft = testParams.timeSec;
+  const circle = document.getElementById('timer-circle');
+  document.getElementById('timer-ring').classList.remove('warn');
+  
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    document.getElementById('timer-num').innerText = timeLeft;
+    let offset = (150.8 * (testParams.timeSec - timeLeft)) / testParams.timeSec;
+    circle.style.strokeDashoffset = offset;
+
+    if(timeLeft <= 5) document.getElementById('timer-ring').classList.add('warn');
+    if(timeLeft <= 0) {
+      clearInterval(timerInterval);
+      handleAnswer(null, '', q.answer);
+    }
+  }, 1000);
 }
 
-// ── INIT ──
-renderSubjects();
-applyI18n();
-checkUrlParams();
+function handleAnswer(btn, chosen, correct) {
+  clearInterval(timerInterval);
+  const btns = document.getElementById('options-list').getElementsByClassName('option-btn');
+  for(let b of btns) b.disabled = true;
+
+  let isCorrect = chosen.toLowerCase() === String(correct).toLowerCase() || (typeof correct === 'number' && ['a','b','c','d'][correct] === chosen);
+  
+  studentAnswers.push({ q: document.getElementById('q-text').innerText, chosen, correct, isCorrect });
+
+  if(btn) {
+    if(isCorrect) btn.classList.add('correct');
+    else {
+      btn.classList.add('wrong');
+      for(let b of btns) {
+        let textCheck = b.innerText.toLowerCase();
+        if(textCheck.startsWith(String(correct).toLowerCase()) || (typeof correct === 'number' && textCheck.startsWith(['a','b','c','d'][correct]))) {
+          b.classList.add('correct');
+        }
+      }
+    }
+  }
+
+  setTimeout(() => {
+    currentQ++;
+    showStudentQuestion();
+  }, 1200);
+}
+
+async function finishStudentQuiz() {
+  clearInterval(quizTimerGlobal);
+  goTo('result-screen');
+
+  const correctCount = studentAnswers.filter(a => a.isCorrect).length;
+  const pct = Math.round((correctCount / generatedQuestions.length) * 100);
+  
+  document.getElementById('result-pct').innerText = `${pct}%`;
+  document.getElementById('result-arc').style.strokeDashoffset = 326.7 - (326.7 * pct) / 100;
+  document.getElementById('result-name').innerText = testParams.studentName;
+
+  let gradeIdx = pct >= 85 ? 3 : pct >= 65 ? 2 : pct >= 40 ? 1 : 0;
+  const gBadge = document.getElementById('result-grade');
+  gBadge.innerText = t('grades')[gradeIdx];
+  gBadge.className = `grade-badge grade-${gradeIdx + 2}`;
+
+  const rList = document.getElementById('review-list');
+  rList.innerHTML = '';
+  studentAnswers.forEach(ans => {
+    rList.innerHTML += `<div class="review-item">
+      <div class="review-q">${ans.q}</div>
+      <div class="review-ans">${t('your_answer')}: <span class="${ans.isCorrect ? 'correct-ans' : 'wrong-ans'}">${ans.chosen.toUpperCase() || 'Vaqt tugadi'}</span> | ${t('correct_answer')}: <span class="correct-ans">${String(ans.correct).toUpperCase()}</span></div>
+    </div>`;
+  });
+
+  // Отправляем финальные результаты ученика в Google Таблицу
+  fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      type: "save_result",
+      name: testParams.studentName,
+      subject: testParams.topic,
+      score: correctCount,
+      total: generatedQuestions.length,
+      percent: pct,
+      time: quizSecondsUsed
+    })
+  }).catch(e => console.log(e));
+}
 </script>
 </body>
 </html>
