@@ -1,398 +1,451 @@
-// ═══════════════════════════════════════════════
-//  I18N & СОСТОЯНИЕ
-// ═══════════════════════════════════════════════
-const LANGS = {
-  uz: {
-    tagline: "Bilimlarni sinab ko'ring — tez va qulay",
-    teacher_title: "O'qituvchi",
-    teacher_desc: "Test yarating, QR-kod va havolani ulashing, natijalarni kuzating",
-    student_hint: "Talabalar QR-kod yoki havola orqali testga kiradi",
-    enter_pass: "Parolni kiriting",
-    pass_hint: "Faqat o'qituvchilar uchun",
-    password: "Parol",
-    wrong_pass: "Noto'g'ri parol",
-    enter: "Kirish",
-    create_test: "Test yaratish",
-    create_test_sub: "Fanni, savol sonini va vaqtni belgilang",
-    subject_label: "Fan / mavzu",
-    topic_custom: "O'z mavzungizni kiriting",
-    q_count: "Savol soni",
-    time_per_q: "Har bir savol (sek)",
-    test_lang_label: "Test tili",
-    extra_instructions: "Qo'shimcha ko'rsatmalar (ixtiyoriy)",
-    generate_btn: "✨ Test yaratish",
-    copy_link: "Havolani nusxalash",
-    view_stats: "Natijalar",
-    stats_title: "Natijalar",
-    no_results: "Hali natijalar yo'q",
-    th_name: "Ism",
-    th_score: "Ball",
-    th_time: "Vaqt",
-    th_grade: "Baho",
-    new_test: "Yangi test",
-    enter_name: "Ismingizni kiriting",
-    name_hint: "Natijalar ushbu ism bilan saqlanadi",
-    start_quiz: "Testni boshlash",
-    result_title: "Natijangiz",
-    try_again: "Qayta urinish",
-    back: "Orqaga",
-    grades: ["A'lo", "Yaxshi", "O'rtacha", "Qoniqarsiz"],
-    subjects: ["Matematika","Fizika","Kimyo","Biologiya","Tarix","Geografiya","Ingliz tili","Rus tili","Adabiyot","Informatika","Boshqa"],
-    generating: "Test yaratilmoqda...",
-    q_of: "savol",
-    correct_answer: "To'g'ri javob",
-    your_answer: "Sizning javobingiz",
-    copied: "Nusxalandi!",
-    enter_name_warn: "Iltimos, ismingizni kiriting",
-    select_subject_warn: "Iltimos, fan tanlang",
-    generating_error: "Xatolik yuz berdi. Qayta urinib ko'ring."
-  },
-  ru: {
-    tagline: "Проверяйте знания — быстро и удобно",
-    teacher_title: "Учитель",
-    teacher_desc: "Создайте тест, поделитесь QR-кодом и ссылкой, отслеживайте результаты",
-    student_hint: "Ученики входят в тест по QR-коду или ссылке",
-    enter_pass: "Введите пароль",
-    pass_hint: "Только для учителей",
-    password: "Пароль",
-    wrong_pass: "Неверный пароль",
-    enter: "Войти",
-    create_test: "Создать тест",
-    create_test_sub: "Выберите предмет, количество вопросов и время",
-    subject_label: "Предмет / тема",
-    topic_custom: "Введите свою тему",
-    q_count: "Количество вопросов",
-    time_per_q: "На каждый вопрос (сек)",
-    test_lang_label: "Язык теста",
-    extra_instructions: "Дополнительные инструкции (необязательно)",
-    generate_btn: "✨ Создать тест",
-    copy_link: "Скопировать ссылку",
-    view_stats: "Результаты",
-    stats_title: "Результаты",
-    no_results: "Результатов пока нет",
-    th_name: "Имя",
-    th_score: "Баллы",
-    th_time: "Время",
-    th_grade: "Оценка",
-    new_test: "Новый тест",
-    enter_name: "Введите имя",
-    name_hint: "Результат будет сохранён с этим именем",
-    start_quiz: "Начать тест",
-    result_title: "Ваш результат",
-    try_again: "Попробовать снова",
-    back: "Назад",
-    grades: ["Отлично", "Хорошо", "Удовлетворительно", "Неудовлетворительно"],
-    subjects: ["Математика","Физика","Химия","Биология","История","География","Английский","Русский язык","Литература","Информатика","Другое"],
-    generating: "Тест генерируется...",
-    q_of: "вопрос",
-    correct_answer: "Правильный ответ",
-    your_answer: "Ваш ответ",
-    copied: "Скопировано!",
-    enter_name_warn: "Пожалуйста, введите имя",
-    select_subject_warn: "Пожалуйста, выберите предмет",
-    generating_error: "Произошла ошибка. Попробуйте снова."
-  },
-  en: {
-    tagline: "Test knowledge — fast and easy",
-    teacher_title: "Teacher",
-    teacher_desc: "Create a quiz, share QR code and link, track results",
-    student_hint: "Students join via QR code or link",
-    enter_pass: "Enter password",
-    pass_hint: "Teachers only",
-    password: "Password",
-    wrong_pass: "Wrong password",
-    enter: "Enter",
-    create_test: "Create Quiz",
-    create_test_sub: "Choose subject, question count, and time",
-    subject_label: "Subject / topic",
-    topic_custom: "Enter your own topic",
-    q_count: "Number of questions",
-    time_per_q: "Per question (sec)",
-    test_lang_label: "Quiz language",
-    extra_instructions: "Extra instructions (optional)",
-    generate_btn: "✨ Generate Quiz",
-    copy_link: "Copy link",
-    view_stats: "Results",
-    stats_title: "Results",
-    no_results: "No results yet",
-    th_name: "Name",
-    th_score: "Score",
-    th_time: "Time",
-    th_grade: "Grade",
-    new_test: "New quiz",
-    enter_name: "Enter your name",
-    name_hint: "Result will be saved with this name",
-    start_quiz: "Start quiz",
-    result_title: "Your Result",
-    try_again: "Try again",
-    back: "Back",
-    grades: ["Excellent","Good","Satisfactory","Unsatisfactory"],
-    subjects: ["Math","Physics","Chemistry","Biology","History","Geography","English","Russian","Literature","Informatics","Other"],
-    generating: "Generating quiz...",
-    q_of: "question",
-    correct_answer: "Correct answer",
-    your_answer: "Your answer",
-    copied: "Copied!",
-    enter_name_warn: "Please enter your name",
-    select_subject_warn: "Please select a subject",
-    generating_error: "An error occurred. Please try again."
-  }
-};
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduQuiz Platform</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        /* СТИЛИ ИНТЕРФЕЙСА EDUQUIZ */
+        :root { --bg: #0d0f2e; --primary: #4f46e5; --text: #ffffff; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #08091a; color: var(--text); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .screen { display: none; width: 100%; max-width: 500px; background: #111333; padding: 30px; border-radius: 16px; box-sizing: border-box; box-shadow: 0 10px 25px rgba(0,0,0,0.3); margin-top: 20px; }
+        .screen.active { display: block; }
+        h1, h2, h3 { text-align: center; margin-top: 0; }
+        .btn { display: block; width: 100%; padding: 14px; background: var(--primary); border: none; border-radius: 8px; color: white; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; margin-top: 15px; }
+        .btn:hover { background: #4338ca; }
+        .btn:disabled { background: #312e81; cursor: not-allowed; }
+        input, select { width: 100%; padding: 12px; background: #1f224f; border: 1px solid #312e81; border-radius: 8px; color: white; box-sizing: border-box; font-size: 16px; margin-top: 8px; }
+        .lang-box { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .lang-btn { background: #1f224f; border: 1px solid #312e81; color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .lang-btn.active { background: var(--primary); border-color: var(--primary); }
+        #subjects-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 15px; }
+        .subject-chip { background: #1f224f; border: 1px solid #312e81; padding: 12px; text-align: center; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 14px; }
+        .subject-chip.sel { background: var(--primary); border-color: var(--primary); font-weight: bold; }
+        #qr-canvas { display: flex; justify-content: center; background: white; padding: 15px; border-radius: 12px; margin: 20px auto; width: 180px; height: 180px; }
+        #link-box { background: #08091a; padding: 12px; border-radius: 8px; word-break: break-all; font-family: monospace; font-size: 13px; border: 1px dashed #312e81; text-align: center; }
+        #timer { font-size: 24px; font-weight: bold; text-align: center; color: #ef4444; margin-bottom: 15px; }
+        #q-counter { font-size: 14px; color: #94a3b8; text-align: center; }
+        .opt-btn { background: #1f224f; text-align: left; padding: 14px; border: 1px solid #312e81; border-radius: 8px; color: white; width: 100%; margin-top: 10px; cursor: pointer; font-size: 15px; transition: 0.2s; }
+        .opt-btn:hover { background: #2e3275; }
+        .hidden { display: none; }
+        #back-btn { align-self: flex-start; background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 16px; display: flex; align-items: center; gap: 5px; margin-bottom: 10px; }
+        #pass-err { color: #f87171; font-size: 14px; margin-top: 8px; text-align: center; }
+    </style>
+</head>
+<body>
 
-let currentLang = 'uz';
-let currentScreen = 'landing-screen';
-let screenHistory = [];
-let selectedSubject = '';
-let generatedQuestions = [];
-let testParams = {};
-let studentAnswers = [];
-let timerInterval = null;
-let currentQ = 0;
-let timeLeft = 30;
-let startTime = 0;
-let results = [];
+    <button id="back-btn" class="hidden" onclick="window.goBack()">← <span id="back-label">Orqaga</span></button>
 
-function t(key) { return LANGS[currentLang][key] || key; }
+    <div id="landing-screen" class="screen active">
+        <div class="lang-box">
+            <button class="lang-btn active" onclick="window.setLang('uz')">UZ</button>
+            <button class="lang-btn" onclick="window.setLang('ru')">RU</button>
+            <button class="lang-btn" onclick="window.setLang('en')">EN</button>
+        </div>
+        <h2 data-i18n="tagline">Bilimlarni sinab ko'ring — tez va qulay</h2>
+        <hr style="border-color: #1f224f; margin: 25px 0;">
+        <h3 data-i18n="teacher_title">O'qituvchi</h3>
+        <p style="color: #94a3b8; font-size: 14px; text-align: center;" data-i18n="teacher_desc">Test yarating, QR-kod va havolani ulashing, natijalarni kuzating</p>
+        
+        <input type="password" id="pass-input" placeholder="Parol">
+        <div id="pass-err" style="display:none;"></div>
+        <button class="btn" onclick="window.checkPass()" data-i18n="enter">Kirish</button>
+    </div>
 
-window.setLang = function(lang) {
-  currentLang = lang;
-  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent === lang.toUpperCase()));
-  applyI18n();
-  renderSubjects();
-}
+    <div id="teacher-screen" class="screen">
+        <h2 data-i18n="create_test">Test yaratish</h2>
+        <p style="color: #94a3b8; font-size: 14px; text-align: center;" data-i18n="create_test_sub">Fanni, savol sonini va vaqtni belgilang</p>
+        
+        <label style="font-size: 14px; color: #94a3b8;" data-i18n="subject_label">Fan / mavzu</label>
+        <div id="subjects-grid"></div>
+        
+        <div id="topics-field" class="hidden">
+            <input type="text" id="custom-topic" placeholder="O'z mavzungizni kiriting">
+        </div>
+        
+        <div style="margin-top: 15px;">
+            <label style="font-size: 14px; color: #94a3b8;" data-i18n="q_count">Savol soni</label>
+            <input type="number" id="q-count" value="10" min="1" max="30">
+        </div>
 
-function applyI18n() {
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const k = el.getAttribute('data-i18n');
-    if (LANGS[currentLang][k]) el.textContent = LANGS[currentLang][k];
-  });
-  const backLabel = document.getElementById('back-label');
-  if (backLabel) backLabel.textContent = t('back');
-}
+        <div style="margin-top: 15px;">
+            <label style="font-size: 14px; color: #94a3b8;" data-i18n="time_per_q">Har bir savol (sek)</label>
+            <input type="number" id="time-per-q" value="30" min="5">
+        </div>
 
-window.goTo = function(screenId) {
-  const currentEl = document.getElementById(currentScreen);
-  if (currentEl) currentEl.classList.remove('active');
-  screenHistory.push(currentScreen);
-  currentScreen = screenId;
-  const nextEl = document.getElementById(screenId);
-  if (nextEl) nextEl.classList.add('active');
-  updateBackBtn();
-}
+        <div style="margin-top: 15px;">
+            <label style="font-size: 14px; color: #94a3b8;" data-i18n="test_lang_label">Test tili</label>
+            <select id="test-lang">
+                <option value="uz">O'zbekcha</option>
+                <option value="ru">Русский</option>
+                <option value="en">English</option>
+            </select>
+        </div>
 
-window.goBack = function() {
-  if (!screenHistory.length) return;
-  const currentEl = document.getElementById(currentScreen);
-  if (currentEl) currentEl.classList.remove('active');
-  const prev = screenHistory.pop();
-  currentScreen = prev;
-  const prevEl = document.getElementById(prev);
-  if (prevEl) prevEl.classList.add('active');
-  updateBackBtn();
-}
+        <button id="gen-btn" class="btn" onclick="window.generateTest()"><span data-i18n="generate_btn">✨ Test yaratish</span></button>
 
-function updateBackBtn() {
-  const btn = document.getElementById('back-btn');
-  if (btn) {
-    const hide = currentScreen === 'landing-screen' || currentScreen === 'student-screen' || currentScreen === 'result-screen';
-    btn.classList.toggle('hidden', hide);
-  }
-}
+        <div id="qr-result" class="hidden" style="margin-top: 25px; border-top: 1px solid #312e81; padding-top: 20px;">
+            <div id="qr-canvas"></div>
+            <div id="link-box"></div>
+            <button class="btn" onclick="window.copyLink()" data-i18n="copy_link">Havolani nusxalash</button>
+        </div>
+    </div>
 
-function showToast(msg) {
-  const toast = document.getElementById('toast');
-  if (!toast) return;
-  toast.textContent = msg;
-  toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 2500);
-}
+    <div id="name-screen" class="screen">
+        <h2 data-i18n="enter_name">Ismingizni kiriting</h2>
+        <p style="color: #94a3b8; font-size: 14px; text-align: center;" data-i18n="name_hint">Natijalar ushbu ism bilan saqlanadi</p>
+        <input type="text" id="student-name" placeholder="Ism Familiya">
+        <button id="start-quiz-btn" class="btn" onclick="window.startStudentQuiz()" data-i18n="start_quiz">Testni boshlash</button>
+    </div>
 
-// ═══════════════════════════════════════════════
-//  ЛОГИКА ПРЕПОДАВАТЕЛЯ
-// ═══════════════════════════════════════════════
-window.checkPass = function() {
-  const val = document.getElementById('pass-input').value;
-  const err = document.getElementById('pass-err');
-  if (val === 'edu2024') {
-    err.style.display = 'none';
-    document.getElementById('pass-input').value = '';
-    window.goTo('teacher-screen');
-  } else {
-    err.style.display = 'block';
-    err.textContent = t('wrong_pass');
-  }
-}
+    <div id="student-screen" class="screen">
+        <div id="q-counter"></div>
+        <div id="timer">30</div>
+        <h3 id="question-text" style="margin-bottom: 20px;"></h3>
+        <div id="options-box"></div>
+    </div>
 
-function renderSubjects() {
-  const grid = document.getElementById('subjects-grid');
-  if (!grid) return;
-  const subs = t('subjects');
-  grid.innerHTML = '';
-  subs.forEach(s => {
-    const d = document.createElement('div');
-    d.className = 'subject-chip' + (selectedSubject === s ? ' sel' : '');
-    d.textContent = s;
-    d.onclick = () => selectSubject(s);
-    grid.appendChild(d);
-  });
-}
+    <div id="result-screen" class="screen">
+        <h2 data-i18n="result_title">Natijangiz</h2>
+        <h1 id="final-score" style="font-size: 48px; color: #10b981; margin: 15px 0;">0 / 0</h1>
+        <p id="final-grade" style="text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 30px;"></p>
+        <button class="btn" onclick="location.reload()" data-i18n="new_test">Yangi test</button>
+    </div>
 
-function selectSubject(s) {
-  const otherKey = currentLang === 'uz' ? 'Boshqa' : currentLang === 'ru' ? 'Другое' : 'Other';
-  selectedSubject = s;
-  renderSubjects();
-  const tf = document.getElementById('topics-field');
-  if (tf) tf.classList.toggle('show', s === otherKey);
-}
+    <div id="toast" class="hidden" style="position: fixed; bottom: 30px; background: #ef4444; color: white; padding: 12px 24px; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000;"></div>
 
-window.generateTest = async function() {
-  if (!selectedSubject) { showToast(t('select_subject_warn')); return; }
+    <script>
+        // ВАЖНО: Сюда вставьте ссылку на ваш опубликованный развертывание Google Apps Script
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyfD0U7S_m9pL-UfH6rV6w5vGzW3Y6uR1v-X8-mD5o_/exec'; 
 
-  const count = document.getElementById('q-count').value;
-  const timeSec = document.getElementById('time-per-q').value;
-  const testLang = document.getElementById('test-lang').value;
-  const customTopic = document.getElementById('custom-topic').value;
-  const topic = customTopic || selectedSubject;
+        const LANGS = {
+          uz: {
+            tagline: "Bilimlarni sinab ko'ring — tez va qulay",
+            teacher_title: "O'qituvchi",
+            teacher_desc: "Test yarating, QR-kod va havolani ulashing, natijalarni kuzating",
+            enter_pass: "Parolni kiriting",
+            password: "Parol",
+            wrong_pass: "Noto'g'ri parol",
+            enter: "Kirish",
+            create_test: "Test yaratish",
+            create_test_sub: "Fanni, savol sonini va vaqtni belgilang",
+            subject_label: "Fan / mavzu",
+            q_count: "Savol soni",
+            time_per_q: "Har bir savol (sek)",
+            test_lang_label: "Test tili",
+            generate_btn: "✨ Test yaratish",
+            copy_link: "Havolani nusxalash",
+            new_test: "Yangi test",
+            enter_name: "Ismingizni kiriting",
+            name_hint: "Natijalar ushbu ism bilan saqlanadi",
+            start_quiz: "Testni boshlash",
+            result_title: "Natijangiz",
+            back: "Orqaga",
+            grades: ["A'lo", "Yaxshi", "O'rtacha", "Qoniqarsiz"],
+            subjects: ["Matematika","Fizika","Kimyo","Biologiya","Tarix","Geografiya","Ingliz tili","Rus tili","Adabiyot","Informatika","Boshqa"],
+            generating: "Test yuklanmoqda...",
+            copied: "Nusxalandi!",
+            enter_name_warn: "Iltimos, ismingizni kiriting",
+            select_subject_warn: "Iltimos, fan tanlang",
+            generating_error: "Xatolik yuz berdi. Qayta urinib ko'ring."
+          },
+          ru: {
+            tagline: "Проверяйте знания — быстро и удобно",
+            teacher_title: "Учитель",
+            teacher_desc: "Создайте тест, поделитесь QR-кодом и ссылкой, отслеживайте результаты",
+            enter_pass: "Введите пароль",
+            password: "Пароль",
+            wrong_pass: "Неверный пароль",
+            enter: "Войти",
+            create_test: "Создать тест",
+            create_test_sub: "Выберите предмет, количество вопросов и время",
+            subject_label: "Предмет / тема",
+            q_count: "Количество вопросов",
+            time_per_q: "На каждый вопрос (сек)",
+            test_lang_label: "Язык теста",
+            generate_btn: "✨ Создать тест",
+            copy_link: "Скопировать ссылку",
+            new_test: "Новый тест",
+            enter_name: "Введите имя",
+            name_hint: "Результат будет сохранён с этим именем",
+            start_quiz: "Начать тест",
+            result_title: "Ваш результат",
+            back: "Назад",
+            grades: ["Отлично", "Хорошо", "Удовлетворительно", "Неудовлетворительно"],
+            subjects: ["Математика","Физика","Химия","Биология","История","География","Английский","Русский язык","Литература","Информатика","Другое"],
+            generating: "Тест загружается...",
+            copied: "Скопировано!",
+            enter_name_warn: "Пожалуйста, введите имя",
+            select_subject_warn: "Пожалуйста, выберите предмет",
+            generating_error: "Произошла ошибка. Попробуйте снова."
+          },
+          en: {
+            tagline: "Test knowledge — fast and easy",
+            teacher_title: "Teacher",
+            teacher_desc: "Create a quiz, share QR code and link, track results",
+            enter_pass: "Enter password",
+            password: "Password",
+            wrong_pass: "Wrong password",
+            enter: "Enter",
+            create_test: "Create Quiz",
+            create_test_sub: "Choose subject, question count, and time",
+            subject_label: "Subject / topic",
+            q_count: "Number of questions",
+            time_per_q: "Per question (sec)",
+            test_lang_label: "Quiz language",
+            generate_btn: "✨ Generate Quiz",
+            copy_link: "Copy link",
+            new_test: "New quiz",
+            enter_name: "Enter your name",
+            name_hint: "Result will be saved with this name",
+            start_quiz: "Start quiz",
+            result_title: "Your Result",
+            back: "Back",
+            grades: ["Excellent","Good","Satisfactory","Unsatisfactory"],
+            subjects: ["Math","Physics","Chemistry","Biology","History","Geography","English","Russian","Literature","Informatics","Other"],
+            generating: "Generating quiz...",
+            copied: "Copied!",
+            enter_name_warn: "Please enter your name",
+            select_subject_warn: "Please select a subject",
+            generating_error: "An error occurred. Please try again."
+          }
+        };
 
-  testParams = { topic, count, timeSec, testLang };
+        let currentLang = 'uz';
+        let currentScreen = 'landing-screen';
+        let screenHistory = [];
+        let selectedSubject = '';
+        let generatedQuestions = [];
+        let testParams = {};
+        let studentAnswers = [];
+        let timerInterval = null;
+        let currentQ = 0;
+        let timeLeft = 30;
+        let startTime = 0;
 
-  const btn = document.getElementById('gen-btn');
-  btn.disabled = true;
-  const btnTxt = btn.querySelector('[data-i18n]');
-  if (btnTxt) btnTxt.textContent = t('generating');
+        function t(key) { return LANGS[currentLang][key] || key; }
 
-  const SPREADSHEET_ID = '1_ваша_таблица_id_здесь'; 
-  const API_KEY = 'AQ_ваш_ключ_здесь'; 
-  const RANGE = 'A2:G100'; 
+        window.setLang = function(lang) {
+          currentLang = lang;
+          document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase() === lang));
+          applyI18n();
+          renderSubjects();
+        }
 
-  try {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${RANGE}?key=${API_KEY}`;
-    const resp = await fetch(url);
-    if (!resp.ok) throw new Error('Ошибка сети Google Таблиц');
-    
-    const data = await resp.json();
-    
-    if (!data.values || data.values.length === 0) {
-      throw new Error('Таблица пустая или не заполнена');
-    }
+        function applyI18n() {
+          document.querySelectorAll('[data-i18n]').forEach(el => {
+            const k = el.getAttribute('data-i18n');
+            if (LANGS[currentLang][k]) el.textContent = LANGS[currentLang][k];
+          });
+          document.getElementById('back-label').textContent = t('back');
+        }
 
-    let allRows = data.values;
-    let filteredRows = allRows.filter(row => row[6] && row[6].toLowerCase() === topic.toLowerCase());
-    
-    if (filteredRows.length === 0) filteredRows = allRows;
+        window.goTo = function(screenId) {
+          document.getElementById(currentScreen).classList.remove('active');
+          screenHistory.push(currentScreen);
+          currentScreen = screenId;
+          document.getElementById(screenId).classList.add('active');
+          updateBackBtn();
+        }
 
-    filteredRows.sort(() => 0.5 - Math.random());
-    let selectedRows = filteredRows.slice(0, parseInt(count));
+        window.goBack = function() {
+          if (!screenHistory.length) return;
+          document.getElementById(currentScreen).classList.remove('active');
+          currentScreen = screenHistory.pop();
+          document.getElementById(currentScreen).classList.add('active');
+          updateBackBtn();
+        }
 
-    generatedQuestions = selectedRows.map(row => ({
-      q: row[0],
-      options: [row[1], row[2], row[3], row[4]],
-      answer: parseInt(row[5]) - 1, 
-      explanation: ""
-    }));
+        function updateBackBtn() {
+          const btn = document.getElementById('back-btn');
+          const hide = currentScreen === 'landing-screen' || currentScreen === 'student-screen' || currentScreen === 'result-screen';
+          btn.classList.toggle('hidden', hide);
+        }
 
-    results = [];
-    renderQrAndLink();
-  } catch (err) {
-    console.error(err);
-    showToast(t('generating_error'));
-  } finally {
-    btn.disabled = false;
-    if (btnTxt) btnTxt.textContent = t('generate_btn');
-  }
-}
+        function showToast(msg) {
+          const toast = document.getElementById('toast');
+          toast.textContent = msg;
+          toast.classList.remove('hidden');
+          setTimeout(() => toast.classList.add('hidden'), 2500);
+        }
 
-function renderQrAndLink() {
-  const qrResult = document.getElementById('qr-result');
-  const linkBox = document.getElementById('link-box');
-  const canvas = document.getElementById('qr-canvas');
-  
-  if (!qrResult || !linkBox || !canvas) return;
+        window.checkPass = function() {
+          const val = document.getElementById('pass-input').value;
+          const err = document.getElementById('pass-err');
+          if (val === 'edu2024') {
+            err.style.display = 'none';
+            document.getElementById('pass-input').value = '';
+            window.goTo('teacher-screen');
+          } else {
+            err.style.display = 'block';
+            err.textContent = t('wrong_pass');
+          }
+        }
 
-  const shareUrl = `${window.location.origin}${window.location.pathname}?subject=${encodeURIComponent(testParams.topic)}&count=${testParams.count}&time=${testParams.timeSec}&lang=${testParams.testLang}`;
-  
-  linkBox.textContent = shareUrl;
-  canvas.innerHTML = '';
-  
-  new QRCode(canvas, {
-    text: shareUrl,
-    width: 180,
-    height: 180,
-    colorDark: "#0d0f2e",
-    colorLight: "#ffffff"
-  });
+        function renderSubjects() {
+          const grid = document.getElementById('subjects-grid');
+          if (!grid) return;
+          grid.innerHTML = '';
+          t('subjects').forEach(s => {
+            const d = document.createElement('div');
+            d.className = 'subject-chip' + (selectedSubject === s ? ' sel' : '');
+            d.textContent = s;
+            d.onclick = () => selectSubject(s);
+            grid.appendChild(d);
+          });
+        }
 
-  qrResult.classList.add('show');
-}
+        function selectSubject(s) {
+          const otherKey = currentLang === 'uz' ? 'Boshqa' : currentLang === 'ru' ? 'Другое' : 'Other';
+          selectedSubject = s;
+          renderSubjects();
+          document.getElementById('topics-field').classList.toggle('hidden', s !== otherKey);
+        }
 
-window.copyLink = function() {
-  const linkBox = document.getElementById('link-box');
-  if (!linkBox) return;
-  navigator.clipboard.writeText(linkBox.textContent);
-  showToast(t('copied'));
-}
+        window.generateTest = function() {
+          if (!selectedSubject) { showToast(t('select_subject_warn')); return; }
+          const count = document.getElementById('q-count').value;
+          const timeSec = document.getElementById('time-per-q').value;
+          const testLang = document.getElementById('test-lang').value;
+          const customTopic = document.getElementById('custom-topic').value;
+          const topic = customTopic || selectedSubject;
 
-// ═══════════════════════════════════════════════
-//  ЛОГИКА СТУДЕНТА (ИНТЕРФЕЙС ТЕСТА)
-// ═══════════════════════════════════════════════
-function checkDirectStudentAccess() {
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('subject')) {
-    currentScreen = 'name-screen';
-    const landing = document.getElementById('landing-screen');
-    const nameSc = document.getElementById('name-screen');
-    if (landing) landing.classList.remove('active');
-    if (nameSc) nameSc.classList.add('active');
-    updateBackBtn();
-  }
-}
+          testParams = { topic, count, timeSec, testLang };
+          
+          const shareUrl = `${window.location.origin}${window.location.pathname}?subject=${encodeURIComponent(topic)}&count=${count}&time=${timeSec}&lang=${testLang}`;
+          document.getElementById('link-box').textContent = shareUrl;
+          
+          const canvas = document.getElementById('qr-canvas');
+          canvas.innerHTML = '';
+          new QRCode(canvas, { text: shareUrl, width: 180, height: 180, colorDark: "#0d0f2e", colorLight: "#ffffff" });
+          document.getElementById('qr-result').classList.remove('hidden');
+        }
 
-window.startStudentQuiz = function() {
-  const nameInput = document.getElementById('student-name');
-  if (!nameInput || !nameInput.value.trim()) {
-    showToast(t('enter_name_warn'));
-    return;
-  }
-  
-  if (generatedQuestions.length === 0) {
-    const params = new URLSearchParams(window.location.search);
-    testParams.topic = params.get('subject') || 'Matematika';
-    testParams.count = params.get('count') || '10';
-    testParams.timeSec = params.get('time') || '30';
-    testParams.testLang = params.get('lang') || 'uz';
-    
-    generatedQuestions = Array.from({length: parseInt(testParams.count)}, (_, i) => ({
-      q: `${testParams.topic} bo'yicha ${i+1}-savol matni?`,
-      options: ["Variant A", "Variant B", "Variant C", "Variant D"],
-      answer: 0
-    }));
-  }
+        window.copyLink = function() {
+          navigator.clipboard.writeText(document.getElementById('link-box').textContent);
+          showToast(t('copied'));
+        }
 
-  studentAnswers = [];
-  currentQ = 0;
-  startTime = Date.now();
-  window.goTo('student-screen');
-  showQuestion();
-}
+        function checkDirectStudentAccess() {
+          const params = new URLSearchParams(window.location.search);
+          if (params.get('subject')) {
+            window.goTo('name-screen');
+          }
+        }
 
-function showQuestion() {
-  if (currentQ >= generatedQuestions.length) {
-    endQuiz();
-    return;
-  }
+        window.startStudentQuiz = async function() {
+          const name = document.getElementById('student-name').value.trim();
+          if (!name) { showToast(t('enter_name_warn')); return; }
 
-  timeLeft = parseInt(testParams.timeSec || 30);
-  const qCounter = document.getElementById('q-counter');
-  if (qCounter) {
-    qCounter.textContent = `${currentQ + 1} / ${generatedQuestions.length}`;
-  }
-  
-  // Дополнительная логика рендеринга вопросов...
-}
+          const params = new URLSearchParams(window.location.search);
+          testParams.topic = params.get('subject') || 'Matematika';
+          testParams.count = params.get('count') || '10';
+          testParams.timeSec = params.get('time') || '30';
+          testParams.testLang = params.get('lang') || 'uz';
 
-// Запуск детектора параметров при загрузке документа
-document.addEventListener("DOMContentLoaded", () => {
-  applyI18n();
-  renderSubjects();
-  checkDirectStudentAccess();
-});
+          const startBtn = document.getElementById('start-quiz-btn');
+          startBtn.disabled = true;
+          startBtn.textContent = t('generating');
+
+          try {
+            const resp = await fetch(`${WEB_APP_URL}?action=generate&topic=${encodeURIComponent(testParams.topic)}&count=${testParams.count}`);
+            generatedQuestions = await resp.json();
+            
+            currentQ = 0;
+            studentAnswers = [];
+            startTime = Date.now();
+            window.goTo('student-screen');
+            showQuestion();
+          } catch (err) {
+            console.error(err);
+            showToast(t('generating_error'));
+          } finally {
+            startBtn.disabled = false;
+            startBtn.textContent = t('start_quiz');
+          }
+        }
+
+        function showQuestion() {
+          if (currentQ >= generatedQuestions.length) {
+            endQuiz();
+            return;
+          }
+          
+          clearInterval(timerInterval);
+          timeLeft = parseInt(testParams.timeSec);
+          document.getElementById('q-counter').textContent = `${currentQ + 1} / ${generatedQuestions.length}`;
+          document.getElementById('timer').textContent = timeLeft;
+
+          timerInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer').textContent = timeLeft;
+            if (timeLeft <= 0) handleAnswer(null);
+          }, 1000);
+
+          const qData = generatedQuestions[currentQ];
+          document.getElementById('question-text').textContent = qData.question;
+          
+          const box = document.getElementById('options-box');
+          box.innerHTML = '';
+          qData.options.forEach(opt => {
+            const b = document.createElement('button');
+            b.className = 'opt-btn';
+            b.textContent = opt;
+            b.onclick = () => handleAnswer(opt);
+            box.appendChild(b);
+          });
+        }
+
+        function handleAnswer(ans) {
+          clearInterval(timerInterval);
+          studentAnswers.push(ans);
+          currentQ++;
+          showQuestion();
+        }
+
+        async function endQuiz() {
+          clearInterval(timerInterval);
+          let correctCount = 0;
+          generatedQuestions.forEach((q, i) => {
+            if (studentAnswers[i] === q.correct) correctCount++;
+          });
+
+          const percent = (correctCount / generatedQuestions.length) * 100;
+          let grade = t('grades')[3]; 
+          if (percent >= 85) grade = t('grades')[0]; 
+          else if (percent >= 70) grade = t('grades')[1]; 
+          else if (percent >= 50) grade = t('grades')[2]; 
+
+          document.getElementById('final-score').textContent = `${correctCount} / ${generatedQuestions.length}`;
+          document.getElementById('final-grade').textContent = grade;
+          window.goTo('result-screen');
+
+          const payload = {
+            name: document.getElementById('student-name').value,
+            subject: testParams.topic,
+            score: correctCount,
+            totalQuestions: generatedQuestions.length,
+            timeSpent: Math.floor((Date.now() - startTime) / 1000),
+            grade: grade
+          };
+
+          try {
+            await fetch(WEB_APP_URL, {
+              method: "POST",
+              mode: "no-cors",
+              body: JSON.stringify(payload)
+            });
+          } catch (e) {
+            console.error("Xatolik saqlashda:", e);
+          }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+          applyI18n();
+          renderSubjects();
+          checkDirectStudentAccess();
+        });
+    </script>
+</body>
+</html>
