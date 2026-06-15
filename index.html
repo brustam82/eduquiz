@@ -1,754 +1,1114 @@
 <!DOCTYPE html>
-<html lang="uz">
+<html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EduQuiz — Bilim tekshirish platformasi</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>EduQuiz — Образовательная платформа</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0b14;
-    --bg2: #0f1120;
-    --bg3: #151729;
-    --card: #1a1d2e;
-    --border: rgba(255,255,255,0.07);
-    --border2: rgba(255,255,255,0.12);
-    --violet: #7c5cfc;
-    --violet2: #9b7ffe;
-    --pink: #f472b6;
-    --cyan: #22d3ee;
-    --gold: #fbbf24;
-    --green: #34d399;
-    --text: #f0f0ff;
-    --muted: #8b8fa8;
-    --muted2: #5a5e75;
-  }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
-  body {
-    font-family: 'Inter', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.6;
-    overflow-x: hidden;
+    --lapis: #1B3A6B;
+    --lapis-light: #2A5298;
+    --gold: #C9952A;
+    --gold-light: #F0B429;
+    --cream: #FAF7F2;
+    --ink: #1A1A2E;
+    --muted: #6B7280;
+    --success: #059669;
+    --danger: #DC2626;
+    --white: #FFFFFF;
+    --border: #E5E0D8;
+    --shadow: 0 4px 24px rgba(27,58,107,0.10);
+    --radius: 14px;
   }
 
-  /* NAV */
-  nav {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 5%;
-    height: 64px;
-    background: rgba(10,11,20,0.85);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
   }
-  .nav-logo {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 22px; font-weight: 700;
-    background: linear-gradient(135deg, #7c5cfc, #f472b6);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    text-decoration: none;
+
+  /* SCREENS */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* HEADER */
+  .header {
+    background: var(--lapis);
+    padding: 0;
+    position: relative;
+    overflow: hidden;
   }
-  .nav-links { display: flex; gap: 32px; list-style: none; }
-  .nav-links a { color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.2s; }
-  .nav-links a:hover { color: var(--text); }
-  .nav-cta {
-    background: var(--violet); color: #fff;
-    border: none; padding: 10px 22px; border-radius: 10px;
-    font-size: 14px; font-weight: 600; cursor: pointer;
-    text-decoration: none; transition: all 0.2s;
-    white-space: nowrap;
+  .header::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 4px;
+    background: repeating-linear-gradient(90deg, var(--gold) 0, var(--gold) 18px, transparent 18px, transparent 24px);
   }
-  .nav-cta:hover { background: var(--violet2); transform: translateY(-1px); }
+  .header::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 4px;
+    background: repeating-linear-gradient(90deg, var(--gold) 0, var(--gold) 18px, transparent 18px, transparent 24px);
+  }
+  .header-inner {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 22px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo {
+    font-family: 'Playfair Display', serif;
+    color: var(--white);
+    font-size: 1.7rem;
+    letter-spacing: 0.5px;
+  }
+  .logo span { color: var(--gold); }
+  .header-back {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: var(--white);
+    padding: 8px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background 0.2s;
+  }
+  .header-back:hover { background: rgba(255,255,255,0.22); }
 
   /* HERO */
   .hero {
-    min-height: 100vh;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
+    background: linear-gradient(135deg, var(--lapis) 0%, var(--lapis-light) 100%);
+    padding: 72px 24px 80px;
     text-align: center;
-    padding: 120px 5% 80px;
-    position: relative; overflow: hidden;
+    position: relative;
+    overflow: hidden;
   }
-  .hero-glow {
-    position: absolute; top: 10%; left: 50%; transform: translateX(-50%);
-    width: 700px; height: 700px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(124,92,252,0.18) 0%, rgba(244,114,182,0.08) 40%, transparent 70%);
+  .hero::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 5px;
+    background: repeating-linear-gradient(90deg, var(--gold) 0, var(--gold) 18px, transparent 18px, transparent 24px);
+  }
+  .hero-pattern {
+    position: absolute; inset: 0;
+    background-image: radial-gradient(circle, rgba(201,149,42,0.12) 1.5px, transparent 1.5px);
+    background-size: 32px 32px;
     pointer-events: none;
   }
-  .hero-badge {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: rgba(124,92,252,0.12); border: 1px solid rgba(124,92,252,0.3);
-    color: var(--violet2); padding: 6px 16px; border-radius: 100px;
-    font-size: 13px; font-weight: 500; margin-bottom: 28px;
-  }
-  .hero-badge span { width: 6px; height: 6px; border-radius: 50%; background: var(--violet2); animation: pulse 2s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.4)} }
   .hero h1 {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: clamp(42px, 7vw, 80px);
-    font-weight: 700; line-height: 1.1;
-    margin-bottom: 24px; position: relative;
-  }
-  .hero h1 .grad {
-    background: linear-gradient(135deg, #7c5cfc 0%, #f472b6 50%, #fbbf24 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  }
-  .hero-sub {
-    font-size: clamp(16px, 2vw, 20px); color: var(--muted);
-    max-width: 600px; margin: 0 auto 40px; font-weight: 400; line-height: 1.7;
-  }
-  .hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 64px; }
-  .btn-primary {
-    background: linear-gradient(135deg, #7c5cfc, #f472b6);
-    color: #fff; border: none; padding: 16px 36px; border-radius: 12px;
-    font-size: 16px; font-weight: 600; cursor: pointer;
-    text-decoration: none; transition: all 0.3s;
-    box-shadow: 0 0 40px rgba(124,92,252,0.35);
-  }
-  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 60px rgba(124,92,252,0.5); }
-  .btn-secondary {
-    background: transparent; color: var(--text);
-    border: 1px solid var(--border2); padding: 16px 32px; border-radius: 12px;
-    font-size: 16px; font-weight: 500; cursor: pointer;
-    text-decoration: none; transition: all 0.2s;
-  }
-  .btn-secondary:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2); }
-
-  /* STATS */
-  .stats-row {
-    display: flex; gap: 48px; justify-content: center;
-    flex-wrap: wrap; position: relative;
-  }
-  .stat { text-align: center; }
-  .stat-num {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 36px; font-weight: 700;
-    background: linear-gradient(135deg, #7c5cfc, #f472b6);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  }
-  .stat-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
-
-  /* LOGOS (trusted by) */
-  .trusted {
-    padding: 48px 5%; text-align: center;
-    border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-  }
-  .trusted p { font-size: 13px; color: var(--muted2); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 24px; }
-  .logos-row { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; align-items: center; }
-  .logo-pill {
-    background: var(--card); border: 1px solid var(--border);
-    padding: 10px 24px; border-radius: 8px;
-    font-size: 13px; font-weight: 600; color: var(--muted);
-    letter-spacing: 0.02em;
-  }
-
-  /* FEATURES */
-  .section { padding: 100px 5%; }
-  .section-label {
-    display: inline-block; font-size: 12px; font-weight: 600;
-    letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--violet2); margin-bottom: 16px;
-  }
-  .section h2 {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: clamp(28px, 4vw, 46px); font-weight: 700; line-height: 1.2;
-    margin-bottom: 16px; max-width: 640px;
-  }
-  .section-sub { font-size: 17px; color: var(--muted); max-width: 560px; line-height: 1.7; margin-bottom: 64px; }
-  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
-  .feat-card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 16px; padding: 28px;
-    transition: all 0.3s; position: relative; overflow: hidden;
-  }
-  .feat-card::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(124,92,252,0.5), transparent);
-    opacity: 0; transition: opacity 0.3s;
-  }
-  .feat-card:hover { border-color: rgba(124,92,252,0.3); transform: translateY(-4px); }
-  .feat-card:hover::before { opacity: 1; }
-  .feat-icon {
-    width: 48px; height: 48px; border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 24px; margin-bottom: 16px;
-  }
-  .feat-card h3 { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
-  .feat-card p { font-size: 14px; color: var(--muted); line-height: 1.6; }
-
-  /* HOW IT WORKS */
-  .how { background: var(--bg2); }
-  .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0; }
-  .step { padding: 32px; position: relative; }
-  .step:not(:last-child)::after {
-    content: '→'; position: absolute; right: -8px; top: 40px;
-    color: var(--muted2); font-size: 20px;
-  }
-  .step-num {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 48px; font-weight: 700; line-height: 1;
-    background: linear-gradient(135deg, rgba(124,92,252,0.3), rgba(244,114,182,0.3));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    color: var(--white);
+    line-height: 1.2;
     margin-bottom: 16px;
+    position: relative;
   }
-  .step h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
-  .step p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+  .hero h1 span { color: var(--gold-light); }
+  .hero p {
+    color: rgba(255,255,255,0.78);
+    font-size: 1.1rem;
+    max-width: 520px;
+    margin: 0 auto 40px;
+    position: relative;
+  }
+  .hero-btns {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    position: relative;
+  }
 
-  /* PRICING */
-  .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 960px; margin: 0 auto; }
-  .price-card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 20px; padding: 36px 32px;
-    position: relative; overflow: hidden;
+  /* BUTTONS */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    text-decoration: none;
   }
-  .price-card.featured {
-    border-color: var(--violet);
-    background: linear-gradient(135deg, rgba(124,92,252,0.12), rgba(244,114,182,0.05));
+  .btn-gold {
+    background: var(--gold);
+    color: var(--white);
   }
-  .price-card.featured::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, #7c5cfc, #f472b6);
+  .btn-gold:hover { background: #b07e1e; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(201,149,42,0.35); }
+  .btn-outline {
+    background: rgba(255,255,255,0.1);
+    color: var(--white);
+    border: 1.5px solid rgba(255,255,255,0.35);
   }
-  .popular-tag {
-    position: absolute; top: 16px; right: 16px;
-    background: linear-gradient(135deg, #7c5cfc, #f472b6);
-    color: #fff; font-size: 11px; font-weight: 600;
-    padding: 4px 12px; border-radius: 100px; letter-spacing: 0.05em;
+  .btn-outline:hover { background: rgba(255,255,255,0.2); }
+  .btn-primary {
+    background: var(--lapis);
+    color: var(--white);
   }
-  .price-name { font-size: 13px; font-weight: 600; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 16px; }
-  .price-val {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 44px; font-weight: 700; line-height: 1; margin-bottom: 6px;
+  .btn-primary:hover { background: var(--lapis-light); transform: translateY(-1px); box-shadow: var(--shadow); }
+  .btn-secondary {
+    background: var(--white);
+    color: var(--lapis);
+    border: 1.5px solid var(--border);
   }
-  .price-val.free { color: var(--green); }
-  .price-val.pro {
-    background: linear-gradient(135deg, #7c5cfc, #f472b6);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  .btn-secondary:hover { background: var(--cream); }
+  .btn-danger {
+    background: var(--danger);
+    color: var(--white);
   }
-  .price-period { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
-  .price-desc { font-size: 14px; color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
-  .price-features { list-style: none; margin-bottom: 32px; }
-  .price-features li {
-    display: flex; align-items: flex-start; gap: 10px;
-    font-size: 14px; padding: 7px 0;
-    border-bottom: 1px solid var(--border); color: var(--muted);
+  .btn-success {
+    background: var(--success);
+    color: var(--white);
   }
-  .price-features li:last-child { border-bottom: none; }
-  .price-features li .check { color: var(--green); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
-  .price-features li .cross { color: var(--muted2); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
-  .price-features li.active { color: var(--text); }
-  .btn-plan {
-    width: 100%; padding: 14px; border-radius: 12px;
-    font-size: 15px; font-weight: 600; cursor: pointer;
-    border: none; transition: all 0.2s; text-decoration: none;
-    display: block; text-align: center;
-  }
-  .btn-plan.outline {
-    background: transparent; color: var(--text);
-    border: 1px solid var(--border2);
-  }
-  .btn-plan.outline:hover { background: rgba(255,255,255,0.05); }
-  .btn-plan.fill {
-    background: linear-gradient(135deg, #7c5cfc, #f472b6); color: #fff;
-    box-shadow: 0 0 30px rgba(124,92,252,0.3);
-  }
-  .btn-plan.fill:hover { transform: translateY(-1px); box-shadow: 0 0 50px rgba(124,92,252,0.5); }
-  .btn-plan.dark {
-    background: rgba(255,255,255,0.06); color: var(--text);
+  .btn-lg { padding: 16px 36px; font-size: 1.05rem; }
+  .btn-sm { padding: 9px 18px; font-size: 0.88rem; }
+  .btn-full { width: 100%; justify-content: center; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+  /* MAIN CONTENT */
+  .main { max-width: 960px; margin: 0 auto; padding: 40px 24px 60px; flex: 1; }
+  .main-narrow { max-width: 520px; margin: 0 auto; padding: 40px 24px 60px; flex: 1; }
+  .main-wide { max-width: 1100px; margin: 0 auto; padding: 40px 24px 60px; flex: 1; }
+
+  /* CARDS */
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
     border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    padding: 32px;
   }
-  .btn-plan.dark:hover { background: rgba(255,255,255,0.1); }
+  .card-sm { padding: 20px 24px; }
 
-  /* TESTIMONIALS */
-  .testi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
-  .testi-card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 16px; padding: 28px;
+  /* FEATURES GRID */
+  .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-top: 48px;
   }
-  .testi-stars { color: var(--gold); font-size: 15px; margin-bottom: 14px; letter-spacing: 2px; }
-  .testi-text { font-size: 15px; color: var(--muted); line-height: 1.7; margin-bottom: 20px; font-style: italic; }
-  .testi-author { display: flex; align-items: center; gap: 12px; }
-  .testi-avatar {
-    width: 40px; height: 40px; border-radius: 50%;
+  .feature-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 24px;
+    text-align: center;
+    box-shadow: var(--shadow);
+    transition: transform 0.2s;
+  }
+  .feature-card:hover { transform: translateY(-3px); }
+  .feature-icon {
+    width: 56px; height: 56px;
+    background: linear-gradient(135deg, var(--lapis), var(--lapis-light));
+    border-radius: 14px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 18px; flex-shrink: 0;
+    font-size: 1.6rem;
+    margin: 0 auto 16px;
   }
-  .testi-name { font-size: 14px; font-weight: 600; }
-  .testi-role { font-size: 12px; color: var(--muted); }
+  .feature-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; color: var(--lapis); }
+  .feature-card p { font-size: 0.88rem; color: var(--muted); line-height: 1.5; }
 
-  /* FAQ */
-  .faq-list { max-width: 720px; }
-  .faq-item {
-    border-bottom: 1px solid var(--border); padding: 20px 0; cursor: pointer;
+  /* FORMS */
+  .form-group { margin-bottom: 20px; }
+  label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 7px; color: var(--lapis); }
+  input[type="text"], input[type="password"], input[type="number"], select, textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 9px;
+    font-size: 1rem;
+    font-family: inherit;
+    color: var(--ink);
+    background: var(--cream);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
   }
-  .faq-q {
-    display: flex; justify-content: space-between; align-items: center;
-    font-size: 16px; font-weight: 500; user-select: none;
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--lapis);
+    box-shadow: 0 0 0 3px rgba(27,58,107,0.10);
+    background: var(--white);
   }
-  .faq-q .icon { color: var(--muted); font-size: 20px; transition: transform 0.3s; flex-shrink: 0; }
-  .faq-a { font-size: 14px; color: var(--muted); line-height: 1.7; max-height: 0; overflow: hidden; transition: max-height 0.3s, padding-top 0.3s; }
-  .faq-item.open .faq-a { max-height: 200px; padding-top: 12px; }
-  .faq-item.open .icon { transform: rotate(45deg); }
+  textarea { resize: vertical; min-height: 90px; }
+  .error-msg { color: var(--danger); font-size: 0.85rem; margin-top: 8px; display: none; }
+  .error-msg.show { display: block; }
 
-  /* CTA SECTION */
-  .cta-section {
-    margin: 0 5% 80px; border-radius: 24px;
-    background: linear-gradient(135deg, rgba(124,92,252,0.2), rgba(244,114,182,0.1));
-    border: 1px solid rgba(124,92,252,0.25);
-    padding: 80px 5%; text-align: center; position: relative; overflow: hidden;
-  }
-  .cta-section::before {
-    content: ''; position: absolute; top: -50%; left: 50%; transform: translateX(-50%);
-    width: 500px; height: 500px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(124,92,252,0.15), transparent 70%);
-    pointer-events: none;
-  }
-  .cta-section h2 {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: clamp(28px, 4vw, 46px); font-weight: 700; margin-bottom: 16px;
-  }
-  .cta-section p { font-size: 17px; color: var(--muted); margin-bottom: 36px; max-width: 500px; margin-left: auto; margin-right: auto; }
+  /* PAGE TITLES */
+  .page-title { font-family: 'Playfair Display', serif; font-size: 1.9rem; color: var(--lapis); margin-bottom: 8px; }
+  .page-subtitle { color: var(--muted); font-size: 1rem; margin-bottom: 32px; }
 
-  /* FOOTER */
-  footer {
-    border-top: 1px solid var(--border);
-    padding: 48px 5%; display: flex;
-    justify-content: space-between; align-items: center;
-    flex-wrap: gap; gap: 16px;
-  }
-  .footer-logo {
-    font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700;
-    background: linear-gradient(135deg, #7c5cfc, #f472b6);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  }
-  footer p { font-size: 13px; color: var(--muted2); }
-  .footer-links { display: flex; gap: 24px; }
-  .footer-links a { font-size: 13px; color: var(--muted); text-decoration: none; }
-  .footer-links a:hover { color: var(--text); }
-
-  /* LANG TOGGLE */
-  .lang-toggle {
-    display: flex; gap: 4px;
-    background: var(--bg3); border: 1px solid var(--border);
-    padding: 4px; border-radius: 8px;
-  }
-  .lang-btn {
-    padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;
-    cursor: pointer; border: none; background: transparent; color: var(--muted);
+  /* TABS */
+  .tabs { display: flex; gap: 0; margin-bottom: 28px; border-bottom: 2px solid var(--border); }
+  .tab {
+    padding: 12px 24px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--muted);
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
     transition: all 0.2s;
   }
-  .lang-btn.active { background: var(--violet); color: #fff; }
+  .tab.active { color: var(--lapis); border-bottom-color: var(--gold); }
+  .tab:hover:not(.active) { color: var(--lapis); }
 
-  /* RESPONSIVE */
-  @media (max-width: 768px) {
-    .nav-links { display: none; }
-    .step:not(:last-child)::after { display: none; }
-    .steps-grid { grid-template-columns: 1fr; }
-    .stats-row { gap: 28px; }
-    footer { flex-direction: column; text-align: center; }
+  /* QUIZ OPTIONS */
+  .options-grid { display: grid; gap: 12px; margin: 24px 0; }
+  .option-btn {
+    width: 100%;
+    text-align: left;
+    padding: 16px 20px;
+    background: var(--white);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: inherit;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 14px;
   }
-  @media (prefers-reduced-motion: reduce) {
-    * { animation: none !important; transition: none !important; }
+  .option-btn:hover:not(:disabled) { border-color: var(--lapis); background: #EEF2FA; }
+  .option-btn.correct { border-color: var(--success); background: #ECFDF5; color: #065F46; }
+  .option-btn.wrong { border-color: var(--danger); background: #FEF2F2; color: #991B1B; }
+  .option-letter {
+    width: 32px; height: 32px; min-width: 32px;
+    background: var(--cream);
+    border: 1.5px solid var(--border);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.88rem;
+    color: var(--lapis);
+  }
+  .option-btn.correct .option-letter { background: var(--success); color: white; border-color: var(--success); }
+  .option-btn.wrong .option-letter { background: var(--danger); color: white; border-color: var(--danger); }
+
+  /* PROGRESS BAR */
+  .progress-wrap { margin-bottom: 24px; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+  .progress-bar { height: 8px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--lapis), var(--gold)); border-radius: 99px; transition: width 0.5s ease; }
+
+  /* TIMER */
+  .timer-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--lapis);
+    color: var(--white);
+    padding: 6px 14px;
+    border-radius: 99px;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+  .timer-badge.warning { background: var(--danger); animation: pulse 0.6s infinite alternate; }
+  @keyframes pulse { to { opacity: 0.75; } }
+
+  /* RESULT */
+  .result-circle {
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--lapis), var(--lapis-light));
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    margin: 0 auto 24px;
+    box-shadow: 0 8px 32px rgba(27,58,107,0.25);
+  }
+  .result-score { font-size: 2.8rem; font-weight: 800; color: var(--white); line-height: 1; }
+  .result-total { font-size: 0.9rem; color: rgba(255,255,255,0.7); }
+  .grade-badge {
+    display: inline-block;
+    padding: 6px 20px;
+    border-radius: 99px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+  }
+  .grade-5 { background: #ECFDF5; color: #065F46; border: 2px solid #6EE7B7; }
+  .grade-4 { background: #EFF6FF; color: #1D4ED8; border: 2px solid #93C5FD; }
+  .grade-3 { background: #FFFBEB; color: #92400E; border: 2px solid #FCD34D; }
+  .grade-2 { background: #FEF2F2; color: #991B1B; border: 2px solid #FCA5A5; }
+
+  /* TEACHER DASHBOARD */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .stat-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+  }
+  .stat-num { font-size: 2rem; font-weight: 800; color: var(--lapis); }
+  .stat-label { font-size: 0.82rem; color: var(--muted); margin-top: 4px; }
+
+  /* QR */
+  .qr-box {
+    width: 180px; height: 180px;
+    background: var(--white);
+    border: 3px solid var(--lapis);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .qr-inner { display: grid; grid-template-columns: repeat(10,1fr); gap: 2px; width: 140px; }
+  .qr-cell { aspect-ratio: 1; border-radius: 1px; }
+
+  /* QUIZ LIST */
+  .quiz-row {
+    display: flex; align-items: center; gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .quiz-row:last-child { border-bottom: none; }
+  .quiz-icon { width: 44px; height: 44px; background: linear-gradient(135deg, var(--lapis), var(--lapis-light)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+  .quiz-info { flex: 1; }
+  .quiz-name { font-weight: 600; font-size: 0.95rem; }
+  .quiz-meta { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
+  .quiz-actions { display: flex; gap: 8px; }
+
+  /* BUILDER */
+  .question-block {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+    margin-bottom: 14px;
+  }
+  .q-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .q-num { font-weight: 700; font-size: 0.85rem; color: var(--gold); }
+  .answer-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+  .answer-row input[type="text"] { flex: 1; }
+  .correct-radio { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--muted); cursor: pointer; }
+
+  /* RESULTS TABLE */
+  table { width: 100%; border-collapse: collapse; }
+  th { background: var(--lapis); color: white; padding: 12px 16px; text-align: left; font-size: 0.88rem; }
+  th:first-child { border-radius: 8px 0 0 8px; }
+  th:last-child { border-radius: 0 8px 8px 0; }
+  td { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+  tr:hover td { background: var(--cream); }
+
+  /* UTILITY */
+  .text-center { text-align: center; }
+  .mt-8 { margin-top: 8px; }
+  .mt-16 { margin-top: 16px; }
+  .mt-24 { margin-top: 24px; }
+  .mt-32 { margin-top: 32px; }
+  .gap-12 { display: flex; gap: 12px; flex-wrap: wrap; }
+  .divider { height: 1px; background: var(--border); margin: 24px 0; }
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 0.78rem; font-weight: 600;
+  }
+  .badge-green { background: #ECFDF5; color: #065F46; }
+  .badge-blue { background: #EFF6FF; color: #1D4ED8; }
+  .badge-yellow { background: #FFFBEB; color: #92400E; }
+
+  /* ORNAMENT FOOTER */
+  .ornament-footer {
+    height: 8px;
+    background: repeating-linear-gradient(90deg, var(--lapis) 0, var(--lapis) 18px, var(--gold) 18px, var(--gold) 24px);
+    margin-top: auto;
   }
 
-  /* LANG CONTENT */
-  [data-ru] { display: none; }
-  body.ru [data-uz] { display: none; }
-  body.ru [data-ru] { display: block; }
-  body.ru span[data-uz] { display: none; }
-  body.ru span[data-ru] { display: inline; }
-  span[data-ru] { display: none; }
+  /* TRANSITION */
+  .screen.fade-in { animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  /* STEP INDICATOR */
+  .steps { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 32px; }
+  .step { display: flex; flex-direction: column; align-items: center; }
+  .step-circle { width: 32px; height: 32px; border-radius: 50%; background: var(--border); color: var(--muted); font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; }
+  .step.done .step-circle { background: var(--success); color: white; }
+  .step.active .step-circle { background: var(--lapis); color: white; }
+  .step-label { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+  .step.active .step-label { color: var(--lapis); font-weight: 600; }
+  .step-line { width: 48px; height: 2px; background: var(--border); margin-bottom: 20px; }
+  .step-line.done { background: var(--success); }
+
+  @media (max-width: 600px) {
+    .hero { padding: 48px 16px 56px; }
+    .card { padding: 20px; }
+    .main, .main-narrow { padding: 24px 16px 48px; }
+  }
 </style>
 </head>
 <body>
 
-<!-- NAV -->
-<nav>
-  <a href="#" class="nav-logo">EduQuiz</a>
-  <ul class="nav-links">
-    <li><a href="#features" data-uz>Imkoniyatlar</a><a href="#features" data-ru>Возможности</a></li>
-    <li><a href="#how" data-uz>Qanday ishlaydi</a><a href="#how" data-ru>Как работает</a></li>
-    <li><a href="#pricing" data-uz>Narxlar</a><a href="#pricing" data-ru>Тарифы</a></li>
-    <li><a href="#faq" data-uz>Savollar</a><a href="#faq" data-ru>Вопросы</a></li>
-  </ul>
-  <div style="display:flex;align-items:center;gap:12px;">
-    <div class="lang-toggle">
-      <button class="lang-btn active" onclick="setLang('uz')">O'Z</button>
-      <button class="lang-btn" onclick="setLang('ru')">РУ</button>
+<!-- ══════════════════════════════════════ -->
+<!-- SCREEN 1: ГЛАВНАЯ                      -->
+<!-- ══════════════════════════════════════ -->
+<div class="screen active" id="s-home">
+  <div class="hero">
+    <div class="hero-pattern"></div>
+    <h1>EduQuiz — <span>умные тесты</span><br>для живого класса</h1>
+    <p>Создавайте викторины за минуты. Ученики проходят с телефона. Результаты — мгновенно.</p>
+    <div class="hero-btns">
+      <button class="btn btn-gold btn-lg" onclick="go('s-teacher-login')">🎓 Я учитель</button>
+      <button class="btn btn-outline btn-lg" onclick="go('s-student-name')">✏️ Я ученик</button>
     </div>
-    <a href="index.html" class="nav-cta">
-      <span data-uz>Boshlash →</span><span data-ru>Начать →</span>
-    </a>
   </div>
-</nav>
-
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-glow"></div>
-  <div class="hero-badge">
-    <span></span>
-    <span data-uz>🇺🇿 O'zbek ta'lim platformasi</span>
-    <span data-ru>🇺🇿 Узбекская образовательная платформа</span>
+  <div class="main">
+    <div class="features">
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>Быстрое создание</h3>
+        <p>Тест из 10 вопросов — за 2 минуты. Импорт из текста или с нуля.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <h3>Без установки</h3>
+        <p>Ученики сканируют QR и сразу начинают. Никаких приложений.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Аналитика класса</h3>
+        <p>Таблица результатов, сложные вопросы, прогресс каждого.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🏆</div>
+        <h3>Геймификация</h3>
+        <p>Таймер, баллы, рейтинг — мотивирует учиться веселее.</p>
+      </div>
+    </div>
   </div>
-  <h1>
-    <span data-uz>O'qitish emas —<br><span class="grad">natija tekshirish</span></span>
-    <span data-ru>Не обучение —<br><span class="grad">проверка результата</span></span>
-  </h1>
-  <p class="hero-sub">
-    <span data-uz>EduQuiz — maktablar, o'quv markazlari va korporativ o'qitish uchun zamonaviy quiz platformasi. Google Sheets bilan integratsiya. Bilimni sekundalarda tekshiring.</span>
-    <span data-ru>EduQuiz — современная quiz-платформа для школ, учебных центров и корпоративного обучения. Интеграция с Google Sheets. Проверяйте знания за секунды.</span>
-  </p>
-  <div class="hero-actions">
-    <a href="index.html" class="btn-primary">
-      <span data-uz>⚡ Bepul boshlash</span>
-      <span data-ru>⚡ Начать бесплатно</span>
-    </a>
-    <a href="#features" class="btn-secondary">
-      <span data-uz>Imkoniyatlarni ko'rish</span>
-      <span data-ru>Смотреть возможности</span>
-    </a>
-  </div>
-  <div class="stats-row">
-    <div class="stat"><div class="stat-num">5 000+</div><div class="stat-label" data-uz>Faol foydalanuvchi</div><div class="stat-label" data-ru>Активных пользователей</div></div>
-    <div class="stat"><div class="stat-num">120+</div><div class="stat-label" data-uz>O'quv markazi</div><div class="stat-label" data-ru>Учебных центров</div></div>
-    <div class="stat"><div class="stat-num">98%</div><div class="stat-label" data-uz>Mamnunlik darajasi</div><div class="stat-label" data-ru>Уровень удовлетворённости</div></div>
-    <div class="stat"><div class="stat-num">2 daqiqa</div><div class="stat-label" data-uz>Sozlash vaqti</div><div class="stat-label" data-ru>Время настройки</div></div>
-  </div>
-</section>
-
-<!-- TRUSTED -->
-<div class="trusted">
-  <p data-uz>Ishonch bildirgan tashkilotlar</p>
-  <p data-ru>Нам доверяют</p>
-  <div class="logos-row">
-    <div class="logo-pill">Toshkent maktablari</div>
-    <div class="logo-pill">Samarqand DTM</div>
-    <div class="logo-pill">Andijon o'quv markazi</div>
-    <div class="logo-pill">Buxoro litseylar</div>
-    <div class="logo-pill">Namangan kollejlar</div>
-  </div>
+  <div class="ornament-footer"></div>
 </div>
 
-<!-- FEATURES -->
-<section class="section" id="features">
-  <div class="section-label" data-uz>Imkoniyatlar</div>
-  <div class="section-label" data-ru>Возможности</div>
-  <h2 data-uz>Hamma narsani bir joyda</h2>
-  <h2 data-ru>Всё в одном месте</h2>
-  <p class="section-sub" data-uz>O'qituvchilar uchun yaratilgan, o'quvchilar uchun moslashtirilgan zamonaviy platforma.</p>
-  <p class="section-sub" data-ru>Современная платформа, созданная для учителей и адаптированная для учеников.</p>
-  <div class="features-grid">
-    <div class="feat-card">
-      <div class="feat-icon" style="background:rgba(124,92,252,0.15);">📊</div>
-      <h3 data-uz>Google Sheets integratsiyasi</h3>
-      <h3 data-ru>Интеграция с Google Sheets</h3>
-      <p data-uz>Savollarni oddiy jadvalda tuzing — platforma avtomatik yuklaydi. Hech qanday kod kerak emas.</p>
-      <p data-ru>Создавайте вопросы в обычной таблице — платформа загружает автоматически. Никакого кода.</p>
-    </div>
-    <div class="feat-card">
-      <div class="feat-icon" style="background:rgba(244,114,182,0.15);">⏱️</div>
-      <h3 data-uz>Vaqt taymeri</h3>
-      <h3 data-ru>Таймер вопросов</h3>
-      <p data-uz>Har bir savol uchun vaqt belgilang. Real imtihon sharoitini yarating va bosimga chidamlilikni sinang.</p>
-      <p data-ru>Устанавливайте время на каждый вопрос. Создайте реальные условия экзамена и проверяйте стрессоустойчивость.</p>
-    </div>
-    <div class="feat-card">
-      <div class="feat-icon" style="background:rgba(34,211,238,0.15);">🌐</div>
-      <h3 data-uz>Ikki tilli interfeys</h3>
-      <h3 data-ru>Двуязычный интерфейс</h3>
-      <p data-uz>O'zbek va rus tillarida to'liq qo'llab-quvvatlash. O'quvchi o'ziga qulay tilda ishlaydi.</p>
-      <p data-ru>Полная поддержка узбекского и русского языков. Ученик работает на удобном для него языке.</p>
-    </div>
-    <div class="feat-card">
-      <div class="feat-icon" style="background:rgba(251,191,36,0.15);">📈</div>
-      <h3 data-uz>Batafsil tahlil</h3>
-      <h3 data-ru>Детальная аналитика</h3>
-      <p data-uz>Har bir o'quvchi nima biladi, nimani bilmaydi — aniq statistika. Mavzu bo'yicha tahlil va tavsiyalar.</p>
-      <p data-ru>Что знает каждый ученик, что нет — точная статистика. Анализ по темам и рекомендации.</p>
-    </div>
-    <div class="feat-card">
-      <div class="feat-icon" style="background:rgba(52,211,153,0.15);">💾</div>
-      <h3 data-uz>Natijalarni saqlash</h3>
-      <h3 data-ru>Сохранение результатов</h3>
-      <p data-uz>Barcha natijalar Google Sheets'ga avtomatik saqlanadi. O'qituvchi istalgan vaqt ko'ra oladi.</p>
-      <p data-ru>Все результаты автоматически сохраняются в Google Sheets. Учитель может просмотреть в любое время.</p>
-    </div>
-    <div class="feat-card">
-      <div class="feat-icon" style="background:rgba(124,92,252,0.15);">🏆</div>
-      <h3 data-uz>Reyting va mukofotlar</h3>
-      <h3 data-ru>Рейтинги и награды</h3>
-      <p data-uz>O'quvchilar orasida reyting. A'lo baho olgan o'quvchilar uchun sertifikat va mukofot tizimi.</p>
-      <p data-ru>Рейтинг среди учеников. Система сертификатов и наград для отличников.</p>
+<!-- ══════════════════════════════════════ -->
+<!-- SCREEN 2: ВХОД УЧИТЕЛЯ                -->
+<!-- ══════════════════════════════════════ -->
+<div class="screen" id="s-teacher-login">
+  <div class="header">
+    <div class="header-inner">
+      <div class="logo">Edu<span>Quiz</span></div>
+      <button class="header-back" onclick="go('s-home')">← Назад</button>
     </div>
   </div>
-</section>
-
-<!-- HOW IT WORKS -->
-<section class="section how" id="how">
-  <div class="section-label" data-uz>Jarayon</div>
-  <div class="section-label" data-ru>Процесс</div>
-  <h2 data-uz>3 qadamda tayyor</h2>
-  <h2 data-ru>Готово за 3 шага</h2>
-  <p class="section-sub" data-uz>Murakkab sozlash yo'q. 2 daqiqada birinchi imtihonni o'tkazing.</p>
-  <p class="section-sub" data-ru>Никаких сложных настроек. Проведите первый экзамен за 2 минуты.</p>
-  <div class="steps-grid">
-    <div class="step">
-      <div class="step-num">01</div>
-      <h3 data-uz>Google Sheets yarating</h3>
-      <h3 data-ru>Создайте Google Sheets</h3>
-      <p data-uz>Savollar, javoblar va to'g'ri javoblarni oddiy jadvalga kiriting. Maxsus format talab qilinmaydi.</p>
-      <p data-ru>Введите вопросы, варианты и правильные ответы в обычную таблицу. Специальный формат не требуется.</p>
-    </div>
-    <div class="step">
-      <div class="step-num">02</div>
-      <h3 data-uz>Havolani ulashish</h3>
-      <h3 data-ru>Поделитесь ссылкой</h3>
-      <p data-uz>EduQuiz havolasini o'quvchilarga yuboring. Telegram, WhatsApp yoki sinfxona ekraniga chiqaring.</p>
-      <p data-ru>Отправьте ссылку EduQuiz ученикам. Через Telegram, WhatsApp или покажите на экране в классе.</p>
-    </div>
-    <div class="step">
-      <div class="step-num">03</div>
-      <h3 data-uz>Natijalarni kuzating</h3>
-      <h3 data-ru>Следите за результатами</h3>
-      <p data-uz>Barcha natijalar real vaqtda Google Sheets'da ko'rinadi. Tahlil va statistika avtomatik.</p>
-      <p data-ru>Все результаты видны в Google Sheets в реальном времени. Анализ и статистика — автоматически.</p>
-    </div>
-    <div class="step">
-      <div class="step-num">04</div>
-      <h3 data-uz>Yaxshilang</h3>
-      <h3 data-ru>Совершенствуйтесь</h3>
-      <p data-uz>Zaif mavzularni aniqlang. Maqsadli takrorlash va individual tavsiyalar bering.</p>
-      <p data-ru>Определяйте слабые темы. Давайте целевые задания и индивидуальные рекомендации.</p>
-    </div>
-  </div>
-</section>
-
-<!-- PRICING -->
-<section class="section" id="pricing" style="text-align:center;">
-  <div class="section-label" data-uz>Narxlar</div>
-  <div class="section-label" data-ru>Тарифы</div>
-  <h2 style="margin:0 auto 16px;" data-uz>Har qanday hajm uchun</h2>
-  <h2 style="margin:0 auto 16px;" data-ru>Для любого масштаба</h2>
-  <p class="section-sub" style="margin:0 auto 48px;" data-uz>Bepul boshlang, o'sgan sari kengaytiring. Yashirin to'lovlar yo'q.</p>
-  <p class="section-sub" style="margin:0 auto 48px;" data-ru>Начните бесплатно, масштабируйтесь по мере роста. Никаких скрытых платежей.</p>
-  <div class="pricing-grid">
-    <div class="price-card">
-      <div class="price-name" data-uz>Boshlang'ich</div>
-      <div class="price-name" data-ru>Базовый</div>
-      <div class="price-val free">Bepul</div>
-      <div class="price-period" data-uz>Abadiy bepul</div>
-      <div class="price-period" data-ru>Бесплатно навсегда</div>
-      <div class="price-desc" data-uz>Sinab ko'rish va kichik sinflar uchun ideal</div>
-      <div class="price-desc" data-ru>Идеально для пробного использования и небольших классов</div>
-      <ul class="price-features">
-        <li class="active"><span class="check">✓</span> <span data-uz>3 tagacha fan</span><span data-ru>До 3 предметов</span></li>
-        <li class="active"><span class="check">✓</span> <span data-uz>30 tagacha savol</span><span data-ru>До 30 вопросов</span></li>
-        <li class="active"><span class="check">✓</span> <span data-uz>Asosiy statistika</span><span data-ru>Базовая статистика</span></li>
-        <li><span class="cross">✗</span> <span data-uz>Sertifikatlar</span><span data-ru>Сертификаты</span></li>
-        <li><span class="cross">✗</span> <span data-uz>Kengaytirilgan tahlil</span><span data-ru>Расширенная аналитика</span></li>
-      </ul>
-      <a href="index.html" class="btn-plan outline" data-uz>Boshlash →</a>
-      <a href="index.html" class="btn-plan outline" data-ru>Начать →</a>
-    </div>
-    <div class="price-card featured">
-      <div class="popular-tag" data-uz>Mashhur</div>
-      <div class="popular-tag" data-ru>Популярный</div>
-      <div class="price-name" data-uz>Pro</div>
-      <div class="price-name" data-ru>Pro</div>
-      <div class="price-val pro">49 000</div>
-      <div class="price-period" data-uz>so'm / oyiga</div>
-      <div class="price-period" data-ru>сум / месяц</div>
-      <div class="price-desc" data-uz>O'quv markazlari va faol o'qituvchilar uchun</div>
-      <div class="price-desc" data-ru>Для учебных центров и активных учителей</div>
-      <ul class="price-features">
-        <li class="active"><span class="check">✓</span> <span data-uz>Cheksiz fanlar</span><span data-ru>Неограниченно предметов</span></li>
-        <li class="active"><span class="check">✓</span> <span data-uz>AI savol generatsiyasi</span><span data-ru>AI-генерация вопросов</span></li>
-        <li class="active"><span class="check">✓</span> <span data-uz>PDF sertifikatlar</span><span data-ru>PDF сертификаты</span></li>
-        <li class="active"><span class="check">✓</span> <span data-uz>Batafsil tahlil</span><span data-ru>Детальная аналитика</span></li>
-        <li class="active"><span class="check">✓</span> <span data-uz>200 tagacha o'quvchi</span><span data-ru>До 200 учеников</span></li>
-      </ul>
-      <a href="#" class="btn-plan fill" data-uz>Pro ga o'tish →</a>
-      <a href="#" class="btn-plan fill" data-ru>Перейти на Pro →</a>
-    </div>
-    <div class="price-card">
-      <div class="price-name" data-uz>O'quv Markazi</div>
-      <div class="price-name" data-ru>Учебный Центр</div>
-      <div class="price-val" style="font-size:32px;color:var(--cyan)">199 000</div>
-      <div class="price-period" data-uz>so'm / oyiga</div>
-      <div class="price-period" data-ru>сум / месяц</div>
-      <div class="price-desc" data-uz>Katta o'quv markazlari va maktablar uchun</div>
-      <div class="price-desc" data-ru>Для крупных учебных центров и школ</div>
-      <ul class="price-features">
-        <li class="active"><span class="check">✓</span> <span data-uz>Pro ning hammasi</span><span data-ru>Всё из Pro</span></li>
-        <li class="active"><span class="check">✓</span> <span data-uz>O'z brend va domen</span><span data-ru>Ваш бренд и домен</span></li>
-        <li class="active"><span class="check">✓</span> <span data-uz>Telegram bot integratsiyasi</span><span data-ru>Telegram-бот интеграция</span></li>
-        <li class="active"><span class="check">✓</span> <span data-uz>Cheksiz o'quvchilar</span><span data-ru>Неограниченно учеников</span></li>
-        <li class="active"><span class="check">✓</span> <span data-uz>Ustuvor qo'llab-quvvatlash</span><span data-ru>Приоритетная поддержка</span></li>
-      </ul>
-      <a href="#" class="btn-plan dark" data-uz>Bog'lanish →</a>
-      <a href="#" class="btn-plan dark" data-ru>Связаться →</a>
-    </div>
-  </div>
-</section>
-
-<!-- TESTIMONIALS -->
-<section class="section" style="background:var(--bg2);">
-  <div class="section-label" data-uz>Fikrlar</div>
-  <div class="section-label" data-ru>Отзывы</div>
-  <h2 data-uz>Ular allaqachon ishlatmoqda</h2>
-  <h2 data-ru>Они уже используют</h2>
-  <p class="section-sub" data-uz>O'qituvchilar va o'quv markazi rahbarlarining haqiqiy fikrlari.</p>
-  <p class="section-sub" data-ru>Реальные отзывы учителей и руководителей учебных центров.</p>
-  <div class="testi-grid">
-    <div class="testi-card">
-      <div class="testi-stars">★★★★★</div>
-      <p class="testi-text" data-uz>"EduQuiz mening darslarimni tubdan o'zgartirdi. Endi har bir o'quvchining bilim darajasini aniq bilaman."</p>
-      <p class="testi-text" data-ru>"EduQuiz полностью изменил мои уроки. Теперь я точно знаю уровень знаний каждого ученика."</p>
-      <div class="testi-author">
-        <div class="testi-avatar" style="background:rgba(124,92,252,0.2);">👩‍🏫</div>
-        <div><div class="testi-name" data-uz>Malika Yusupova</div><div class="testi-name" data-ru>Малика Юсупова</div><div class="testi-role" data-uz>Matematika o'qituvchisi, Toshkent</div><div class="testi-role" data-ru>Учитель математики, Ташкент</div></div>
-      </div>
-    </div>
-    <div class="testi-card">
-      <div class="testi-stars">★★★★★</div>
-      <p class="testi-text" data-uz>"Google Sheets bilan integratsiya — bu ajoyib! 100 ta savolni 10 daqiqada tayyor qilaman."</p>
-      <p class="testi-text" data-ru>"Интеграция с Google Sheets — это просто шедевр! 100 вопросов готовлю за 10 минут."</p>
-      <div class="testi-author">
-        <div class="testi-avatar" style="background:rgba(244,114,182,0.2);">👨‍💼</div>
-        <div><div class="testi-name" data-uz>Jasur Rahimov</div><div class="testi-name" data-ru>Жасур Рахимов</div><div class="testi-role" data-uz>O'quv markazi direktori, Samarqand</div><div class="testi-role" data-ru>Директор учебного центра, Самарканд</div></div>
-      </div>
-    </div>
-    <div class="testi-card">
-      <div class="testi-stars">★★★★★</div>
-      <p class="testi-text" data-uz>"O'quvchilarim EduQuiz'ni sevib qoldi. Imtihonga tayyorlanish endi o'yinga aylandi!"</p>
-      <p class="testi-text" data-ru>"Мои ученики полюбили EduQuiz. Подготовка к экзамену превратилась в игру!"</p>
-      <div class="testi-author">
-        <div class="testi-avatar" style="background:rgba(34,211,238,0.2);">👩‍💻</div>
-        <div><div class="testi-name" data-uz>Dilnoza Karimova</div><div class="testi-name" data-ru>Дилноза Каримова</div><div class="testi-role" data-uz>Ingliz tili o'qituvchisi, Andijon</div><div class="testi-role" data-ru>Учитель английского, Андижан</div></div>
+  <div class="main-narrow" style="display:flex;align-items:center;flex:1;">
+    <div style="width:100%">
+      <div class="card">
+        <div class="text-center" style="margin-bottom:28px;">
+          <div style="width:60px;height:60px;background:linear-gradient(135deg,var(--lapis),var(--lapis-light));border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 16px;">🎓</div>
+          <h2 class="page-title" style="margin-bottom:4px;">Вход для учителя</h2>
+          <p style="color:var(--muted);font-size:0.93rem;">Войдите, чтобы управлять тестами</p>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="text" id="teacher-email" placeholder="teacher@school.uz" value="teacher@school.uz">
+        </div>
+        <div class="form-group">
+          <label>Пароль</label>
+          <input type="password" id="teacher-pass" placeholder="Введите пароль" value="">
+          <div class="error-msg" id="login-error">Неверный пароль. Попробуйте: <b>edu2024</b></div>
+        </div>
+        <button class="btn btn-primary btn-full btn-lg" onclick="teacherLogin()" style="margin-top:8px;">Войти →</button>
+        <p style="text-align:center;color:var(--muted);font-size:0.82rem;margin-top:16px;">Пароль для демо: <b>edu2024</b></p>
       </div>
     </div>
   </div>
-</section>
-
-<!-- FAQ -->
-<section class="section" id="faq">
-  <div class="section-label" data-uz>Savol-javob</div>
-  <div class="section-label" data-ru>Вопрос-ответ</div>
-  <h2 data-uz>Ko'p so'raladigan savollar</h2>
-  <h2 data-ru>Часто задаваемые вопросы</h2>
-  <div class="faq-list">
-    <div class="faq-item" onclick="toggleFaq(this)">
-      <div class="faq-q">
-        <span data-uz>EduQuiz'ni ishlatish uchun dasturlash bilimlari kerakmi?</span>
-        <span data-ru>Нужны ли знания программирования для EduQuiz?</span>
-        <span class="icon">+</span>
-      </div>
-      <div class="faq-a">
-        <span data-uz>Yo'q! EduQuiz Google Sheets bilan ishlaydi. Jadvalga savol kiritasiz — platforma qolganini qiladi. Hech qanday kod yozish shart emas.</span>
-        <span data-ru>Нет! EduQuiz работает с Google Sheets. Вводите вопросы в таблицу — платформа делает остальное. Никакого кода писать не нужно.</span>
-      </div>
-    </div>
-    <div class="faq-item" onclick="toggleFaq(this)">
-      <div class="faq-q">
-        <span data-uz>Bir vaqtda nechta o'quvchi imtihon topshira oladi?</span>
-        <span data-ru>Сколько учеников могут проходить тест одновременно?</span>
-        <span class="icon">+</span>
-      </div>
-      <div class="faq-a">
-        <span data-uz>Bepul rejimda cheksiz. Pro va O'quv Markazi rejimlarida ham cheklov yo'q — butun sinf yoki guruh bir vaqtda ishlaydi.</span>
-        <span data-ru>В бесплатном режиме — без ограничений. В тарифах Pro и Учебный Центр тоже нет лимита — весь класс или группа работает одновременно.</span>
-      </div>
-    </div>
-    <div class="faq-item" onclick="toggleFaq(this)">
-      <div class="faq-q">
-        <span data-uz>Natijalar qayerda saqlanadi?</span>
-        <span data-ru>Где хранятся результаты?</span>
-        <span class="icon">+</span>
-      </div>
-      <div class="faq-a">
-        <span data-uz>Barcha natijalar sizning Google Sheets'ingizga avtomatik saqlanadi. Siz to'liq nazoratdasiz, ma'lumotlaringiz faqat sizning Google akkauntingizda.</span>
-        <span data-ru>Все результаты автоматически сохраняются в вашем Google Sheets. Вы полностью контролируете данные — они хранятся только в вашем Google аккаунте.</span>
-      </div>
-    </div>
-    <div class="faq-item" onclick="toggleFaq(this)">
-      <div class="faq-q">
-        <span data-uz>Telefonda ham ishlaydi?</span>
-        <span data-ru>Работает ли на телефоне?</span>
-        <span class="icon">+</span>
-      </div>
-      <div class="faq-a">
-        <span data-uz>Ha, EduQuiz barcha qurilmalarda ishlaydi — telefon, planshet, kompyuter. Maxsus ilova o'rnatish shart emas.</span>
-        <span data-ru>Да, EduQuiz работает на всех устройствах — телефон, планшет, компьютер. Никакого специального приложения устанавливать не нужно.</span>
-      </div>
-    </div>
-    <div class="faq-item" onclick="toggleFaq(this)">
-      <div class="faq-q">
-        <span data-uz>Pro rejimni bekor qilish mumkinmi?</span>
-        <span data-ru>Можно ли отменить Pro подписку?</span>
-        <span class="icon">+</span>
-      </div>
-      <div class="faq-a">
-        <span data-uz>Ha, istalgan vaqt bekor qilishingiz mumkin. Shartnoma va yashirin to'lovlar yo'q. To'lov muddati tugagach, bepul rejimga o'tasiz.</span>
-        <span data-ru>Да, можете отменить в любое время. Никаких контрактов и скрытых платежей. По истечении периода оплаты переходите на бесплатный тариф.</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- CTA -->
-<div class="cta-section">
-  <h2 data-uz>Bugun boshlang — bepul!</h2>
-  <h2 data-ru>Начните сегодня — бесплатно!</h2>
-  <p data-uz>2 daqiqada birinchi imtihonni o'tkazing. Kredit kartasi talab qilinmaydi.</p>
-  <p data-ru>Проведите первый экзамен за 2 минуты. Кредитная карта не требуется.</p>
-  <a href="index.html" class="btn-primary" style="display:inline-block;">
-    <span data-uz>⚡ Bepul boshlash →</span>
-    <span data-ru>⚡ Начать бесплатно →</span>
-  </a>
+  <div class="ornament-footer"></div>
 </div>
 
-<!-- FOOTER -->
-<footer>
-  <div>
-    <div class="footer-logo">EduQuiz</div>
-    <p style="margin-top:8px;" data-uz>O'zbek ta'limi uchun zamonaviy platforma</p>
-    <p style="margin-top:8px;" data-ru>Современная платформа для образования Узбекистана</p>
+<!-- ══════════════════════════════════════ -->
+<!-- SCREEN 3: ПАНЕЛЬ УЧИТЕЛЯ              -->
+<!-- ══════════════════════════════════════ -->
+<div class="screen" id="s-teacher-dashboard">
+  <div class="header">
+    <div class="header-inner">
+      <div class="logo">Edu<span>Quiz</span></div>
+      <button class="header-back" onclick="go('s-home')">Выйти</button>
+    </div>
   </div>
-  <div class="footer-links">
-    <a href="#features" data-uz>Imkoniyatlar</a><a href="#features" data-ru>Возможности</a>
-    <a href="#pricing" data-uz>Narxlar</a><a href="#pricing" data-ru>Тарифы</a>
-    <a href="index.html" data-uz>Platforma</a><a href="index.html" data-ru>Платформа</a>
-  </div>
-  <p>© 2025 EduQuiz. <span data-uz>Barcha huquqlar himoyalangan.</span><span data-ru>Все права защищены.</span></p>
-</footer>
+  <div class="main">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:28px;">
+      <div>
+        <h1 class="page-title">Панель учителя</h1>
+        <p style="color:var(--muted);">Добро пожаловать, Алишер Набиев 👋</p>
+      </div>
+      <button class="btn btn-gold" onclick="go('s-create-quiz')">+ Создать тест</button>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-num">5</div><div class="stat-label">Тестов создано</div></div>
+      <div class="stat-card"><div class="stat-num">148</div><div class="stat-label">Учеников прошли</div></div>
+      <div class="stat-card"><div class="stat-num">72%</div><div class="stat-label">Средний балл</div></div>
+      <div class="stat-card"><div class="stat-num">3</div><div class="stat-label">Активных сессий</div></div>
+    </div>
 
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('t-quizzes','tab-quizzes',this)">Мои тесты</div>
+      <div class="tab" onclick="switchTab('t-results','tab-results',this)">Результаты</div>
+    </div>
+
+    <div id="t-quizzes">
+      <div class="card card-sm">
+        <div class="quiz-row">
+          <div class="quiz-icon">🧮</div>
+          <div class="quiz-info">
+            <div class="quiz-name">Алгебра — Квадратные уравнения</div>
+            <div class="quiz-meta">10 вопросов · 5 мин · <span class="badge badge-green">Активен</span></div>
+          </div>
+          <div class="quiz-actions">
+            <button class="btn btn-sm btn-primary" onclick="go('s-qr')">QR</button>
+            <button class="btn btn-sm btn-secondary" onclick="go('s-results')">📊</button>
+          </div>
+        </div>
+        <div class="quiz-row">
+          <div class="quiz-icon">🌍</div>
+          <div class="quiz-info">
+            <div class="quiz-name">История Узбекистана — Тест #3</div>
+            <div class="quiz-meta">8 вопросов · 4 мин · <span class="badge badge-blue">Черновик</span></div>
+          </div>
+          <div class="quiz-actions">
+            <button class="btn btn-sm btn-secondary">✏️</button>
+            <button class="btn btn-sm btn-secondary">🗑</button>
+          </div>
+        </div>
+        <div class="quiz-row">
+          <div class="quiz-icon">⚗️</div>
+          <div class="quiz-info">
+            <div class="quiz-name">Химия — Периодическая таблица</div>
+            <div class="quiz-meta">15 вопросов · 8 мин · <span class="badge badge-yellow">Завершён</span></div>
+          </div>
+          <div class="quiz-actions">
+            <button class="btn btn-sm btn-secondary" onclick="go('s-results')">📊</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="t-results" style="display:none;">
+      <div class="card card-sm">
+        <table>
+          <tr><th>Ученик</th><th>Тест</th><th>Балл</th><th>Оценка</th><th>Время</th></tr>
+          <tr><td>Камила Рашидова</td><td>Алгебра</td><td>9/10</td><td><span class="badge badge-green">5</span></td><td>3:42</td></tr>
+          <tr><td>Бобур Юсупов</td><td>Алгебра</td><td>7/10</td><td><span class="badge badge-blue">4</span></td><td>4:15</td></tr>
+          <tr><td>Дилноза Хасанова</td><td>Алгебра</td><td>5/10</td><td><span class="badge badge-yellow">3</span></td><td>4:58</td></tr>
+          <tr><td>Санжар Тошматов</td><td>Алгебра</td><td>4/10</td><td><span class="badge badge-yellow">3</span></td><td>5:00</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="ornament-footer"></div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- SCREEN 4: СОЗДАНИЕ ТЕСТА              -->
+<!-- ══════════════════════════════════════ -->
+<div class="screen" id="s-create-quiz">
+  <div class="header">
+    <div class="header-inner">
+      <div class="logo">Edu<span>Quiz</span></div>
+      <button class="header-back" onclick="go('s-teacher-dashboard')">← Назад</button>
+    </div>
+  </div>
+  <div class="main">
+    <h1 class="page-title">Создать новый тест</h1>
+    <p class="page-subtitle">Заполните основные данные и добавьте вопросы</p>
+
+    <div class="card" style="margin-bottom:20px;">
+      <div class="form-group">
+        <label>Название теста</label>
+        <input type="text" placeholder="Например: Алгебра — Тема 5" value="Биология — Клетка">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>Время на вопрос (сек)</label>
+          <select><option>15</option><option selected>30</option><option>45</option><option>60</option></select>
+        </div>
+        <div class="form-group">
+          <label>Предмет</label>
+          <select><option>Биология</option><option>Алгебра</option><option>История</option><option>Химия</option></select>
+        </div>
+      </div>
+    </div>
+
+    <div id="questions-list">
+      <div class="question-block">
+        <div class="q-header"><span class="q-num">ВОПРОС 1</span><button class="btn btn-sm btn-secondary" onclick="removeQ(this)">✕</button></div>
+        <input type="text" placeholder="Текст вопроса..." value="Что является основной единицей жизни?">
+        <div class="answer-row"><input type="text" placeholder="Вариант А" value="Атом"><label class="correct-radio"><input type="radio" name="q1" onchange="markCorrect(this,'A')"> Верный</label></div>
+        <div class="answer-row"><input type="text" placeholder="Вариант Б" value="Клетка"><label class="correct-radio"><input type="radio" name="q1" checked onchange="markCorrect(this,'B')"> Верный</label></div>
+        <div class="answer-row"><input type="text" placeholder="Вариант В" value="Молекула"><label class="correct-radio"><input type="radio" name="q1" onchange="markCorrect(this,'C')"> Верный</label></div>
+        <div class="answer-row"><input type="text" placeholder="Вариант Г" value="Орган"><label class="correct-radio"><input type="radio" name="q1" onchange="markCorrect(this,'D')"> Верный</label></div>
+      </div>
+    </div>
+
+    <button class="btn btn-secondary btn-full mt-16" onclick="addQuestion()">+ Добавить вопрос</button>
+
+    <div class="gap-12 mt-24">
+      <button class="btn btn-primary btn-lg" onclick="go('s-qr')">Сохранить и получить QR →</button>
+      <button class="btn btn-secondary">Сохранить черновик</button>
+    </div>
+  </div>
+  <div class="ornament-footer"></div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- SCREEN 5: QR КОД                      -->
+<!-- ══════════════════════════════════════ -->
+<div class="screen" id="s-qr">
+  <div class="header">
+    <div class="header-inner">
+      <div class="logo">Edu<span>Quiz</span></div>
+      <button class="header-back" onclick="go('s-teacher-dashboard')">← Панель</button>
+    </div>
+  </div>
+  <div class="main-narrow" style="display:flex;align-items:center;flex:1;">
+    <div style="width:100%">
+      <div class="card text-center">
+        <h2 class="page-title" style="margin-bottom:6px;">Тест готов! 🎉</h2>
+        <p style="color:var(--muted);margin-bottom:28px;">Покажите QR-код ученикам или поделитесь ссылкой</p>
+        <div class="qr-box" id="qr-visual">
+          <svg width="140" height="140" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+            <!-- QR decorative pattern -->
+            <rect x="0" y="0" width="50" height="50" rx="4" fill="none" stroke="#1B3A6B" stroke-width="4"/>
+            <rect x="8" y="8" width="34" height="34" rx="2" fill="#1B3A6B"/>
+            <rect x="90" y="0" width="50" height="50" rx="4" fill="none" stroke="#1B3A6B" stroke-width="4"/>
+            <rect x="98" y="8" width="34" height="34" rx="2" fill="#1B3A6B"/>
+            <rect x="0" y="90" width="50" height="50" rx="4" fill="none" stroke="#1B3A6B" stroke-width="4"/>
+            <rect x="8" y="98" width="34" height="34" rx="2" fill="#1B3A6B"/>
+            <!-- data cells -->
+            <rect x="60" y="0" width="10" height="10" rx="1" fill="#1B3A6B"/>
+            <rect x="74" y="0" width="10" height="10" rx="1" fill="#1B3A6B"/>
+            <rect x="60" y="14" width="10" height="10" rx="1" fill="#1B3A6B"/>
+            <rect x="60" y="28" width="10" height="10" rx="1" fill="#1B3A6B"/>
+            <rect x="74" y="28" width="10" height="10" rx="1" fill="#1B3A6B"/>
+            <rect x="0" y="60" width="10" height="10" rx="1" fill="#1B3A6B"/>
+            <rect x="14" y="60" width="10" height="10" rx="1" fill="#1B3A6B"/>
+            <rect x="28" y="60" width="10" height="10" rx="1" fill="#1B3A6B"/>
+            <rect x="28" y="74" width="10" height="10" rx="1" fill="#1B3A6B"/>
+            <rect x="14" y="74" width="10" height="10" rx="1" fill="#1B3A6B"/>
+            <rect x="60" y="60" width="10" height="10" rx="1" fill="#C9952A"/>
+            <rect x="74" y="60" width="10" height="10" rx="1" fill="#C9952A"/>
+            <rect x="60" y="74" width="10" height="10" rx="1" fill="#1B3A6B"/>
+            <rect x="74" y="74" width="10" height="10" rx="1" fill="#C9952A"/>
+            <rect x="90" y="60" width="10" height="10" rx="1" fill="#1B3A6B"/>
+            <rect x="104" y="60" width="10" height="10" rx="1" fill="#1B3A6B"/>
+            <rect x="118" y="60" width="10" height="10" rx="1" fill="#1B3A6B"/>
+            <rect x="90" y="74" width="10" height="10" rx="1" fill="#C9952A"/>
+            <rect x="118" y="74" width="10" height="10" rx="1" fill="#1B3A6B"/>
+            <rect x="90" y="90" width="10" height="10" rx="1" fill="#1B3A6B"/>
+            <rect x="104" y="90" width="10" height="10" rx="1" fill="#1B3A6B"/>
+            <rect x="118" y="90" width="10" height="10" rx="1" fill="#C9952A"/>
+            <rect x="90" y="104" width="10" height="10" rx="1" fill="#C9952A"/>
+            <rect x="118" y="104" width="10" height="10" rx="1" fill="#1B3A6B"/>
+            <rect x="90" y="118" width="10" height="10" rx="1" fill="#1B3A6B"/>
+            <rect x="104" y="118" width="10" height="10" rx="1" fill="#1B3A6B"/>
+          </svg>
+        </div>
+        <p style="font-size:0.82rem;color:var(--muted);margin-bottom:16px;">eduquizplatform.vercel.app/join/<b style="color:var(--lapis);">BIO-2024</b></p>
+        <div class="gap-12" style="justify-content:center;margin-bottom:20px;">
+          <button class="btn btn-primary">📋 Скопировать ссылку</button>
+          <button class="btn btn-secondary">🖨 Распечатать</button>
+        </div>
+        <div class="divider"></div>
+        <button class="btn btn-gold btn-full" onclick="go('s-results')">📊 Смотреть результаты в реальном времени</button>
+      </div>
+    </div>
+  </div>
+  <div class="ornament-footer"></div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- SCREEN 6: РЕЗУЛЬТАТЫ КЛАССА           -->
+<!-- ══════════════════════════════════════ -->
+<div class="screen" id="s-results">
+  <div class="header">
+    <div class="header-inner">
+      <div class="logo">Edu<span>Quiz</span></div>
+      <button class="header-back" onclick="go('s-teacher-dashboard')">← Панель</button>
+    </div>
+  </div>
+  <div class="main">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+      <div>
+        <h1 class="page-title">Результаты: Биология — Клетка</h1>
+        <p style="color:var(--muted);">Прошли 8 из 22 учеников · Ожидаем...</p>
+      </div>
+      <span class="badge badge-green" style="font-size:0.88rem;padding:7px 14px;">🟢 Сессия активна</span>
+    </div>
+
+    <div class="stats-row" style="margin-bottom:24px;">
+      <div class="stat-card"><div class="stat-num">8</div><div class="stat-label">Прошли</div></div>
+      <div class="stat-card"><div class="stat-num">78%</div><div class="stat-label">Средний балл</div></div>
+      <div class="stat-card"><div class="stat-num">3:21</div><div class="stat-label">Среднее время</div></div>
+      <div class="stat-card"><div class="stat-num">Q3</div><div class="stat-label">Трудный вопрос</div></div>
+    </div>
+
+    <div class="card card-sm">
+      <table>
+        <tr><th>#</th><th>Ученик</th><th>Баллы</th><th>%</th><th>Оценка</th><th>Время</th></tr>
+        <tr><td>🥇 1</td><td><b>Камила Рашидова</b></td><td>10/10</td><td>100%</td><td><span class="badge badge-green">5</span></td><td>2:58</td></tr>
+        <tr><td>🥈 2</td><td>Бобур Юсупов</td><td>9/10</td><td>90%</td><td><span class="badge badge-green">5</span></td><td>3:14</td></tr>
+        <tr><td>🥉 3</td><td>Дилноза Хасанова</td><td>8/10</td><td>80%</td><td><span class="badge badge-blue">4</span></td><td>3:30</td></tr>
+        <tr><td>4</td><td>Санжар Тошматов</td><td>7/10</td><td>70%</td><td><span class="badge badge-blue">4</span></td><td>3:50</td></tr>
+        <tr><td>5</td><td>Малика Юнусова</td><td>6/10</td><td>60%</td><td><span class="badge badge-yellow">3</span></td><td>4:12</td></tr>
+        <tr><td>6</td><td>Тимур Абдуллаев</td><td>5/10</td><td>50%</td><td><span class="badge badge-yellow">3</span></td><td>4:55</td></tr>
+        <tr><td>7</td><td>Нилуфар Каримова</td><td>9/10</td><td>90%</td><td><span class="badge badge-green">5</span></td><td>3:05</td></tr>
+        <tr><td>8</td><td>Одил Исмоилов</td><td>4/10</td><td>40%</td><td><span class="badge" style="background:#FEF2F2;color:#991B1B;">2</span></td><td>5:00</td></tr>
+      </table>
+    </div>
+    <div class="gap-12 mt-24">
+      <button class="btn btn-secondary">📥 Экспорт в Excel</button>
+      <button class="btn btn-primary" onclick="go('s-qr')">← QR-код</button>
+    </div>
+  </div>
+  <div class="ornament-footer"></div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- SCREEN 7: УЧЕНИК — ИМЯ               -->
+<!-- ══════════════════════════════════════ -->
+<div class="screen" id="s-student-name">
+  <div class="header">
+    <div class="header-inner">
+      <div class="logo">Edu<span>Quiz</span></div>
+      <button class="header-back" onclick="go('s-home')">← Назад</button>
+    </div>
+  </div>
+  <div class="main-narrow" style="display:flex;align-items:center;flex:1;">
+    <div style="width:100%">
+      <div class="card">
+        <div class="text-center" style="margin-bottom:28px;">
+          <div style="font-size:3rem;margin-bottom:12px;">✏️</div>
+          <h2 class="page-title" style="margin-bottom:4px;">Добро пожаловать!</h2>
+          <p style="color:var(--muted);">Введите своё имя, чтобы начать тест</p>
+        </div>
+        <div class="form-group">
+          <label>Ваше имя</label>
+          <input type="text" id="student-name-input" placeholder="Например: Камила Рашидова">
+        </div>
+        <div class="form-group">
+          <label>Код теста (если есть)</label>
+          <input type="text" placeholder="BIO-2024" value="BIO-2024">
+        </div>
+        <button class="btn btn-gold btn-full btn-lg mt-8" onclick="startQuiz()">Начать тест →</button>
+      </div>
+    </div>
+  </div>
+  <div class="ornament-footer"></div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- SCREEN 8: ВОПРОС                      -->
+<!-- ══════════════════════════════════════ -->
+<div class="screen" id="s-question">
+  <div class="header">
+    <div class="header-inner">
+      <div class="logo">Edu<span>Quiz</span></div>
+      <div class="timer-badge" id="timer-badge">⏱ <span id="timer-display">30</span></div>
+    </div>
+  </div>
+  <div class="main-narrow">
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span>Вопрос <span id="q-current">1</span> из <span id="q-total">5</span></span>
+        <span id="q-score-label">0 / 0 верно</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:20%"></div></div>
+    </div>
+
+    <div class="card">
+      <p style="font-size:0.82rem;color:var(--gold);font-weight:700;margin-bottom:10px;">ВОПРОС <span id="q-num-label">1</span></p>
+      <h2 style="font-size:1.25rem;font-weight:700;color:var(--lapis);line-height:1.4;margin-bottom:4px;" id="q-text">Загрузка...</h2>
+      <p style="color:var(--muted);font-size:0.85rem;margin-bottom:20px;">Выберите один правильный ответ</p>
+      <div class="options-grid" id="options-container"></div>
+      <div id="next-btn-wrap" style="display:none;margin-top:20px;">
+        <button class="btn btn-primary btn-full" onclick="nextQuestion()">Следующий вопрос →</button>
+      </div>
+    </div>
+  </div>
+  <div class="ornament-footer"></div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- SCREEN 9: РЕЗУЛЬТАТ УЧЕНИКА           -->
+<!-- ══════════════════════════════════════ -->
+<div class="screen" id="s-student-result">
+  <div class="header">
+    <div class="header-inner">
+      <div class="logo">Edu<span>Quiz</span></div>
+    </div>
+  </div>
+  <div class="main-narrow" style="display:flex;align-items:center;flex:1;">
+    <div style="width:100%;text-align:center;">
+      <div class="card">
+        <h2 class="page-title" style="margin-bottom:24px;" id="result-title">Тест завершён!</h2>
+        <div class="result-circle">
+          <div class="result-score" id="result-score">0</div>
+          <div class="result-total" id="result-total">из 5</div>
+        </div>
+        <div class="grade-badge" id="grade-badge">—</div>
+        <p style="color:var(--muted);margin-bottom:24px;" id="result-msg">—</p>
+        <div class="divider"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+          <div style="background:var(--cream);border-radius:10px;padding:14px;">
+            <div style="font-weight:800;font-size:1.4rem;color:var(--lapis);" id="res-percent">0%</div>
+            <div style="font-size:0.8rem;color:var(--muted);">Правильных</div>
+          </div>
+          <div style="background:var(--cream);border-radius:10px;padding:14px;">
+            <div style="font-weight:800;font-size:1.4rem;color:var(--lapis);" id="res-time">0:00</div>
+            <div style="font-size:0.8rem;color:var(--muted);">Затрачено времени</div>
+          </div>
+        </div>
+        <button class="btn btn-gold btn-full btn-lg" onclick="go('s-home')">На главную</button>
+        <button class="btn btn-secondary btn-full mt-8" onclick="retakeQuiz()">Пройти снова</button>
+      </div>
+    </div>
+  </div>
+  <div class="ornament-footer"></div>
+</div>
+
+
+<!-- ══════════════════════════════════════ -->
+<!-- JAVASCRIPT                            -->
+<!-- ══════════════════════════════════════ -->
 <script>
-function setLang(lang) {
-  document.body.classList.toggle('ru', lang === 'ru');
-  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector(`.lang-btn:${lang==='uz'?'first':'last'}-child`).classList.add('active');
+// ── NAVIGATION ──────────────────────────
+function go(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active','fade-in'));
+  const next = document.getElementById(screenId);
+  if (next) {
+    next.classList.add('active','fade-in');
+    window.scrollTo(0,0);
+  }
 }
-function toggleFaq(el) {
-  el.classList.toggle('open');
+
+// ── TEACHER LOGIN ────────────────────────
+function teacherLogin() {
+  const pass = document.getElementById('teacher-pass').value;
+  const err = document.getElementById('login-error');
+  if (pass === 'edu2024') {
+    err.classList.remove('show');
+    go('s-teacher-dashboard');
+  } else {
+    err.classList.add('show');
+    document.getElementById('teacher-pass').focus();
+  }
 }
-// Scroll reveal
-const obs = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if(e.isIntersecting) {
-      e.target.style.opacity = '1';
-      e.target.style.transform = 'translateY(0)';
-    }
-  });
-}, { threshold: 0.1 });
-document.querySelectorAll('.feat-card, .step, .price-card, .testi-card').forEach(el => {
-  el.style.opacity = '0';
-  el.style.transform = 'translateY(24px)';
-  el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-  obs.observe(el);
+
+// Allow Enter key in login
+document.getElementById('teacher-pass').addEventListener('keydown', e => {
+  if (e.key === 'Enter') teacherLogin();
 });
+
+// ── TABS ─────────────────────────────────
+function switchTab(showId, hideId, clickedTab) {
+  document.getElementById('t-quizzes').style.display = 'none';
+  document.getElementById('t-results').style.display = 'none';
+  document.getElementById(showId).style.display = 'block';
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  clickedTab.classList.add('active');
+}
+
+// ── QUIZ BUILDER ─────────────────────────
+let qCount = 1;
+function addQuestion() {
+  qCount++;
+  const n = qCount;
+  const list = document.getElementById('questions-list');
+  const div = document.createElement('div');
+  div.className = 'question-block';
+  div.innerHTML = `
+    <div class="q-header"><span class="q-num">ВОПРОС ${n}</span><button class="btn btn-sm btn-secondary" onclick="removeQ(this)">✕</button></div>
+    <input type="text" placeholder="Текст вопроса...">
+    <div class="answer-row"><input type="text" placeholder="Вариант А"><label class="correct-radio"><input type="radio" name="q${n}"> Верный</label></div>
+    <div class="answer-row"><input type="text" placeholder="Вариант Б"><label class="correct-radio"><input type="radio" name="q${n}"> Верный</label></div>
+    <div class="answer-row"><input type="text" placeholder="Вариант В"><label class="correct-radio"><input type="radio" name="q${n}"> Верный</label></div>
+    <div class="answer-row"><input type="text" placeholder="Вариант Г"><label class="correct-radio"><input type="radio" name="q${n}"> Верный</label></div>
+  `;
+  list.appendChild(div);
+  div.querySelector('input[type="text"]').focus();
+}
+function removeQ(btn) {
+  btn.closest('.question-block').remove();
+}
+
+// ── QUIZ DATA ────────────────────────────
+const quizData = [
+  {
+    q: "Что является основной структурной единицей всех живых организмов?",
+    opts: ["Атом", "Молекула", "Клетка", "Орган"],
+    correct: 2
+  },
+  {
+    q: "Где в клетке происходит синтез белка?",
+    opts: ["Митохондрия", "Рибосома", "Ядро", "Лизосома"],
+    correct: 1
+  },
+  {
+    q: "Какой органоид клетки отвечает за выработку энергии (АТФ)?",
+    opts: ["Хлоропласт", "Аппарат Гольджи", "Эндоплазматическая сеть", "Митохондрия"],
+    correct: 3
+  },
+  {
+    q: "Что такое ДНК?",
+    opts: ["Белок-переносчик", "Носитель генетической информации", "Фермент расщепления", "Вид РНК"],
+    correct: 1
+  },
+  {
+    q: "Фотосинтез происходит в:",
+    opts: ["Митохондриях", "Рибосомах", "Хлоропластах", "Ядре"],
+    correct: 2
+  }
+];
+
+// ── QUIZ STATE ────────────────────────────
+let currentQ = 0;
+let score = 0;
+let answered = false;
+let timerInterval = null;
+let timeLeft = 30;
+let startTime = null;
+let totalElapsed = 0;
+
+const letters = ['А', 'Б', 'В', 'Г'];
+
+function startQuiz() {
+  const nameInput = document.getElementById('student-name-input').value.trim();
+  if (!nameInput) {
+    document.getElementById('student-name-input').focus();
+    document.getElementById('student-name-input').style.borderColor = 'var(--danger)';
+    return;
+  }
+  currentQ = 0;
+  score = 0;
+  totalElapsed = 0;
+  startTime = Date.now();
+  go('s-question');
+  showQuestion();
+}
+
+function showQuestion() {
+  answered = false;
+  const data = quizData[currentQ];
+
+  document.getElementById('q-current').textContent = currentQ + 1;
+  document.getElementById('q-total').textContent = quizData.length;
+  document.getElementById('q-num-label').textContent = currentQ + 1;
+  document.getElementById('q-score-label').textContent = `${score} / ${currentQ} верно`;
+  document.getElementById('progress-fill').style.width = ((currentQ + 1) / quizData.length * 100) + '%';
+  document.getElementById('q-text').textContent = data.q;
+  document.getElementById('next-btn-wrap').style.display = 'none';
+
+  // Build options
+  const container = document.getElementById('options-container');
+  container.innerHTML = '';
+  data.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="option-letter">${letters[i]}</span>${opt}`;
+    btn.onclick = () => selectAnswer(i, data.correct, btn);
+    container.appendChild(btn);
+  });
+
+  // Timer
+  clearInterval(timerInterval);
+  timeLeft = 30;
+  updateTimer();
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimer();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      if (!answered) autoExpire();
+    }
+  }, 1000);
+}
+
+function updateTimer() {
+  const badge = document.getElementById('timer-badge');
+  document.getElementById('timer-display').textContent = timeLeft;
+  badge.className = 'timer-badge' + (timeLeft <= 10 ? ' warning' : '');
+}
+
+function selectAnswer(chosen, correct, clickedBtn) {
+  if (answered) return;
+  answered = true;
+  clearInterval(timerInterval);
+
+  const allBtns = document.querySelectorAll('.option-btn');
+  allBtns.forEach((b, i) => {
+    b.disabled = true;
+    if (i === correct) b.classList.add('correct');
+  });
+
+  if (chosen === correct) {
+    score++;
+    clickedBtn.classList.remove('wrong');
+  } else {
+    clickedBtn.classList.add('wrong');
+  }
+
+  document.getElementById('next-btn-wrap').style.display = 'block';
+}
+
+function autoExpire() {
+  answered = true;
+  const allBtns = document.querySelectorAll('.option-btn');
+  allBtns.forEach((b, i) => {
+    b.disabled = true;
+    if (i === quizData[currentQ].correct) b.classList.add('correct');
+  });
+  document.getElementById('next-btn-wrap').style.display = 'block';
+}
+
+function nextQuestion() {
+  currentQ++;
+  if (currentQ < quizData.length) {
+    showQuestion();
+  } else {
+    showResult();
+  }
+}
+
+function showResult() {
+  clearInterval(timerInterval);
+  const elapsed = Math.round((Date.now() - startTime) / 1000);
+  const mins = Math.floor(elapsed / 60);
+  const secs = elapsed % 60;
+  const pct = Math.round(score / quizData.length * 100);
+
+  const grade = pct >= 90 ? 5 : pct >= 70 ? 4 : pct >= 50 ? 3 : 2;
+  const msgs = {
+    5: "Отлично! Превосходный результат 🌟",
+    4: "Хорошо! Ты справился с большинством вопросов 👍",
+    3: "Удовлетворительно. Стоит повторить материал 📚",
+    2: "Нужно подтянуть тему. Попробуй ещё раз 💪"
+  };
+  const gradeClasses = { 5:'grade-5', 4:'grade-4', 3:'grade-3', 2:'grade-2' };
+
+  document.getElementById('result-score').textContent = score;
+  document.getElementById('result-total').textContent = `из ${quizData.length}`;
+  document.getElementById('result-msg').textContent = msgs[grade];
+  document.getElementById('res-percent').textContent = pct + '%';
+  document.getElementById('res-time').textContent = `${mins}:${String(secs).padStart(2,'0')}`;
+
+  const badge = document.getElementById('grade-badge');
+  badge.textContent = `Оценка: ${grade}`;
+  badge.className = 'grade-badge ' + gradeClasses[grade];
+
+  go('s-student-result');
+}
+
+function retakeQuiz() {
+  go('s-student-name');
+}
 </script>
 </body>
 </html>
