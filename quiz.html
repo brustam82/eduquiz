@@ -66,20 +66,6 @@
     letter-spacing: 0.5px;
   }
   .logo span { color: var(--gold); }
-  
-  .lang-switcher { display: flex; gap: 6px; }
-  .lang-btn {
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.2);
-    color: var(--white);
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    font-weight: 600;
-  }
-  .lang-btn.active { background: var(--gold); border-color: var(--gold); }
-
   .header-back {
     background: rgba(255,255,255,0.12);
     border: 1px solid rgba(255,255,255,0.25);
@@ -89,7 +75,9 @@
     cursor: pointer;
     font-size: 0.9rem;
     font-weight: 500;
+    transition: background 0.2s;
   }
+  .header-back:hover { background: rgba(255,255,255,0.22); }
 
   /* HERO */
   .hero {
@@ -116,6 +104,7 @@
     color: var(--white);
     line-height: 1.2;
     margin-bottom: 16px;
+    position: relative;
   }
   .hero h1 span { color: var(--gold-light); }
   .hero p {
@@ -123,8 +112,9 @@
     font-size: 1.1rem;
     max-width: 520px;
     margin: 0 auto 40px;
+    position: relative;
   }
-  .hero-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .hero-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; position: relative; }
 
   /* BUTTONS */
   .btn {
@@ -140,9 +130,10 @@
   .btn-secondary { background: var(--white); color: var(--lapis); border: 1.5px solid var(--border); }
   .btn-secondary:hover { background: var(--cream); }
   .btn-full { width: 100%; justify-content: center; }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
 
-  /* CONTAINERS */
+  /* CONTAINER SIZES */
+  .main { max-width: 960px; margin: 0 auto; padding: 40px 24px 60px; flex: 1; }
   .main-narrow { max-width: 520px; margin: 0 auto; padding: 40px 24px 60px; flex: 1; }
 
   /* CARDS */
@@ -211,15 +202,11 @@
 <div class="screen active" id="s-home">
   <div class="hero">
     <div class="hero-pattern"></div>
-    <div style="position: absolute; top: 20px; right: 24px;" class="lang-switcher">
-      <button class="lang-btn active" onclick="changeLang('uz')">UZ</button>
-      <button class="lang-btn" onclick="changeLang('ru')">RU</button>
-    </div>
-    <h1 id="main-tagline">Bilimlarni sinab ko'ring — tez va qulay</h1>
-    <p id="main-desc">Test yarating, QR-kod va havolani ulashing, natijalarni kuzating</p>
+    <h1>EduQuiz — <span>умные тесты</span><br>для живого класса</h1>
+    <p>Тесты генерируются автоматически на базе вашей единой Google Таблицы.</p>
     <div class="hero-btns">
-      <button class="btn btn-gold btn-lg" onclick="go('s-teacher-login')" id="btn-role-teacher">🎓 O'qituvchi</button>
-      <button class="btn btn-outline btn-lg" onclick="checkDirectAccessOrGo()" id="btn-role-student">✏️ Talaba</button>
+      <button class="btn btn-gold btn-lg" onclick="go('s-teacher-login')">🎓 Я учитель</button>
+      <button class="btn btn-outline btn-lg" onclick="checkDirectAccessOrGo()">✏️ Я ученик</button>
     </div>
   </div>
   <div class="ornament-footer"></div>
@@ -229,21 +216,21 @@
   <div class="header">
     <div class="header-inner">
       <div class="logo">Edu<span>Quiz</span></div>
-      <button class="header-back" onclick="go('s-home')" id="back-1">Orqaga</button>
+      <button class="header-back" onclick="go('s-home')">← Назад</button>
     </div>
   </div>
   <div class="main-narrow">
     <div class="card">
       <div class="text-center" style="margin-bottom:28px;">
-        <h2 id="login-title">Parolni kiriting</h2>
-        <p style="color:var(--muted);" id="login-subtitle">Faqat o'qituvchilar uchun</p>
+        <h2 class="page-title">Вход для учителя</h2>
+        <p style="color:var(--muted);">Введите пароль доступа к конструктору</p>
       </div>
       <div class="form-group">
-        <label id="lbl-password">Parol</label>
-        <input type="password" id="teacher-pass" placeholder="***">
-        <div class="error-msg" id="login-error">Noto'g'ri parol</div>
+        <label>Пароль доступа</label>
+        <input type="password" id="teacher-pass" placeholder="Введите пароль">
+        <div class="error-msg" id="login-error">Неверный пароль. Используйте: <b>edu2024</b></div>
       </div>
-      <button class="btn btn-primary btn-full" onclick="checkTeacherPassword()" id="btn-enter">Kirish</button>
+      <button class="btn btn-primary btn-full" onclick="checkTeacherPassword()">Войти →</button>
     </div>
   </div>
   <div class="ornament-footer"></div>
@@ -253,15 +240,15 @@
   <div class="header">
     <div class="header-inner">
       <div class="logo">Edu<span>Quiz</span></div>
-      <button class="header-back" onclick="go('s-home')" id="btn-logout">Chiqish</button>
+      <button class="header-back" onclick="go('s-home')">Выйти</button>
     </div>
   </div>
   <div class="main-narrow">
     <div class="card">
-      <h2 class="page-title text-center" style="margin-bottom: 20px;" id="dash-title">Test yaratish</h2>
+      <h2 class="page-title text-center" style="margin-bottom: 20px;">Генератор QR-кодов</h2>
       
       <div class="form-group">
-        <label id="lbl-subject">Fanni tanlang</label>
+        <label>Выберите предмет / Тему</label>
         <select id="quiz-subject-select">
           <option value="Matematika">Matematika</option>
           <option value="Fizika">Fizika</option>
@@ -275,21 +262,21 @@
       </div>
 
       <div class="form-group">
-        <label id="lbl-count">Savollar soni</label>
+        <label>Количество вопросов</label>
         <input type="number" id="quiz-q-count" value="5" min="1" max="30">
       </div>
 
       <div class="form-group">
-        <label id="lbl-time">Har bir savol (sek)</label>
+        <label>Время на один вопрос (сек)</label>
         <input type="number" id="quiz-time-limit" value="30" min="5" max="180">
       </div>
 
-      <button class="btn btn-gold btn-full" onclick="generateQuizLink()" id="btn-generate">🚀 Test yaratish</button>
+      <button class="btn btn-gold btn-full" onclick="generateQuizLink()">✨ Создать тест и QR</button>
 
       <div id="teacher-qr-result" class="hidden" style="margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border);">
         <div class="qr-box" id="qrcode-canvas"></div>
-        <p class="text-center" style="font-size: 0.85rem; color: var(--muted); margin-bottom: 12px; word-break: break-all;" id="generated-url-text"></p>
-        <button class="btn btn-primary btn-full" onclick="copyQuizLink()" id="btn-copy">Havolani nusxalash</button>
+        <p class="text-center" style="font-size: 0.85rem; color: var(--muted); margin-bottom: 12px;" id="generated-url-text"></p>
+        <button class="btn btn-primary btn-full" onclick="copyQuizLink()">📋 Скопировать ссылку тестов</button>
       </div>
     </div>
   </div>
@@ -300,21 +287,21 @@
   <div class="header">
     <div class="header-inner">
       <div class="logo">Edu<span>Quiz</span></div>
-      <button class="header-back" onclick="go('s-home')" id="back-2">Orqaga</button>
+      <button class="header-back" onclick="go('s-home')">← Назад</button>
     </div>
   </div>
   <div class="main-narrow">
     <div class="card">
       <div class="text-center" style="margin-bottom:24px;">
         <div style="font-size:3rem;margin-bottom:12px;">✏️</div>
-        <h2 class="page-title" id="student-subject-title">Test</h2>
-        <p style="color:var(--muted);" id="student-hint">Talabalar QR-kod yoki havola orqali testga kiradi</p>
+        <h2 class="page-title" id="student-subject-title">Регистрация на тест</h2>
+        <p style="color:var(--muted);">Введите свои данные, результаты запишутся в журнал</p>
       </div>
       <div class="form-group">
-        <label id="lbl-student-name">Ismingizni kiriting</label>
-        <input type="text" id="student-name-input" placeholder="F.I.O.">
+        <label>Ваше Имя и Фамилия</label>
+        <input type="text" id="student-name-input" placeholder="Например: Камила Рашидова">
       </div>
-      <button id="start-test-btn" class="btn btn-gold btn-full btn-lg" onclick="loadQuestionsFromGoogle()"><span id="btn-start-quiz">Testni boshlash</span> →</button>
+      <button id="start-test-btn" class="btn btn-gold btn-full btn-lg" onclick="loadQuestionsFromGoogle()">Начать тест →</button>
     </div>
   </div>
   <div class="ornament-footer"></div>
@@ -330,17 +317,18 @@
   <div class="main-narrow">
     <div class="progress-wrap">
       <div class="progress-label">
-        <span><span id="txt-q">savol</span> <span id="q-current">0</span> / <span id="q-total">0</span></span>
-        <span id="q-score-label">0</span>
+        <span>Вопрос <span id="q-current">0</span> из <span id="q-total">0</span></span>
+        <span id="q-score-label">0 верно</span>
       </div>
       <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
     </div>
 
     <div class="card">
-      <h2 style="font-size:1.25rem;font-weight:700;color:var(--lapis);line-height:1.4;margin-bottom:20px;" id="q-text">...</h2>
+      <p style="font-size:0.82rem;color:var(--gold);font-weight:700;margin-bottom:10px;">ВОПРОС <span id="q-num-label">1</span></p>
+      <h2 style="font-size:1.25rem;font-weight:700;color:var(--lapis);line-height:1.4;margin-bottom:20px;" id="q-text">Загрузка вопроса...</h2>
       <div class="options-grid" id="options-container"></div>
       <div id="next-btn-wrap" style="display:none;margin-top:20px;">
-        <button class="btn btn-primary btn-full" onclick="nextQuestion()" id="btn-next">Keyingi savol →</button>
+        <button class="btn btn-primary btn-full" onclick="nextQuestion()">Следующий вопрос →</button>
       </div>
     </div>
   </div>
@@ -355,106 +343,35 @@
   </div>
   <div class="main-narrow">
     <div class="card text-center">
-      <h2 class="page-title" style="margin-bottom:24px;" id="result-title-page">Natijangiz</h2>
+      <h2 class="page-title" style="margin-bottom:24px;">Тест завершён!</h2>
       <div class="result-circle">
         <div class="result-score" id="result-score">0</div>
-        <div class="result-total" id="result-total">/ 0</div>
+        <div class="result-total" id="result-total">из 0</div>
       </div>
       <div class="grade-badge" id="grade-badge">—</div>
+      <p style="color:var(--muted);margin-bottom:24px;" id="result-msg">—</p>
       <div class="divider"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
         <div style="background:var(--cream);border-radius:10px;padding:14px;">
           <div style="font-weight:800;font-size:1.4rem;color:var(--lapis);" id="res-percent">0%</div>
-          <div style="font-size:0.8rem;color:var(--muted);" id="lbl-correct-percent">To'g'ri javob</div>
+          <div style="font-size:0.8rem;color:var(--muted);">Правильных</div>
         </div>
         <div style="background:var(--cream);border-radius:10px;padding:14px;">
           <div style="font-weight:800;font-size:1.4rem;color:var(--lapis);" id="res-time">0:00</div>
-          <div style="font-size:0.8rem;color:var(--muted);" id="lbl-time-spent">Vaqt</div>
+          <div style="font-size:0.8rem;color:var(--muted);">Время теста</div>
         </div>
       </div>
-      <button class="btn btn-gold btn-full btn-lg" onclick="resetToHome()" id="btn-retry">Qayta urinish</button>
+      <button class="btn btn-gold btn-full btn-lg" onclick="location.href=window.location.origin+window.location.pathname">На главную</button>
     </div>
   </div>
   <div class="ornament-footer"></div>
 </div>
 
 <script>
-// ВАЖНО: URL вашего развернутого Google Apps Script Web App
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyfD0U7S_m9pL-UfH6rV6w5vGzW3Y6uR1v-X8-mD5o_/exec'; 
+// ВАЖНО: Ссылка на развернутое веб-приложение вашего Google Apps Script
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzDusUOcp-XfHzFFr6s3mfm1GFAps5HH_i3-edUI1ZzyoIkbR68V6H9bsaW2zDwgrZtHA/exec'; 
 
-// СЛОВАРЬ МУЛЬТИЯЗЫЧНОСТИ (I18N)
-const LANGS = {
-  uz: {
-    tagline: "Bilimlarni sinab ko'ring — tez va qulay",
-    desc: "Test yarating, QR-kod va havolani ulashing, natijalarni kuzating",
-    teacher: "🎓 O'qituvchi",
-    student: "✏️ Talaba",
-    title_login: "Parolni kiriting",
-    sub_login: "Faqat o'qituvchilar uchun",
-    lbl_pass: "Parol",
-    btn_enter: "Kirish",
-    back: "Orqaga",
-    logout: "Chiqish",
-    err_pass: "Noto'g'ri parol",
-    dash_title: "Test yaratish",
-    lbl_subject: "Fanni tanlang",
-    lbl_count: "Savollar soni",
-    lbl_time: "Har bir savol (sek)",
-    btn_generate: "🚀 Test yaratish",
-    btn_copy: "Havolani nusxalash",
-    copied: "Nusxalandi!",
-    student_hint: "Talabalar QR-kod yoki havola orqali testga kiradi",
-    lbl_student_name: "Ismingizni kiriting",
-    btn_start_quiz: "Testni boshlash",
-    txt_q: "savol",
-    btn_next: "Keyingi savol →",
-    result_title: "Natijangiz",
-    lbl_correct_percent: "To'g'ri javob",
-    lbl_time_spent: "Vaqt",
-    btn_retry: "Qayta urinish",
-    loading: "Yuklanmoqda...",
-    not_found: "Bu fan bo'yicha savollar topilmadi!",
-    conn_error: "Google Tablitsaga ulanishda xatolik yuz berdi. Qayta urinib ko'ring.",
-    grades: ["A'lo", "Yaxshi", "O'rtacha", "Qoniqarsiz"]
-  },
-  ru: {
-    tagline: "Проверяйте знания — быстро и удобно",
-    desc: "Создайте тест, поделитесь QR-кодом и ссылкой, отслеживайте результаты",
-    teacher: "🎓 Учитель",
-    student: "✏️ Ученик",
-    title_login: "Введите пароль",
-    sub_login: "Только для учителей",
-    lbl_pass: "Пароль",
-    btn_enter: "Войти",
-    back: "Назад",
-    logout: "Выйти",
-    err_pass: "Неверный пароль",
-    dash_title: "Создание теста",
-    lbl_subject: "Выберите предмет",
-    lbl_count: "Количество вопросов",
-    lbl_time: "На каждый вопрос (сек)",
-    btn_generate: "🚀 Создать тест",
-    btn_copy: "Скопировать ссылку",
-    copied: "Скопировано!",
-    student_hint: "Ученики входят в тест по QR-коду или ссылке",
-    lbl_student_name: "Введите ваше имя",
-    btn_start_quiz: "Начать тест",
-    txt_q: "вопрос",
-    btn_next: "Следующий вопрос →",
-    result_title: "Ваш результат",
-    lbl_correct_percent: "Правильных ответов",
-    lbl_time_spent: "Время",
-    btn_retry: "Попробовать снова",
-    loading: "Загрузка вопросов...",
-    not_found: "Вопросы по этому предмету не найдены!",
-    conn_error: "Ошибка соединения с Google Таблицей. Попробуйте позже.",
-    grades: ["Отлично", "Хорошо", "Удовлетворительно", "Неудовлетворительно"]
-  }
-};
-
-let currentLang = 'uz';
-
-// СОСТОЯНИЕ ТЕСТА
+// СОСТОЯНИЕ ИГРЫ/ТЕСТА
 let dynamicQuizData = [];
 let currentQ = 0;
 let score = 0;
@@ -463,45 +380,9 @@ let timerInterval = null;
 let timeLeft = 30;
 let startTime = null;
 let quizConfig = { topic: 'Matematika', count: 5, timeSec: 30 };
-const letters = ['A', 'B', 'C', 'D'];
+const letters = ['А', 'Б', 'В', 'Г'];
 
-// ПЕРЕКЛЮЧЕНИЕ ЯЗЫКА ИНТЕРФЕЙСА
-function changeLang(lang) {
-  currentLang = lang;
-  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-  event?.target?.classList.add('active');
-  
-  const l = LANGS[lang];
-  document.getElementById('main-tagline').textContent = l.tagline;
-  document.getElementById('main-desc').textContent = l.desc;
-  document.getElementById('btn-role-teacher').textContent = l.teacher;
-  document.getElementById('btn-role-student').textContent = l.student;
-  document.getElementById('login-title').textContent = l.title_login;
-  document.getElementById('login-subtitle').textContent = l.sub_login;
-  document.getElementById('lbl-password').textContent = l.lbl_pass;
-  document.getElementById('btn-enter').textContent = l.btn_enter;
-  document.getElementById('back-1').textContent = l.back;
-  document.getElementById('back-2').textContent = l.back;
-  document.getElementById('btn-logout').textContent = l.logout;
-  document.getElementById('login-error').textContent = l.err_pass;
-  document.getElementById('dash-title').textContent = l.dash_title;
-  document.getElementById('lbl-subject').textContent = l.lbl_subject;
-  document.getElementById('lbl-count').textContent = l.lbl_count;
-  document.getElementById('lbl-time').textContent = l.lbl_time;
-  document.getElementById('btn-generate').textContent = l.btn_generate;
-  document.getElementById('btn-copy').textContent = l.btn_copy;
-  document.getElementById('student-hint').textContent = l.student_hint;
-  document.getElementById('lbl-student-name').textContent = l.lbl_student_name;
-  document.getElementById('btn-start-quiz').textContent = l.btn_start_quiz;
-  document.getElementById('txt-q').textContent = l.txt_q;
-  document.getElementById('btn-next').textContent = l.btn_next;
-  document.getElementById('result-title-page').textContent = l.result_title;
-  document.getElementById('lbl-correct-percent').textContent = l.lbl_correct_percent;
-  document.getElementById('lbl-time-spent').textContent = l.lbl_time_spent;
-  document.getElementById('btn-retry').textContent = l.btn_retry;
-}
-
-// НАВИГАЦИЯ
+// НАВИГАЦИЯ МЕЖДУ ЭКРАНАМИ
 function go(screenId) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const next = document.getElementById(screenId);
@@ -515,14 +396,15 @@ function checkDirectAccessOrGo() {
     quizConfig.topic = params.get('subject');
     quizConfig.count = parseInt(params.get('count')) || 5;
     quizConfig.timeSec = parseInt(params.get('time')) || 30;
-    document.getElementById('student-subject-title').textContent = quizConfig.topic;
+    document.getElementById('student-subject-title').textContent = `Тест: ${quizConfig.topic}`;
     go('s-student-name');
   } else {
-    go('s-student-name');
+    alert("Пожалуйста, перейдите по ссылке из сгенерированного учителем QR-кода.");
+    go('s-home');
   }
 }
 
-// УЧИТЕЛЬ: ПРОВЕРКА ПАРОЛЯ
+// ПРОВЕРКА ПАРОЛЯ УЧИТЕЛЯ
 function checkTeacherPassword() {
   const pass = document.getElementById('teacher-pass').value;
   const err = document.getElementById('login-error');
@@ -534,7 +416,7 @@ function checkTeacherPassword() {
   }
 }
 
-// УЧИТЕЛЬ: СБОРКА ССЫЛКИ И QR-КОДА
+// ГЕНЕРАЦИЯ ССЫЛКИ И QR ДЛЯ УЧЕНИКОВ
 function generateQuizLink() {
   const subject = document.getElementById('quiz-subject-select').value;
   const count = document.getElementById('quiz-q-count').value;
@@ -554,10 +436,10 @@ function generateQuizLink() {
 function copyQuizLink() {
   const txt = document.getElementById('generated-url-text').textContent;
   navigator.clipboard.writeText(txt);
-  alert(LANGS[currentLang].copied);
+  alert("Ссылка скопирована в буфер обмена!");
 }
 
-// СТУДЕНТ: СКАЧИВАНИЕ ВОПРОСОВ ИЗ КЛЕТОК GOOGLE-ТАБЛИЦЫ
+// ЗАГРУЗКА ВОПРОСОВ ИЗ БАЗЫ ДАННЫХ GOOGLE SPREADSHEET
 async function loadQuestionsFromGoogle() {
   const nameInput = document.getElementById('student-name-input').value.trim();
   if (!nameInput) {
@@ -566,23 +448,18 @@ async function loadQuestionsFromGoogle() {
     return;
   }
 
-  // Если зашли без QR-кода, выберем дефолтную математику
-  const params = new URLSearchParams(window.location.search);
-  const finalSubject = params.get('subject') || "Matematika";
-  const finalCount = params.get('count') || 5;
-
   const startBtn = document.getElementById('start-test-btn');
   startBtn.disabled = true;
-  startBtn.textContent = LANGS[currentLang].loading;
+  startBtn.textContent = "Загрузка вопросов...";
 
   try {
-    const response = await fetch(`${WEB_APP_URL}?action=generate&topic=${encodeURIComponent(finalSubject)}&count=${finalCount}`);
+    const response = await fetch(`${WEB_APP_URL}?action=generate&topic=${encodeURIComponent(quizConfig.topic)}&count=${quizConfig.count}`);
     dynamicQuizData = await response.json();
     
     if (!dynamicQuizData || dynamicQuizData.length === 0) {
-      alert(LANGS[currentLang].not_found);
+      alert("Вопросы по этой теме не найдены в таблице BAZA!");
       startBtn.disabled = false;
-      startBtn.textContent = LANGS[currentLang].btn_start_quiz;
+      startBtn.textContent = "Начать тест →";
       return;
     }
 
@@ -593,21 +470,22 @@ async function loadQuestionsFromGoogle() {
     showQuestion();
   } catch (error) {
     console.error(error);
-    alert(LANGS[currentLang].conn_error);
+    alert("Ошибка соединения с Google Таблицей. Попробуйте позже.");
   } finally {
     startBtn.disabled = false;
-    startBtn.innerHTML = LANGS[currentLang].btn_start_quiz;
+    startBtn.textContent = "Начать тест →";
   }
 }
 
-// ХОД ИГРЫ: ОТРЕНДЕРИТЬ ВОПРОС
+// ОТОБРАЖЕНИЕ ВОПРОСА
 function showQuestion() {
   answered = false;
   const data = dynamicQuizData[currentQ];
 
   document.getElementById('q-current').textContent = currentQ + 1;
   document.getElementById('q-total').textContent = dynamicQuizData.length;
-  document.getElementById('q-score-label').textContent = `${score} to'g'ri`;
+  document.getElementById('q-num-label').textContent = currentQ + 1;
+  document.getElementById('q-score-label').textContent = `${score} верно`;
   document.getElementById('progress-fill').style.width = ((currentQ + 1) / dynamicQuizData.length * 100) + '%';
   document.getElementById('q-text').textContent = data.question;
   document.getElementById('next-btn-wrap').style.display = 'none';
@@ -616,10 +494,10 @@ function showQuestion() {
   container.innerHTML = '';
 
   data.options.forEach((opt, i) => {
-    if (!opt) return;
+    if(!opt) return; // Пропуск пустых ячеек
     const btn = document.createElement('button');
     btn.className = 'option-btn';
-    btn.innerHTML = `<span class="option-letter">${letters[i]}</span> ${opt}`;
+    btn.innerHTML = `<span class="option-letter">${letters[i]}</span>${opt}`;
     btn.onclick = () => selectAnswer(opt, data.correct, btn);
     container.appendChild(btn);
   });
@@ -649,18 +527,13 @@ function selectAnswer(chosenText, correctText, clickedBtn) {
   answered = true;
   clearInterval(timerInterval);
 
-  const cleanChosen = String(chosenText).trim().toLowerCase();
-  const cleanCorrect = String(correctText).trim().toLowerCase();
-
   const allBtns = document.querySelectorAll('.option-btn');
   allBtns.forEach(b => {
     b.disabled = true;
-    // Отрезаем букву индекса "A " при чистом сравнении содержимого
-    const textOnly = b.innerText.substring(2).trim().toLowerCase();
-    if (textOnly === cleanCorrect) b.classList.add('correct');
+    if (b.innerText.substring(2) === correctText) b.classList.add('correct');
   });
 
-  if (cleanChosen === cleanCorrect) {
+  if (chosenText === correctText) {
     score++;
     clickedBtn.classList.add('correct');
   } else {
@@ -671,12 +544,11 @@ function selectAnswer(chosenText, correctText, clickedBtn) {
 
 function autoTimeOut() {
   answered = true;
-  const cleanCorrect = String(dynamicQuizData[currentQ].correct).trim().toLowerCase();
+  const correctText = dynamicQuizData[currentQ].correct;
   const allBtns = document.querySelectorAll('.option-btn');
   allBtns.forEach(b => {
     b.disabled = true;
-    const textOnly = b.innerText.substring(2).trim().toLowerCase();
-    if (textOnly === cleanCorrect) b.classList.add('correct');
+    if (b.innerText.substring(2) === correctText) b.classList.add('correct');
   });
   document.getElementById('next-btn-wrap').style.display = 'block';
 }
@@ -690,7 +562,7 @@ function nextQuestion() {
   }
 }
 
-// ФИНАЛ: СОХРАНЕНИЕ ДАННЫХ В GOOGLE ТАБЛИЦУ (ЛИСТ NATIJALAR)
+// ЗАВЕРШЕНИЕ ТЕСТА И ОТПРАВКА ДАННЫХ В NATIJALAR
 async function processQuizEnd() {
   clearInterval(timerInterval);
   const elapsed = Math.round((Date.now() - startTime) / 1000);
@@ -698,34 +570,31 @@ async function processQuizEnd() {
   const secs = elapsed % 60;
   const pct = Math.round((score / dynamicQuizData.length) * 100);
 
-  const lGrades = LANGS[currentLang].grades;
-  let gradeText = lGrades[2]; 
+  let grade = "Удовлетворительно";
   let gradeClass = "grade-3";
-  
-  if (pct >= 85) { gradeText = lGrades[0]; gradeClass = "grade-5"; }
-  else if (pct >= 70) { gradeText = lGrades[1]; gradeClass = "grade-4"; }
-  else if (pct < 50) { gradeText = lGrades[3]; gradeClass = "grade-2"; }
+  if (pct >= 85) { grade = "Отлично"; gradeClass = "grade-5"; }
+  else if (pct >= 70) { grade = "Хорошо"; gradeClass = "grade-4"; }
+  else if (pct < 50) { grade = "Неудовлетворительно"; gradeClass = "grade-2"; }
 
   document.getElementById('result-score').textContent = score;
-  document.getElementById('result-total').textContent = `/ ${dynamicQuizData.length}`;
+  document.getElementById('result-total').textContent = `из ${dynamicQuizData.length}`;
   document.getElementById('res-percent').textContent = pct + '%';
   document.getElementById('res-time').textContent = `${mins}:${String(secs).padStart(2,'0')}`;
   
   const badge = document.getElementById('grade-badge');
-  badge.textContent = gradeText;
+  badge.textContent = grade;
   badge.className = `grade-badge ${gradeClass}`;
   
   go('s-student-result');
 
-  // POST-пакет для передачи скрипту
-  const params = new URLSearchParams(window.location.search);
+  // Отправка в POST-метод Google Скрипта для сохранения на листе NATIJALAR
   const reportPayload = {
     name: document.getElementById('student-name-input').value.trim(),
-    subject: params.get('subject') || "Matematika",
+    subject: quizConfig.topic,
     score: score,
     totalQuestions: dynamicQuizData.length,
     timeSpent: elapsed,
-    grade: gradeText
+    grade: grade
   };
 
   try {
@@ -735,16 +604,12 @@ async function processQuizEnd() {
       body: JSON.stringify(reportPayload)
     });
   } catch (err) {
-    console.error("Ошибка фиксации результатов:", err);
+    console.error("Не удалось сохранить в NATIJALAR:", err);
   }
 }
 
-function resetToHome() {
-  location.href = window.location.origin + window.location.pathname;
-}
-
 document.addEventListener("DOMContentLoaded", () => {
-  changeLang('uz'); // Начальный язык по умолчанию
+  // Автоматический вход в интерфейс ученика, если пришли по QR
   const params = new URLSearchParams(window.location.search);
   if (params.get('subject')) {
     checkDirectAccessOrGo();
