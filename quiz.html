@@ -25,12 +25,8 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);min
 .screen.active{display:flex;flex-direction:column}
 .screen.fade-in{animation:fadeIn .35s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-
-/* ── ORNAMENT BORDERS ── */
 .girih-top{height:5px;background:repeating-linear-gradient(90deg,var(--gold) 0,var(--gold) 16px,transparent 16px,transparent 22px)}
 .girih-bottom{height:5px;background:repeating-linear-gradient(90deg,var(--gold) 0,var(--gold) 16px,transparent 16px,transparent 22px);margin-top:auto}
-
-/* ── HEADER ── */
 .header{background:var(--lapis);position:relative}
 .header-inner{max-width:1080px;margin:0 auto;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
 .logo{font-family:'Playfair Display',serif;color:#fff;font-size:1.5rem;font-weight:700;letter-spacing:.3px;cursor:pointer;display:flex;align-items:center;gap:8px}
@@ -42,8 +38,6 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);min
 .lang-btn.active{background:var(--gold);color:var(--lapis-d)}
 .header-back{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);color:#fff;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:.86rem;font-weight:600;transition:.2s;white-space:nowrap}
 .header-back:hover{background:rgba(255,255,255,.2)}
-
-/* ── HERO ── */
 .hero{background:linear-gradient(140deg,var(--lapis-d) 0%,var(--lapis) 55%,var(--lapis-l) 100%);padding:80px 24px 88px;text-align:center;position:relative;overflow:hidden}
 .hero::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,rgba(201,149,42,.14) 1.4px,transparent 1.4px);background-size:30px 30px;pointer-events:none}
 .hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(201,149,42,.16);border:1px solid rgba(201,149,42,.4);color:var(--gold-l);padding:6px 16px;border-radius:99px;font-size:.78rem;font-weight:700;letter-spacing:.5px;margin-bottom:24px;position:relative}
@@ -51,8 +45,6 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);min
 .hero h1 em{font-style:normal;color:var(--gold-l)}
 .hero p{color:rgba(255,255,255,.75);font-size:1.08rem;max-width:540px;margin:0 auto 38px;position:relative;line-height:1.6}
 .hero-btns{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;position:relative}
-
-/* ── BUTTONS ── */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 26px;border-radius:10px;font-weight:700;font-size:.95rem;cursor:pointer;border:none;transition:.18s;text-decoration:none;font-family:inherit}
 .btn-gold{background:var(--gold);color:#fff}
 .btn-gold:hover{background:#b07e1e;transform:translateY(-1px);box-shadow:0 8px 22px rgba(201,149,42,.35)}
@@ -69,28 +61,21 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);min
 .btn-full{width:100%}
 .btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
 .btn-icon{width:36px;height:36px;padding:0;border-radius:8px}
-
-/* ── LAYOUT ── */
 .main{max-width:1080px;margin:0 auto;padding:44px 24px 64px;flex:1;width:100%}
 .main-narrow{max-width:480px;margin:0 auto;padding:44px 24px 64px;flex:1;width:100%}
 .main-narrow.centered{display:flex;align-items:center}
 .main-narrow.centered>div{width:100%}
-
-/* ── CARDS ── */
 .card{background:#fff;border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:32px}
 .card-sm{padding:18px 22px}
-
-/* ── FEATURES ── */
 .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;margin-top:52px}
 .feature-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:26px 22px;box-shadow:var(--shadow);transition:transform .2s}
 .feature-card:hover{transform:translateY(-3px)}
 .feature-icon{width:48px;height:48px;background:linear-gradient(135deg,var(--lapis),var(--lapis-l));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:14px}
 .feature-card h3{font-size:.98rem;font-weight:700;margin-bottom:6px;color:var(--lapis)}
 .feature-card p{font-size:.86rem;color:var(--muted);line-height:1.5}
-
-/* ── FORMS ── */
 .form-group{margin-bottom:18px}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
 label{display:block;font-weight:600;font-size:.86rem;margin-bottom:6px;color:var(--lapis)}
 input[type=text],input[type=password],input[type=email],input[type=number],select,textarea{
   width:100%;padding:11px 15px;border:1.5px solid var(--border);border-radius:9px;font-size:.96rem;
@@ -99,18 +84,12 @@ input:focus,select:focus,textarea:focus{border-color:var(--lapis);background:#ff
 .error-msg{color:var(--danger);font-size:.82rem;margin-top:7px;display:none}
 .error-msg.show{display:block}
 .hint{font-size:.8rem;color:var(--muted);margin-top:6px}
-
-/* ── PAGE TITLES ── */
 .page-title{font-family:'Playfair Display',serif;font-size:1.7rem;color:var(--lapis);margin-bottom:6px;font-weight:700}
 .page-subtitle{color:var(--muted);font-size:.94rem;margin-bottom:28px}
-
-/* ── TABS ── */
 .tabs{display:flex;gap:0;margin-bottom:24px;border-bottom:2px solid var(--border);overflow-x:auto}
 .tab{padding:11px 20px;cursor:pointer;font-weight:700;font-size:.88rem;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px;transition:.18s;white-space:nowrap}
 .tab.active{color:var(--lapis);border-bottom-color:var(--gold)}
 .tab:hover:not(.active){color:var(--lapis)}
-
-/* ── OPTIONS ── */
 .options-grid{display:grid;gap:11px;margin:22px 0}
 .option-btn{width:100%;text-align:left;padding:15px 18px;background:#fff;border:2px solid var(--border);border-radius:10px;font-size:.96rem;cursor:pointer;transition:.16s;font-family:inherit;color:var(--ink);display:flex;align-items:center;gap:13px}
 .option-btn:hover:not(:disabled){border-color:var(--lapis);background:#EEF2FA}
@@ -119,8 +98,6 @@ input:focus,select:focus,textarea:focus{border-color:var(--lapis);background:#ff
 .option-letter{width:30px;height:30px;min-width:30px;background:var(--cream);border:1.5px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.84rem;color:var(--lapis)}
 .option-btn.correct .option-letter{background:var(--success);color:#fff;border-color:var(--success)}
 .option-btn.wrong .option-letter{background:var(--danger);color:#fff;border-color:var(--danger)}
-
-/* ── PROGRESS / TIMER ── */
 .progress-wrap{margin-bottom:22px}
 .progress-label{display:flex;justify-content:space-between;font-size:.83rem;color:var(--muted);margin-bottom:6px;font-weight:600}
 .progress-bar{height:7px;background:var(--border);border-radius:99px;overflow:hidden}
@@ -128,8 +105,6 @@ input:focus,select:focus,textarea:focus{border-color:var(--lapis);background:#ff
 .timer-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);color:#fff;padding:6px 14px;border-radius:99px;font-weight:700;font-size:.92rem;border:1px solid rgba(255,255,255,.2)}
 .timer-badge.warning{background:var(--danger);border-color:var(--danger);animation:pulse .6s infinite alternate}
 @keyframes pulse{to{opacity:.7}}
-
-/* ── RESULT ── */
 .result-circle{width:130px;height:130px;border-radius:50%;background:linear-gradient(135deg,var(--lapis),var(--lapis-l));display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 22px;box-shadow:0 10px 32px rgba(27,58,107,.25)}
 .result-score{font-size:2.5rem;font-weight:800;color:#fff;line-height:1}
 .result-total{font-size:.86rem;color:rgba(255,255,255,.7)}
@@ -138,17 +113,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--lapis);background:#ff
 .grade-4{background:#EFF6FF;color:#1D4ED8;border:2px solid #93C5FD}
 .grade-3{background:#FFFBEB;color:#92400E;border:2px solid #FCD34D}
 .grade-2{background:#FEF2F2;color:#991B1B;border:2px solid #FCA5A5}
-
-/* ── STATS ── */
 .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:28px}
 .stat-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px;text-align:center}
 .stat-num{font-size:1.8rem;font-weight:800;color:var(--lapis)}
 .stat-label{font-size:.78rem;color:var(--muted);margin-top:3px}
-
-/* ── QR ── */
 .qr-box{width:180px;height:180px;background:#fff;border:3px solid var(--lapis);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;padding:10px}
-
-/* ── LISTS / TABLE ── */
 .row-item{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border)}
 .row-item:last-child{border-bottom:none}
 .row-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--lapis),var(--lapis-l));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;color:#fff}
@@ -163,18 +132,13 @@ th:last-child{border-radius:0 8px 8px 0}
 td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:.86rem}
 tr:hover td{background:var(--cream)}
 .table-wrap{overflow-x:auto}
-
 .badge{display:inline-block;padding:3px 11px;border-radius:99px;font-size:.76rem;font-weight:700}
 .badge-green{background:#ECFDF5;color:#065F46}
 .badge-blue{background:#EFF6FF;color:#1D4ED8}
 .badge-yellow{background:#FFFBEB;color:#92400E}
 .badge-gray{background:#F3F4F6;color:#4B5563}
-
-/* ── EMPTY STATE ── */
 .empty-state{text-align:center;padding:48px 20px;color:var(--muted)}
 .empty-state .empty-icon{font-size:2.4rem;margin-bottom:12px;opacity:.5}
-
-/* ── UTIL ── */
 .text-center{text-align:center}
 .mt-8{margin-top:8px}.mt-16{margin-top:16px}.mt-24{margin-top:24px}.mt-32{margin-top:32px}
 .gap-12{display:flex;gap:12px;flex-wrap:wrap}
@@ -187,12 +151,11 @@ tr:hover td{background:var(--cream)}
 .loader{width:18px;height:18px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
 @keyframes spin{to{transform:rotate(360deg)}}
 .plan-badge{font-size:.7rem;font-weight:800;padding:3px 10px;border-radius:99px;background:rgba(201,149,42,.18);color:var(--gold);text-transform:uppercase;letter-spacing:.4px}
-
 @media(max-width:600px){
   .hero{padding:56px 16px 60px}
   .card{padding:22px}
   .main,.main-narrow{padding:28px 16px 48px}
-  .form-row{grid-template-columns:1fr}
+  .form-row,.form-row-3{grid-template-columns:1fr}
   .header-inner{padding:14px 16px}
 }
 </style>
@@ -231,7 +194,7 @@ tr:hover td{background:var(--cream)}
   <div class="girih-bottom"></div>
 </div>
 
-<!-- ══════════════ TEACHER AUTH (login/register toggle) ══════════════ -->
+<!-- ══════════════ TEACHER AUTH ══════════════ -->
 <div class="screen" id="s-teacher-auth">
   <div class="girih-top"></div>
   <div class="header"><div class="header-inner">
@@ -244,14 +207,12 @@ tr:hover td{background:var(--cream)}
         <button class="active" style="flex:1" id="toggle-login" onclick="switchAuthMode('login')" data-t="auth.loginTab">Вход</button>
         <button style="flex:1" id="toggle-register" onclick="switchAuthMode('register')" data-t="auth.registerTab">Регистрация</button>
       </div>
-
       <div id="auth-login-form">
         <div class="form-group"><label data-t="auth.email">Email</label><input type="email" id="login-email" placeholder="teacher@school.uz"></div>
         <div class="form-group"><label data-t="auth.password">Пароль</label><input type="password" id="login-pass"></div>
         <div class="error-msg" id="login-error" data-t="auth.loginError">Неверный email или пароль</div>
         <button class="btn btn-primary btn-full btn-lg" onclick="handleLogin()" id="login-submit-btn"><span data-t="auth.loginBtn">Войти</span></button>
       </div>
-
       <div id="auth-register-form" class="hidden">
         <div class="form-group"><label data-t="auth.name">Имя и фамилия</label><input type="text" id="reg-name" placeholder="Алишер Набиев"></div>
         <div class="form-group"><label data-t="auth.email">Email</label><input type="email" id="reg-email" placeholder="teacher@school.uz"></div>
@@ -264,7 +225,7 @@ tr:hover td{background:var(--cream)}
   <div class="girih-bottom"></div>
 </div>
 
-<!-- ══════════════ TEACHER DASHBOARD (единое окно) ══════════════ -->
+<!-- ══════════════ TEACHER DASHBOARD ══════════════ -->
 <div class="screen" id="s-dashboard">
   <div class="girih-top"></div>
   <div class="header"><div class="header-inner">
@@ -282,13 +243,11 @@ tr:hover td{background:var(--cream)}
       </div>
       <button class="btn btn-gold" onclick="openCreateTest()">+ <span data-t="dash.createBtn">Создать тест</span></button>
     </div>
-
     <div class="stats-row" id="dash-stats">
       <div class="stat-card"><div class="stat-num" id="stat-tests">—</div><div class="stat-label" data-t="dash.statTests">Тестов создано</div></div>
       <div class="stat-card"><div class="stat-num" id="stat-students">—</div><div class="stat-label" data-t="dash.statStudents">Прохождений</div></div>
       <div class="stat-card"><div class="stat-num" id="stat-avg">—</div><div class="stat-label" data-t="dash.statAvg">Средний балл</div></div>
     </div>
-
     <div class="tabs">
       <div class="tab active" data-tab="tests" onclick="switchDashTab('tests',this)" data-t="dash.tabTests">Мои тесты</div>
       <div class="tab" data-tab="bank" onclick="switchDashTab('bank',this)" data-t="dash.tabBank">База вопросов</div>
@@ -308,10 +267,30 @@ tr:hover td{background:var(--cream)}
     <div id="dash-tab-bank" class="hidden">
       <div class="card" style="margin-bottom:18px;">
         <h3 style="font-size:1rem;color:var(--lapis);margin-bottom:14px;" data-t="bank.addTitle">Добавить вопрос в базу</h3>
+        <!-- ИЗМЕНЕНО: добавлены Sinf и Daraja -->
         <div class="form-row">
           <div class="form-group"><label data-t="bank.subject">Предмет</label><input type="text" id="q-subject" placeholder="Matematika"></div>
           <div class="form-group"><label data-t="bank.lang">Язык вопроса</label>
             <select id="q-lang"><option value="ru" data-t="lang.ru">Русский</option><option value="uz" data-t="lang.uz">Узбекский</option></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label data-t="bank.sinf">Класс (Sinf)</label>
+            <select id="q-sinf">
+              <option value="1">1</option><option value="2" selected>2</option><option value="3">3</option>
+              <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+              <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+              <option value="10">10</option><option value="11">11</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label data-t="bank.daraja">Сложность (Daraja)</label>
+            <select id="q-daraja">
+              <option value="oson" data-t="daraja.oson">Лёгкий (oson)</option>
+              <option value="o'rta" data-t="daraja.orta">Средний (o'rta)</option>
+              <option value="qiyin" data-t="daraja.qiyin">Тяжёлый (qiyin)</option>
+            </select>
           </div>
         </div>
         <div class="form-group"><label data-t="bank.question">Текст вопроса</label><textarea id="q-text-input" placeholder="2 + 2 = ?"></textarea></div>
@@ -351,7 +330,7 @@ tr:hover td{background:var(--cream)}
   <div class="girih-bottom"></div>
 </div>
 
-<!-- ══════════════ CREATE TEST MODAL-SCREEN ══════════════ -->
+<!-- ══════════════ CREATE TEST ══════════════ -->
 <div class="screen" id="s-create-test">
   <div class="girih-top"></div>
   <div class="header"><div class="header-inner">
@@ -368,9 +347,31 @@ tr:hover td{background:var(--cream)}
         <input type="text" id="ct-subject" list="subject-list" placeholder="Matematika">
         <datalist id="subject-list"></datalist>
       </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label data-t="createTest.class">Класс / Группа</label>
+          <input type="text" id="ct-class" placeholder="2-A">
+        </div>
+        <!-- НОВОЕ: выбор номера класса для фильтрации вопросов -->
+        <div class="form-group">
+          <label data-t="createTest.sinf">Номер класса</label>
+          <select id="ct-sinf">
+            <option value="1">1</option><option value="2" selected>2</option><option value="3">3</option>
+            <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+            <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+            <option value="10">10</option><option value="11">11</option>
+          </select>
+        </div>
+      </div>
+      <!-- НОВОЕ: выбор сложности -->
       <div class="form-group">
-        <label data-t="createTest.class">Класс / Группа</label>
-        <input type="text" id="ct-class" placeholder="9-A">
+        <label data-t="createTest.daraja">Сложность вопросов</label>
+        <select id="ct-daraja">
+          <option value="" data-t="daraja.mix">Смешанная (все уровни)</option>
+          <option value="oson" data-t="daraja.oson">Лёгкий (oson)</option>
+          <option value="o'rta" data-t="daraja.orta">Средний (o'rta)</option>
+          <option value="qiyin" data-t="daraja.qiyin">Тяжёлый (qiyin)</option>
+        </select>
       </div>
       <div class="form-row">
         <div class="form-group"><label data-t="createTest.count">Кол-во вопросов</label><input type="number" id="ct-count" value="5" min="1" max="30"></div>
@@ -389,7 +390,7 @@ tr:hover td{background:var(--cream)}
   <div class="girih-bottom"></div>
 </div>
 
-<!-- ══════════════ QR RESULT SCREEN ══════════════ -->
+<!-- ══════════════ QR SCREEN ══════════════ -->
 <div class="screen" id="s-qr">
   <div class="girih-top"></div>
   <div class="header"><div class="header-inner">
@@ -413,7 +414,7 @@ tr:hover td{background:var(--cream)}
   <div class="girih-bottom"></div>
 </div>
 
-<!-- ══════════════ STUDENT ENTRY (name + test code) ══════════════ -->
+<!-- ══════════════ STUDENT ENTRY ══════════════ -->
 <div class="screen" id="s-student-entry">
   <div class="girih-top"></div>
   <div class="header"><div class="header-inner">
@@ -437,7 +438,7 @@ tr:hover td{background:var(--cream)}
       </div>
       <div class="form-group">
         <label data-t="student.class">Класс / Группа</label>
-        <input type="text" id="student-class-input" placeholder="9-A">
+        <input type="text" id="student-class-input" placeholder="2-A">
       </div>
       <div class="error-msg" id="student-entry-error" data-t="student.entryError">Тест с таким кодом не найден</div>
       <button id="start-test-btn" class="btn btn-gold btn-full btn-lg" onclick="loadQuestionsFromGoogle()">
@@ -506,14 +507,8 @@ tr:hover td{background:var(--cream)}
 
 </body>
 <script>
-// ══════════════════════════════════════════════════════════════
-// CONFIG — ВСТАВЬ СВОЙ URL ПОСЛЕ РАЗВЁРТЫВАНИЯ APPS SCRIPT
-// ══════════════════════════════════════════════════════════════
 const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby74bqHXRzLjRczUsasZ2eHrdYLCoCptEu3Uoi0jj6OS0c1iJayZykNLm8uYMPvMQf9/exec';
 
-// ══════════════════════════════════════════════════════════════
-// I18N — переводы
-// ══════════════════════════════════════════════════════════════
 const I18N = {
   ru: {
     'hero.badge':'Платформа нового поколения','hero.title':'Тесты, которые <em>оживляют</em><br>любой урок',
@@ -533,15 +528,20 @@ const I18N = {
     'dash.tabTests':'Мои тесты','dash.tabBank':'База вопросов','dash.tabResults':'Результаты',
     'dash.noTests':'Тестов пока нет. Создай первый!',
     'bank.addTitle':'Добавить вопрос в базу','bank.subject':'Предмет','bank.lang':'Язык вопроса',
+    'bank.sinf':'Класс (Sinf)','bank.daraja':'Сложность (Daraja)',
     'bank.question':'Текст вопроса','bank.correct':'Правильный вариант','bank.fillAll':'Заполните все поля',
     'bank.addBtn':'Добавить вопрос','bank.added':'✓ Вопрос добавлен в Google Таблицу',
     'results.student':'Ученик','results.class':'Класс','results.subject':'Предмет','results.score':'Балл',
     'results.grade':'Оценка','results.time':'Время','results.empty':'Пока нет результатов',
     'createTest.title':'Новый тест','createTest.subtitle':'Параметры прохождения и QR-доступ для учеников',
-    'createTest.subject':'Предмет / Тема','createTest.class':'Класс / Группа','createTest.count':'Кол-во вопросов',
-    'createTest.time':'Время/вопрос (сек)','createTest.lang':'Язык теста для ученика',
+    'createTest.subject':'Предмет / Тема','createTest.class':'Класс / Группа',
+    'createTest.sinf':'Номер класса','createTest.daraja':'Сложность вопросов',
+    'createTest.count':'Кол-во вопросов','createTest.time':'Время/вопрос (сек)',
+    'createTest.lang':'Язык теста для ученика',
     'createTest.fillAll':'Заполните предмет и класс','createTest.submitBtn':'Создать тест и получить QR →',
     'createTest.noQuestions':'В базе нет вопросов по этому предмету и языку',
+    'daraja.mix':'Смешанная (все уровни)','daraja.oson':'Лёгкий (oson)',
+    'daraja.orta':'Средний (o\'rta)','daraja.qiyin':'Тяжёлый (qiyin)',
     'qr.title':'Тест готов! 🎉','qr.subtitle':'Покажите QR-код ученикам или отправьте ссылку',
     'qr.code':'Код теста:','qr.copyBtn':'Скопировать ссылку','qr.toDashboard':'К результатам','qr.copied':'Ссылка скопирована!',
     'student.entryTitle':'Вход на тест','student.entrySubtitle':'Введите код теста и свои данные',
@@ -572,15 +572,20 @@ const I18N = {
     'dash.tabTests':'Mening testlarim','dash.tabBank':'Savollar bazasi','dash.tabResults':'Natijalar',
     'dash.noTests':'Hozircha testlar yo\'q. Birinchisini yarating!',
     'bank.addTitle':'Bazaga savol qo\'shish','bank.subject':'Fan','bank.lang':'Savol tili',
+    'bank.sinf':'Sinf','bank.daraja':'Daraja',
     'bank.question':'Savol matni','bank.correct':'To\'g\'ri javob','bank.fillAll':'Barcha maydonlarni to\'ldiring',
     'bank.addBtn':'Savol qo\'shish','bank.added':'✓ Savol Google jadvaliga qo\'shildi',
     'results.student':'O\'quvchi','results.class':'Sinf','results.subject':'Fan','results.score':'Ball',
     'results.grade':'Baho','results.time':'Vaqt','results.empty':'Hozircha natijalar yo\'q',
-    'createTest.title':'Yangi test','createTest.subtitle':'Topshirish параметрлари va o\'quvchilar uchun QR-kirish',
-    'createTest.subject':'Fan / Mavzu','createTest.class':'Sinf / Guruh','createTest.count':'Savollar soni',
-    'createTest.time':'Savolga vaqt (sek)','createTest.lang':'O\'quvchi uchun test tili',
+    'createTest.title':'Yangi test','createTest.subtitle':'Topshirish parametrlari va o\'quvchilar uchun QR-kirish',
+    'createTest.subject':'Fan / Mavzu','createTest.class':'Sinf / Guruh',
+    'createTest.sinf':'Sinf raqami','createTest.daraja':'Savollar darajasi',
+    'createTest.count':'Savollar soni','createTest.time':'Savolga vaqt (sek)',
+    'createTest.lang':'O\'quvchi uchun test tili',
     'createTest.fillAll':'Fan va sinfni to\'ldiring','createTest.submitBtn':'Test yaratish va QR olish →',
     'createTest.noQuestions':'Bu fan va til bo\'yicha bazada savollar yo\'q',
+    'daraja.mix':'Aralash (barcha darajalar)','daraja.oson':'Oson',
+    'daraja.orta':'O\'rta','daraja.qiyin':'Qiyin',
     'qr.title':'Test tayyor! 🎉','qr.subtitle':'O\'quvchilarga QR-kodni ko\'rsating yoki havolani yuboring',
     'qr.code':'Test kodi:','qr.copyBtn':'Havolani nusxalash','qr.toDashboard':'Natijalarga','qr.copied':'Havola nusxalandi!',
     'student.entryTitle':'Testga kirish','student.entrySubtitle':'Test kodini va ma\'lumotlaringizni kiriting',
@@ -596,191 +601,101 @@ const I18N = {
 };
 
 let currentLang = localStorage.getItem('eduquiz_lang') || 'ru';
+function setLang(lang) { currentLang=lang; localStorage.setItem('eduquiz_lang',lang); applyTranslations(); document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===lang)); }
+function applyTranslations() { document.querySelectorAll('[data-t]').forEach(el=>{const txt=I18N[currentLang][el.getAttribute('data-t')];if(txt!==undefined)el.innerHTML=txt;}); document.documentElement.lang=currentLang; }
+function t(key){return I18N[currentLang][key]||key;}
 
-function setLang(lang) {
-  currentLang = lang;
-  localStorage.setItem('eduquiz_lang', lang);
-  applyTranslations();
-  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+function go(screenId){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active','fade-in'));const next=document.getElementById(screenId);if(next){next.classList.add('active','fade-in');window.scrollTo(0,0);}}
+
+let session=JSON.parse(localStorage.getItem('eduquiz_session')||'null');
+function saveSession(s){session=s;localStorage.setItem('eduquiz_session',JSON.stringify(s));}
+function logout(){session=null;localStorage.removeItem('eduquiz_session');go('s-home');}
+
+async function apiGet(params){const res=await fetch(WEB_APP_URL+'?'+new URLSearchParams(params).toString());return res.json();}
+async function apiPost(body){const res=await fetch(WEB_APP_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});return res.json();}
+
+function switchAuthMode(mode){
+  document.getElementById('toggle-login').classList.toggle('active',mode==='login');
+  document.getElementById('toggle-register').classList.toggle('active',mode==='register');
+  document.getElementById('auth-login-form').classList.toggle('hidden',mode!=='login');
+  document.getElementById('auth-register-form').classList.toggle('hidden',mode!=='register');
 }
 
-function applyTranslations() {
-  document.querySelectorAll('[data-t]').forEach(el => {
-    const key = el.getAttribute('data-t');
-    const txt = I18N[currentLang][key];
-    if (txt !== undefined) el.innerHTML = txt;
-  });
-  document.documentElement.lang = currentLang;
-}
-
-function t(key) { return I18N[currentLang][key] || key; }
-
-// ══════════════════════════════════════════════════════════════
-// NAVIGATION
-// ══════════════════════════════════════════════════════════════
-function go(screenId) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active','fade-in'));
-  const next = document.getElementById(screenId);
-  if (next) { next.classList.add('active','fade-in'); window.scrollTo(0,0); }
-}
-
-// ══════════════════════════════════════════════════════════════
-// SESSION STATE
-// ══════════════════════════════════════════════════════════════
-let session = JSON.parse(localStorage.getItem('eduquiz_session') || 'null');
-
-function saveSession(s) {
-  session = s;
-  localStorage.setItem('eduquiz_session', JSON.stringify(s));
-}
-function logout() {
-  session = null;
-  localStorage.removeItem('eduquiz_session');
-  go('s-home');
-}
-
-// ══════════════════════════════════════════════════════════════
-// API HELPER
-// ══════════════════════════════════════════════════════════════
-async function apiGet(params) {
-  const url = WEB_APP_URL + '?' + new URLSearchParams(params).toString();
-  const res = await fetch(url);
-  return res.json();
-}
-async function apiPost(body) {
-  const res = await fetch(WEB_APP_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(body)
-  });
-  return res.json();
-}
-
-// ══════════════════════════════════════════════════════════════
-// AUTH
-// ══════════════════════════════════════════════════════════════
-function switchAuthMode(mode) {
-  document.getElementById('toggle-login').classList.toggle('active', mode==='login');
-  document.getElementById('toggle-register').classList.toggle('active', mode==='register');
-  document.getElementById('auth-login-form').classList.toggle('hidden', mode!=='login');
-  document.getElementById('auth-register-form').classList.toggle('hidden', mode!=='register');
-}
-
-async function handleLogin() {
-  const email = document.getElementById('login-email').value.trim();
-  const pass = document.getElementById('login-pass').value;
-  const errEl = document.getElementById('login-error');
-  const btn = document.getElementById('login-submit-btn');
+async function handleLogin(){
+  const email=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-pass').value;
+  const errEl=document.getElementById('login-error');
+  const btn=document.getElementById('login-submit-btn');
   errEl.classList.remove('show');
-  if (!email || !pass) { errEl.textContent = t('auth.fillAll'); errEl.classList.add('show'); return; }
-
-  btn.disabled = true; btn.innerHTML = '<span class="loader"></span>';
-  try {
-    const res = await apiPost({ action:'login', email, password: pass });
-    if (res.status === 'ok') {
-      saveSession({ teacherId: res.teacherId, name: res.name, plan: res.plan });
-      enterDashboard();
-    } else {
-      errEl.textContent = t('auth.loginError');
-      errEl.classList.add('show');
-    }
-  } catch(e) {
-    errEl.textContent = t('auth.connError');
-    errEl.classList.add('show');
-  }
-  btn.disabled = false; btn.innerHTML = `<span data-t="auth.loginBtn">${t('auth.loginBtn')}</span>`;
+  if(!email||!pass){errEl.textContent=t('auth.fillAll');errEl.classList.add('show');return;}
+  btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
+  try{
+    const res=await apiPost({action:'login',email,password:pass});
+    if(res.status==='ok'){saveSession({teacherId:res.teacherId,name:res.name,plan:res.plan});enterDashboard();}
+    else{errEl.textContent=t('auth.loginError');errEl.classList.add('show');}
+  }catch(e){errEl.textContent=t('auth.connError');errEl.classList.add('show');}
+  btn.disabled=false;btn.innerHTML=`<span data-t="auth.loginBtn">${t('auth.loginBtn')}</span>`;
 }
 
-async function handleRegister() {
-  const name = document.getElementById('reg-name').value.trim();
-  const email = document.getElementById('reg-email').value.trim();
-  const pass = document.getElementById('reg-pass').value;
-  const errEl = document.getElementById('reg-error');
-  const btn = document.getElementById('reg-submit-btn');
+async function handleRegister(){
+  const name=document.getElementById('reg-name').value.trim();
+  const email=document.getElementById('reg-email').value.trim();
+  const pass=document.getElementById('reg-pass').value;
+  const errEl=document.getElementById('reg-error');
+  const btn=document.getElementById('reg-submit-btn');
   errEl.classList.remove('show');
-  if (!name || !email || !pass) { errEl.textContent = t('auth.fillAll'); errEl.classList.add('show'); return; }
+  if(!name||!email||!pass){errEl.textContent=t('auth.fillAll');errEl.classList.add('show');return;}
+  btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
+  try{
+    const res=await apiPost({action:'register',name,email,password:pass});
+    if(res.status==='ok'){saveSession({teacherId:res.teacherId,name:res.name,plan:res.plan});enterDashboard();}
+    else if(res.message==='email_exists'){errEl.textContent=t('auth.emailExists');errEl.classList.add('show');}
+    else{errEl.textContent=t('auth.connError');errEl.classList.add('show');}
+  }catch(e){errEl.textContent=t('auth.connError');errEl.classList.add('show');}
+  btn.disabled=false;btn.innerHTML=`<span data-t="auth.registerBtn">${t('auth.registerBtn')}</span>`;
+}
 
-  btn.disabled = true; btn.innerHTML = '<span class="loader"></span>';
-  try {
-    const res = await apiPost({ action:'register', name, email, password: pass });
-    if (res.status === 'ok') {
-      saveSession({ teacherId: res.teacherId, name: res.name, plan: res.plan });
-      enterDashboard();
-    } else if (res.message === 'email_exists') {
-      errEl.textContent = t('auth.emailExists');
-      errEl.classList.add('show');
-    } else {
-      errEl.textContent = t('auth.connError');
-      errEl.classList.add('show');
+async function enterDashboard(){
+  document.getElementById('dash-teacher-name').textContent=session.name;
+  document.getElementById('dash-plan').textContent=(session.plan||'free').toUpperCase();
+  go('s-dashboard');loadDashboardData();
+}
+
+function switchDashTab(tabName,el){
+  document.querySelectorAll('.tabs .tab').forEach(tb=>tb.classList.remove('active'));el.classList.add('active');
+  document.getElementById('dash-tab-tests').classList.toggle('hidden',tabName!=='tests');
+  document.getElementById('dash-tab-bank').classList.toggle('hidden',tabName!=='bank');
+  document.getElementById('dash-tab-results').classList.toggle('hidden',tabName!=='results');
+  if(tabName==='results')loadResults();
+}
+
+async function loadDashboardData(){
+  try{const tests=await apiGet({action:'getTeacherTests',teacherId:session.teacherId});renderTestsList(tests);document.getElementById('stat-tests').textContent=Array.isArray(tests)?tests.length:0;}catch(e){console.error(e);}
+  try{
+    const results=await apiGet({action:'getResults',teacherId:session.teacherId});
+    if(Array.isArray(results)){
+      document.getElementById('stat-students').textContent=results.length;
+      if(results.length){const avg=results.reduce((s,r)=>s+parseInt((r['%']||'0').toString().replace('%','')),0)/results.length;document.getElementById('stat-avg').textContent=Math.round(avg)+'%';}
+      else document.getElementById('stat-avg').textContent='—';
     }
-  } catch(e) {
-    errEl.textContent = t('auth.connError');
-    errEl.classList.add('show');
-  }
-  btn.disabled = false; btn.innerHTML = `<span data-t="auth.registerBtn">${t('auth.registerBtn')}</span>`;
+  }catch(e){console.error(e);}
+  try{
+    const subjects=await apiGet({action:'getSubjects'});
+    const dl=document.getElementById('subject-list');dl.innerHTML='';
+    (subjects||[]).forEach(s=>{const o=document.createElement('option');o.value=s;dl.appendChild(o);});
+  }catch(e){}
 }
 
-// ══════════════════════════════════════════════════════════════
-// DASHBOARD
-// ══════════════════════════════════════════════════════════════
-async function enterDashboard() {
-  document.getElementById('dash-teacher-name').textContent = session.name;
-  document.getElementById('dash-plan').textContent = (session.plan || 'free').toUpperCase();
-  go('s-dashboard');
-  loadDashboardData();
-}
-
-function switchDashTab(tabName, el) {
-  document.querySelectorAll('.tabs .tab').forEach(tb => tb.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('dash-tab-tests').classList.toggle('hidden', tabName!=='tests');
-  document.getElementById('dash-tab-bank').classList.toggle('hidden', tabName!=='bank');
-  document.getElementById('dash-tab-results').classList.toggle('hidden', tabName!=='results');
-  if (tabName === 'results') loadResults();
-}
-
-async function loadDashboardData() {
-  try {
-    const tests = await apiGet({ action:'getTeacherTests', teacherId: session.teacherId });
-    renderTestsList(tests);
-    document.getElementById('stat-tests').textContent = Array.isArray(tests) ? tests.length : 0;
-  } catch(e) { console.error(e); }
-
-  try {
-    const results = await apiGet({ action:'getResults', teacherId: session.teacherId });
-    if (Array.isArray(results)) {
-      document.getElementById('stat-students').textContent = results.length;
-      if (results.length) {
-        const avg = results.reduce((s,r)=> s + parseInt((r['%']||'0').toString().replace('%','')), 0) / results.length;
-        document.getElementById('stat-avg').textContent = Math.round(avg) + '%';
-      } else {
-        document.getElementById('stat-avg').textContent = '—';
-      }
-    }
-  } catch(e) { console.error(e); }
-
-  // populate subject datalist
-  try {
-    const subjects = await apiGet({ action:'getSubjects' });
-    const dl = document.getElementById('subject-list');
-    dl.innerHTML = '';
-    (subjects || []).forEach(s => { const o = document.createElement('option'); o.value = s; dl.appendChild(o); });
-  } catch(e) {}
-}
-
-function renderTestsList(tests) {
-  const list = document.getElementById('tests-list');
-  const empty = document.getElementById('tests-empty');
-  if (!Array.isArray(tests) || tests.length === 0) {
-    empty.classList.remove('hidden'); list.innerHTML=''; return;
-  }
+function renderTestsList(tests){
+  const list=document.getElementById('tests-list');const empty=document.getElementById('tests-empty');
+  if(!Array.isArray(tests)||tests.length===0){empty.classList.remove('hidden');list.innerHTML='';return;}
   empty.classList.add('hidden');
-  list.innerHTML = tests.map(test => `
+  list.innerHTML=tests.map(test=>`
     <div class="row-item">
       <div class="row-icon">📝</div>
       <div class="row-info">
-        <div class="row-name">${escapeHtml(test['Предмет'])} — ${escapeHtml(test['Класс']||'')}</div>
-        <div class="row-meta">${test['КолВопросов']} ${t('quiz.question').toLowerCase()} · ${test['Время']}s · <b>${test['TestCode']}</b></div>
+        <div class="row-name">${escapeHtml(test['Предмет'])} — ${escapeHtml(test['Класс']||'')} · ${escapeHtml(test['Sinf']||'')} sinf</div>
+        <div class="row-meta">${test['КолВопросов']} ${t('quiz.question').toLowerCase()} · ${test['Время']}s · ${escapeHtml(test['Daraja']||'—')} · <b>${test['TestCode']}</b></div>
       </div>
       <div class="row-actions">
         <button class="btn btn-sm btn-secondary" onclick="showExistingQr('${escapeHtml(test['TestCode'])}')">QR</button>
@@ -789,305 +704,180 @@ function renderTestsList(tests) {
   `).join('');
 }
 
-function showExistingQr(code) {
-  document.getElementById('qr-test-code').textContent = code;
-  const url = `${window.location.origin}${window.location.pathname}?code=${encodeURIComponent(code)}`;
-  document.getElementById('qr-url-text').textContent = url;
-  const qrContainer = document.getElementById('qrcode-canvas');
-  qrContainer.innerHTML = '';
-  new QRCode(qrContainer, { text: url, width:160, height:160, colorDark:"#1B3A6B", colorLight:"#FFFFFF" });
+function showExistingQr(code){
+  document.getElementById('qr-test-code').textContent=code;
+  const url=`${window.location.origin}${window.location.pathname}?code=${encodeURIComponent(code)}`;
+  document.getElementById('qr-url-text').textContent=url;
+  const qrContainer=document.getElementById('qrcode-canvas');qrContainer.innerHTML='';
+  new QRCode(qrContainer,{text:url,width:160,height:160,colorDark:"#1B3A6B",colorLight:"#FFFFFF"});
   go('s-qr');
 }
 
-async function loadResults() {
-  const tbody = document.getElementById('results-tbody');
-  const empty = document.getElementById('results-empty');
-  try {
-    const results = await apiGet({ action:'getResults', teacherId: session.teacherId });
-    if (!Array.isArray(results) || results.length === 0) {
-      tbody.innerHTML = ''; empty.classList.remove('hidden'); return;
-    }
+async function loadResults(){
+  const tbody=document.getElementById('results-tbody');const empty=document.getElementById('results-empty');
+  try{
+    const results=await apiGet({action:'getResults',teacherId:session.teacherId});
+    if(!Array.isArray(results)||results.length===0){tbody.innerHTML='';empty.classList.remove('hidden');return;}
     empty.classList.add('hidden');
-    tbody.innerHTML = results.map(r => `
-      <tr>
-        <td>${escapeHtml(r['Ученик'])}</td>
-        <td>${escapeHtml(r['Класс']||'—')}</td>
-        <td>${escapeHtml(r['Предмет'])}</td>
-        <td>${r['Балл']}/${r['Всего']} (${r['%']})</td>
-        <td><span class="badge ${gradeBadgeClass(r['Оценка'])}">${escapeHtml(r['Оценка'])}</span></td>
-        <td>${formatSeconds(r['Время'])}</td>
-      </tr>
-    `).join('');
-  } catch(e) { console.error(e); }
+    tbody.innerHTML=results.map(r=>`<tr><td>${escapeHtml(r['Ученик'])}</td><td>${escapeHtml(r['Класс']||'—')}</td><td>${escapeHtml(r['Предмет'])}</td><td>${r['Балл']}/${r['Всего']} (${r['%']})</td><td><span class="badge ${gradeBadgeClass(r['Оценка'])}">${escapeHtml(r['Оценка'])}</span></td><td>${formatSeconds(r['Время'])}</td></tr>`).join('');
+  }catch(e){console.error(e);}
 }
 
-function gradeBadgeClass(grade) {
-  if (/5|Отлично|A'lo/i.test(grade)) return 'badge-green';
-  if (/4|Хорошо|Yaxshi/i.test(grade)) return 'badge-blue';
-  if (/3|Удовл|Qoniqarli/i.test(grade)) return 'badge-yellow';
-  return 'badge-gray';
-}
-function formatSeconds(s) {
-  s = parseInt(s)||0;
-  return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
-}
-function escapeHtml(str) {
-  return (str===undefined||str===null) ? '' : String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-}
+function gradeBadgeClass(grade){if(/5|Отлично|A'lo/i.test(grade))return'badge-green';if(/4|Хорошо|Yaxshi/i.test(grade))return'badge-blue';if(/3|Удовл|Qoniqarli/i.test(grade))return'badge-yellow';return'badge-gray';}
+function formatSeconds(s){s=parseInt(s)||0;return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
+function escapeHtml(str){return(str===undefined||str===null)?'':String(str).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 
-// ══════════════════════════════════════════════════════════════
-// CREATE TEST
-// ══════════════════════════════════════════════════════════════
-function openCreateTest() {
-  document.getElementById('ct-subject').value = '';
-  document.getElementById('ct-class').value = '';
-  document.getElementById('ct-count').value = 5;
-  document.getElementById('ct-time').value = 30;
+// ── CREATE TEST — добавлены sinf и daraja ──
+function openCreateTest(){
+  document.getElementById('ct-subject').value='';
+  document.getElementById('ct-class').value='';
+  document.getElementById('ct-count').value=5;
+  document.getElementById('ct-time').value=30;
+  document.getElementById('ct-sinf').value='2';
+  document.getElementById('ct-daraja').value='';
   document.getElementById('ct-error').classList.remove('show');
   go('s-create-test');
 }
 
-async function submitCreateTest() {
-  const subject = document.getElementById('ct-subject').value.trim();
-  const className = document.getElementById('ct-class').value.trim();
-  const count = parseInt(document.getElementById('ct-count').value) || 5;
-  const timeSec = parseInt(document.getElementById('ct-time').value) || 30;
-  const lang = document.getElementById('ct-lang').value;
-  const errEl = document.getElementById('ct-error');
-  const btn = document.getElementById('ct-submit-btn');
-
+async function submitCreateTest(){
+  const subject=document.getElementById('ct-subject').value.trim();
+  const className=document.getElementById('ct-class').value.trim();
+  const count=parseInt(document.getElementById('ct-count').value)||5;
+  const timeSec=parseInt(document.getElementById('ct-time').value)||30;
+  const lang=document.getElementById('ct-lang').value;
+  const sinf=document.getElementById('ct-sinf').value;
+  const daraja=document.getElementById('ct-daraja').value;
+  const errEl=document.getElementById('ct-error');const btn=document.getElementById('ct-submit-btn');
   errEl.classList.remove('show');
-  if (!subject || !className) {
-    errEl.textContent = t('createTest.fillAll'); errEl.classList.add('show'); return;
-  }
-
-  btn.disabled = true; btn.innerHTML = '<span class="loader"></span>';
-  try {
-    const res = await apiPost({ action:'createTest', teacherId: session.teacherId, subject, className, count, timeSec, lang });
-    if (res.status === 'ok') {
-      document.getElementById('qr-test-code').textContent = res.testCode;
-      const url = `${window.location.origin}${window.location.pathname}?code=${encodeURIComponent(res.testCode)}`;
-      document.getElementById('qr-url-text').textContent = url;
-      const qrContainer = document.getElementById('qrcode-canvas');
-      qrContainer.innerHTML = '';
-      new QRCode(qrContainer, { text: url, width:160, height:160, colorDark:"#1B3A6B", colorLight:"#FFFFFF" });
-      go('s-qr');
-      loadDashboardData();
-    } else {
-      errEl.textContent = t('auth.connError'); errEl.classList.add('show');
-    }
-  } catch(e) {
-    errEl.textContent = t('auth.connError'); errEl.classList.add('show');
-  }
-  btn.disabled = false; btn.innerHTML = `<span data-t="createTest.submitBtn">${t('createTest.submitBtn')}</span>`;
+  if(!subject||!className){errEl.textContent=t('createTest.fillAll');errEl.classList.add('show');return;}
+  btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
+  try{
+    const res=await apiPost({action:'createTest',teacherId:session.teacherId,subject,className,count,timeSec,lang,sinf,daraja});
+    if(res.status==='ok'){
+      document.getElementById('qr-test-code').textContent=res.testCode;
+      const url=`${window.location.origin}${window.location.pathname}?code=${encodeURIComponent(res.testCode)}`;
+      document.getElementById('qr-url-text').textContent=url;
+      const qrContainer=document.getElementById('qrcode-canvas');qrContainer.innerHTML='';
+      new QRCode(qrContainer,{text:url,width:160,height:160,colorDark:"#1B3A6B",colorLight:"#FFFFFF"});
+      go('s-qr');loadDashboardData();
+    }else{errEl.textContent=t('auth.connError');errEl.classList.add('show');}
+  }catch(e){errEl.textContent=t('auth.connError');errEl.classList.add('show');}
+  btn.disabled=false;btn.innerHTML=`<span data-t="createTest.submitBtn">${t('createTest.submitBtn')}</span>`;
 }
 
-function copyQuizLink() {
-  const txt = document.getElementById('qr-url-text').textContent;
-  navigator.clipboard.writeText(txt);
-  alert(t('qr.copied'));
+function copyQuizLink(){navigator.clipboard.writeText(document.getElementById('qr-url-text').textContent);alert(t('qr.copied'));}
+
+// ── QUESTION BANK — добавлены sinf и daraja ──
+async function submitQuestion(){
+  const subject=document.getElementById('q-subject').value.trim();
+  const lang=document.getElementById('q-lang').value;
+  const sinf=document.getElementById('q-sinf').value;
+  const daraja=document.getElementById('q-daraja').value;
+  const question=document.getElementById('q-text-input').value.trim();
+  const optA=document.getElementById('q-opt-a').value.trim();
+  const optB=document.getElementById('q-opt-b').value.trim();
+  const optC=document.getElementById('q-opt-c').value.trim();
+  const optD=document.getElementById('q-opt-d').value.trim();
+  const correctLetter=document.getElementById('q-correct').value;
+  const correctMap={A:optA,B:optB,C:optC,D:optD};
+  const correct=correctMap[correctLetter];
+  const errEl=document.getElementById('q-error');const successEl=document.getElementById('q-success');
+  errEl.classList.remove('show');successEl.style.display='none';
+  if(!subject||!question||!optA||!optB||!optC||!optD){errEl.classList.add('show');return;}
+  try{
+    const res=await apiPost({action:'addQuestion',subject,question,optA,optB,optC,optD,correct,lang,sinf,daraja});
+    if(res.status==='ok'){
+      successEl.style.display='block';
+      document.getElementById('q-text-input').value='';
+      document.getElementById('q-opt-a').value='';document.getElementById('q-opt-b').value='';
+      document.getElementById('q-opt-c').value='';document.getElementById('q-opt-d').value='';
+    }else{errEl.classList.add('show');}
+  }catch(e){errEl.classList.add('show');}
 }
 
-// ══════════════════════════════════════════════════════════════
-// QUESTION BANK (teacher adds questions)
-// ══════════════════════════════════════════════════════════════
-async function submitQuestion() {
-  const subject = document.getElementById('q-subject').value.trim();
-  const lang = document.getElementById('q-lang').value;
-  const question = document.getElementById('q-text-input').value.trim();
-  const optA = document.getElementById('q-opt-a').value.trim();
-  const optB = document.getElementById('q-opt-b').value.trim();
-  const optC = document.getElementById('q-opt-c').value.trim();
-  const optD = document.getElementById('q-opt-d').value.trim();
-  const correctLetter = document.getElementById('q-correct').value;
-  const correctMap = { A: optA, B: optB, C: optC, D: optD };
-  const correct = correctMap[correctLetter];
-  const errEl = document.getElementById('q-error');
-  const successEl = document.getElementById('q-success');
+// ── STUDENT FLOW ──
+let dynamicQuizData=[],currentQ=0,score=0,answered=false;
+let timerInterval=null,timeLeft=30,startTime=null;
+let quizSession={testCode:'',subject:'',className:'',studentName:'',timeSec:30};
+const letters=['А','Б','В','Г'];
 
-  errEl.classList.remove('show'); successEl.style.display = 'none';
-  if (!subject || !question || !optA || !optB || !optC || !optD) {
-    errEl.classList.add('show'); return;
-  }
-
-  try {
-    const res = await apiPost({ action:'addQuestion', subject, question, optA, optB, optC, optD, correct, lang });
-    if (res.status === 'ok') {
-      successEl.style.display = 'block';
-      document.getElementById('q-text-input').value = '';
-      document.getElementById('q-opt-a').value = '';
-      document.getElementById('q-opt-b').value = '';
-      document.getElementById('q-opt-c').value = '';
-      document.getElementById('q-opt-d').value = '';
-    } else {
-      errEl.classList.add('show');
-    }
-  } catch(e) {
-    errEl.classList.add('show');
-  }
-}
-
-// ══════════════════════════════════════════════════════════════
-// STUDENT FLOW
-// ══════════════════════════════════════════════════════════════
-let dynamicQuizData = [];
-let currentQ = 0, score = 0, answered = false;
-let timerInterval = null, timeLeft = 30, startTime = null;
-let quizSession = { testCode:'', subject:'', className:'', studentName:'', timeSec:30 };
-const letters = ['А','Б','В','Г'];
-
-async function loadQuestionsFromGoogle() {
-  const code = document.getElementById('student-test-code').value.trim().toUpperCase();
-  const name = document.getElementById('student-name-input').value.trim();
-  const className = document.getElementById('student-class-input').value.trim();
-  const errEl = document.getElementById('student-entry-error');
-  const btn = document.getElementById('start-test-btn');
-
+async function loadQuestionsFromGoogle(){
+  const code=document.getElementById('student-test-code').value.trim().toUpperCase();
+  const name=document.getElementById('student-name-input').value.trim();
+  const className=document.getElementById('student-class-input').value.trim();
+  const errEl=document.getElementById('student-entry-error');const btn=document.getElementById('start-test-btn');
   errEl.classList.remove('show');
-  if (!code || !name || !className) { errEl.classList.add('show'); return; }
-
-  btn.disabled = true; btn.innerHTML = `<span class="loader"></span> ${t('student.loading')}`;
-  try {
-    const cfg = await apiGet({ action:'getTestConfig', code });
-    if (!cfg || cfg.error) {
-      errEl.classList.add('show');
-      btn.disabled = false; btn.innerHTML = `<span data-t="student.startBtn">${t('student.startBtn')}</span>`;
-      return;
-    }
-    const questions = await apiGet({ action:'getQuestions', code });
-    if (!Array.isArray(questions) || questions.length === 0) {
-      alert(t('student.noQuestions'));
-      btn.disabled = false; btn.innerHTML = `<span data-t="student.startBtn">${t('student.startBtn')}</span>`;
-      return;
-    }
-    dynamicQuizData = questions;
-    quizSession = { testCode: code, subject: cfg['Предмет'], className, studentName: name, timeSec: parseInt(cfg['Время'])||30 };
-    currentQ = 0; score = 0; startTime = Date.now();
-    go('s-question');
-    showQuestion();
-  } catch(e) {
-    console.error(e);
-    errEl.textContent = t('auth.connError');
-    errEl.classList.add('show');
-  }
-  btn.disabled = false; btn.innerHTML = `<span data-t="student.startBtn">${t('student.startBtn')}</span>`;
+  if(!code||!name||!className){errEl.classList.add('show');return;}
+  btn.disabled=true;btn.innerHTML=`<span class="loader"></span> ${t('student.loading')}`;
+  try{
+    const cfg=await apiGet({action:'getTestConfig',code});
+    if(!cfg||cfg.error){errEl.classList.add('show');btn.disabled=false;btn.innerHTML=`<span data-t="student.startBtn">${t('student.startBtn')}</span>`;return;}
+    const questions=await apiGet({action:'getQuestions',code});
+    if(!Array.isArray(questions)||questions.length===0){alert(t('student.noQuestions'));btn.disabled=false;btn.innerHTML=`<span data-t="student.startBtn">${t('student.startBtn')}</span>`;return;}
+    dynamicQuizData=questions;
+    quizSession={testCode:code,subject:cfg['Предмет'],className,studentName:name,timeSec:parseInt(cfg['Время'])||30};
+    currentQ=0;score=0;startTime=Date.now();go('s-question');showQuestion();
+  }catch(e){console.error(e);errEl.textContent=t('auth.connError');errEl.classList.add('show');}
+  btn.disabled=false;btn.innerHTML=`<span data-t="student.startBtn">${t('student.startBtn')}</span>`;
 }
 
-function showQuestion() {
-  answered = false;
-  const data = dynamicQuizData[currentQ];
-  document.getElementById('q-current').textContent = currentQ+1;
-  document.getElementById('q-total').textContent = dynamicQuizData.length;
-  document.getElementById('q-num-label').textContent = currentQ+1;
-  document.getElementById('q-score-num').textContent = score;
-  document.getElementById('progress-fill').style.width = ((currentQ+1)/dynamicQuizData.length*100)+'%';
-  document.getElementById('q-text').textContent = data.question;
+function showQuestion(){
+  answered=false;const data=dynamicQuizData[currentQ];
+  document.getElementById('q-current').textContent=currentQ+1;
+  document.getElementById('q-total').textContent=dynamicQuizData.length;
+  document.getElementById('q-num-label').textContent=currentQ+1;
+  document.getElementById('q-score-num').textContent=score;
+  document.getElementById('progress-fill').style.width=((currentQ+1)/dynamicQuizData.length*100)+'%';
+  document.getElementById('q-text').textContent=data.question;
   document.getElementById('next-btn-wrap').classList.add('hidden');
-
-  const container = document.getElementById('options-container');
-  container.innerHTML = '';
-  data.options.forEach((opt,i) => {
-    if (!opt) return;
-    const b = document.createElement('button');
-    b.className = 'option-btn';
-    b.innerHTML = `<span class="option-letter">${letters[i]}</span>${escapeHtml(opt)}`;
-    b.onclick = () => selectAnswer(opt, data.correct, b);
-    container.appendChild(b);
-  });
-
-  clearInterval(timerInterval);
-  timeLeft = quizSession.timeSec;
-  updateTimerView();
-  timerInterval = setInterval(() => {
-    timeLeft--; updateTimerView();
-    if (timeLeft <= 0) { clearInterval(timerInterval); if (!answered) autoTimeOut(); }
-  }, 1000);
+  const container=document.getElementById('options-container');container.innerHTML='';
+  data.options.forEach((opt,i)=>{if(!opt)return;const b=document.createElement('button');b.className='option-btn';b.innerHTML=`<span class="option-letter">${letters[i]}</span>${escapeHtml(opt)}`;b.onclick=()=>selectAnswer(opt,data.correct,b);container.appendChild(b);});
+  clearInterval(timerInterval);timeLeft=quizSession.timeSec;updateTimerView();
+  timerInterval=setInterval(()=>{timeLeft--;updateTimerView();if(timeLeft<=0){clearInterval(timerInterval);if(!answered)autoTimeOut();}},1000);
 }
 
-function updateTimerView() {
-  document.getElementById('timer-display').textContent = timeLeft;
-  document.getElementById('timer-badge').className = 'timer-badge' + (timeLeft<=10?' warning':'');
-}
+function updateTimerView(){document.getElementById('timer-display').textContent=timeLeft;document.getElementById('timer-badge').className='timer-badge'+(timeLeft<=10?' warning':'');}
 
-function selectAnswer(chosenText, correctText, clickedBtn) {
-  if (answered) return;
-  answered = true;
-  clearInterval(timerInterval);
-  document.querySelectorAll('.option-btn').forEach(b => {
-    b.disabled = true;
-    if (b.textContent.trim() === String(correctText).trim() || b.innerText.substring(1).trim() === String(correctText).trim()) b.classList.add('correct');
-  });
-  if (String(chosenText).trim() === String(correctText).trim()) {
-    score++;
-  } else {
-    clickedBtn.classList.add('wrong');
-  }
+function selectAnswer(chosenText,correctText,clickedBtn){
+  if(answered)return;answered=true;clearInterval(timerInterval);
+  document.querySelectorAll('.option-btn').forEach(b=>{b.disabled=true;if(b.innerText.substring(1).trim()===String(correctText).trim())b.classList.add('correct');});
+  if(String(chosenText).trim()===String(correctText).trim())score++;else clickedBtn.classList.add('wrong');
   document.getElementById('next-btn-wrap').classList.remove('hidden');
 }
 
-function autoTimeOut() {
-  answered = true;
-  const correctText = dynamicQuizData[currentQ].correct;
-  document.querySelectorAll('.option-btn').forEach(b => {
-    b.disabled = true;
-    if (b.innerText.substring(1).trim() === String(correctText).trim()) b.classList.add('correct');
-  });
+function autoTimeOut(){
+  answered=true;const correctText=dynamicQuizData[currentQ].correct;
+  document.querySelectorAll('.option-btn').forEach(b=>{b.disabled=true;if(b.innerText.substring(1).trim()===String(correctText).trim())b.classList.add('correct');});
   document.getElementById('next-btn-wrap').classList.remove('hidden');
 }
 
-function nextQuestion() {
-  currentQ++;
-  if (currentQ < dynamicQuizData.length) showQuestion();
-  else processQuizEnd();
-}
+function nextQuestion(){currentQ++;if(currentQ<dynamicQuizData.length)showQuestion();else processQuizEnd();}
 
-async function processQuizEnd() {
-  clearInterval(timerInterval);
-  const elapsed = Math.round((Date.now()-startTime)/1000);
-  const pct = Math.round((score/dynamicQuizData.length)*100);
-  let grade, gradeClass;
-  if (pct >= 85) { grade = currentLang==='uz' ? "A'lo" : "Отлично"; gradeClass = 'grade-5'; }
-  else if (pct >= 70) { grade = currentLang==='uz' ? "Yaxshi" : "Хорошо"; gradeClass = 'grade-4'; }
-  else if (pct >= 50) { grade = currentLang==='uz' ? "Qoniqarli" : "Удовлетворительно"; gradeClass = 'grade-3'; }
-  else { grade = currentLang==='uz' ? "Qoniqarsiz" : "Неудовлетворительно"; gradeClass = 'grade-2'; }
-
-  document.getElementById('result-score').textContent = score;
-  document.getElementById('result-total').textContent = `${currentLang==='uz'?'/':'из'} ${dynamicQuizData.length}`;
-  document.getElementById('res-percent').textContent = pct+'%';
-  document.getElementById('res-time').textContent = formatSeconds(elapsed);
-  const msgKey = gradeClass==='grade-5'?'result.grade5':gradeClass==='grade-4'?'result.grade4':gradeClass==='grade-3'?'result.grade3':'result.grade2';
-  document.getElementById('result-msg').textContent = t(msgKey);
-  const badge = document.getElementById('grade-badge');
-  badge.textContent = grade;
-  badge.className = `grade-badge ${gradeClass}`;
-
+async function processQuizEnd(){
+  clearInterval(timerInterval);const elapsed=Math.round((Date.now()-startTime)/1000);
+  const pct=Math.round((score/dynamicQuizData.length)*100);
+  let grade,gradeClass;
+  if(pct>=85){grade=currentLang==='uz'?"A'lo":"Отлично";gradeClass='grade-5';}
+  else if(pct>=70){grade=currentLang==='uz'?"Yaxshi":"Хорошо";gradeClass='grade-4';}
+  else if(pct>=50){grade=currentLang==='uz'?"Qoniqarli":"Удовлетворительно";gradeClass='grade-3';}
+  else{grade=currentLang==='uz'?"Qoniqarsiz":"Неудовлетворительно";gradeClass='grade-2';}
+  document.getElementById('result-score').textContent=score;
+  document.getElementById('result-total').textContent=`${currentLang==='uz'?'/':'из'} ${dynamicQuizData.length}`;
+  document.getElementById('res-percent').textContent=pct+'%';
+  document.getElementById('res-time').textContent=formatSeconds(elapsed);
+  const msgKey=gradeClass==='grade-5'?'result.grade5':gradeClass==='grade-4'?'result.grade4':gradeClass==='grade-3'?'result.grade3':'result.grade2';
+  document.getElementById('result-msg').textContent=t(msgKey);
+  const badge=document.getElementById('grade-badge');badge.textContent=grade;badge.className=`grade-badge ${gradeClass}`;
   go('s-student-result');
-
-  try {
-    await apiPost({
-      action:'submitResult',
-      studentName: quizSession.studentName,
-      className: quizSession.className,
-      subject: quizSession.subject,
-      testCode: quizSession.testCode,
-      score, total: dynamicQuizData.length, grade, timeSpent: elapsed
-    });
-  } catch(e) { console.error('Не удалось сохранить результат:', e); }
+  try{await apiPost({action:'submitResult',studentName:quizSession.studentName,className:quizSession.className,subject:quizSession.subject,testCode:quizSession.testCode,score,total:dynamicQuizData.length,grade,timeSpent:elapsed});}
+  catch(e){console.error('Не удалось сохранить результат:',e);}
 }
 
-// ══════════════════════════════════════════════════════════════
-// INIT — обработка прямого QR-перехода ?code=XXX
-// ══════════════════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded',()=>{
   applyTranslations();
-  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === currentLang));
-
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get('code');
-  if (code) {
-    document.getElementById('student-test-code').value = code.toUpperCase();
-    go('s-student-entry');
-  }
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===currentLang));
+  const params=new URLSearchParams(window.location.search);const code=params.get('code');
+  if(code){document.getElementById('student-test-code').value=code.toUpperCase();go('s-student-entry');}
 });
 </script>
 </html>
