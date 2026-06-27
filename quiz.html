@@ -162,7 +162,6 @@ tr:hover td{background:var(--cream)}
 </head>
 <body>
 
-<!-- ══════════════ HOME ══════════════ -->
 <div class="screen active" id="s-home">
   <div class="girih-top"></div>
   <div class="header">
@@ -194,7 +193,6 @@ tr:hover td{background:var(--cream)}
   <div class="girih-bottom"></div>
 </div>
 
-<!-- ══════════════ TEACHER AUTH ══════════════ -->
 <div class="screen" id="s-teacher-auth">
   <div class="girih-top"></div>
   <div class="header"><div class="header-inner">
@@ -225,7 +223,6 @@ tr:hover td{background:var(--cream)}
   <div class="girih-bottom"></div>
 </div>
 
-<!-- ══════════════ TEACHER DASHBOARD ══════════════ -->
 <div class="screen" id="s-dashboard">
   <div class="girih-top"></div>
   <div class="header"><div class="header-inner">
@@ -267,7 +264,6 @@ tr:hover td{background:var(--cream)}
     <div id="dash-tab-bank" class="hidden">
       <div class="card" style="margin-bottom:18px;">
         <h3 style="font-size:1rem;color:var(--lapis);margin-bottom:14px;" data-t="bank.addTitle">Добавить вопрос в базу</h3>
-        <!-- ИЗМЕНЕНО: добавлены Sinf и Daraja -->
         <div class="form-row">
           <div class="form-group"><label data-t="bank.subject">Предмет</label><input type="text" id="q-subject" placeholder="Matematika"></div>
           <div class="form-group"><label data-t="bank.lang">Язык вопроса</label>
@@ -330,7 +326,6 @@ tr:hover td{background:var(--cream)}
   <div class="girih-bottom"></div>
 </div>
 
-<!-- ══════════════ CREATE TEST ══════════════ -->
 <div class="screen" id="s-create-test">
   <div class="girih-top"></div>
   <div class="header"><div class="header-inner">
@@ -352,7 +347,6 @@ tr:hover td{background:var(--cream)}
           <label data-t="createTest.class">Класс / Группа</label>
           <input type="text" id="ct-class" placeholder="2-A">
         </div>
-        <!-- НОВОЕ: выбор номера класса для фильтрации вопросов -->
         <div class="form-group">
           <label data-t="createTest.sinf">Номер класса</label>
           <select id="ct-sinf">
@@ -363,7 +357,6 @@ tr:hover td{background:var(--cream)}
           </select>
         </div>
       </div>
-      <!-- НОВОЕ: выбор сложности -->
       <div class="form-group">
         <label data-t="createTest.daraja">Сложность вопросов</label>
         <select id="ct-daraja">
@@ -390,7 +383,6 @@ tr:hover td{background:var(--cream)}
   <div class="girih-bottom"></div>
 </div>
 
-<!-- ══════════════ QR SCREEN ══════════════ -->
 <div class="screen" id="s-qr">
   <div class="girih-top"></div>
   <div class="header"><div class="header-inner">
@@ -414,7 +406,6 @@ tr:hover td{background:var(--cream)}
   <div class="girih-bottom"></div>
 </div>
 
-<!-- ══════════════ STUDENT ENTRY ══════════════ -->
 <div class="screen" id="s-student-entry">
   <div class="girih-top"></div>
   <div class="header"><div class="header-inner">
@@ -449,7 +440,6 @@ tr:hover td{background:var(--cream)}
   <div class="girih-bottom"></div>
 </div>
 
-<!-- ══════════════ QUESTION SCREEN ══════════════ -->
 <div class="screen" id="s-question">
   <div class="girih-top"></div>
   <div class="header" style="background:var(--lapis);"><div class="header-inner">
@@ -476,7 +466,6 @@ tr:hover td{background:var(--cream)}
   <div class="girih-bottom"></div>
 </div>
 
-<!-- ══════════════ STUDENT RESULT ══════════════ -->
 <div class="screen" id="s-student-result">
   <div class="girih-top"></div>
   <div class="header"><div class="header-inner">
@@ -484,400 +473,648 @@ tr:hover td{background:var(--cream)}
   </div></div>
   <div class="main-narrow centered"><div>
     <div class="card text-center">
-      <h2 class="page-title" data-t="result.title">Тест завершён!</h2>
-      <div class="result-circle"><div class="result-score" id="result-score">0</div><div class="result-total" id="result-total">из 5</div></div>
-      <div class="grade-badge" id="grade-badge">—</div>
-      <p style="color:var(--muted);margin-bottom:22px;" id="result-msg">—</p>
-      <div class="divider"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
-        <div style="background:var(--cream);border-radius:10px;padding:14px;">
-          <div style="font-weight:800;font-size:1.3rem;color:var(--lapis);" id="res-percent">0%</div>
-          <div style="font-size:.78rem;color:var(--muted);" data-t="result.correctPct">Правильных</div>
-        </div>
-        <div style="background:var(--cream);border-radius:10px;padding:14px;">
-          <div style="font-weight:800;font-size:1.3rem;color:var(--lapis);" id="res-time">0:00</div>
-          <div style="font-size:.78rem;color:var(--muted);" data-t="result.timeSpent">Время</div>
-        </div>
+      <h2 class="page-title" id="result-title" data-t="result.title">Тест завершён!</h2>
+      <p style="color:var(--muted);margin-bottom:24px;" id="result-msg">Отличный результат, ты молодец!</p>
+      <div class="result-circle">
+        <div class="result-score" id="result-score">0</div>
+        <div class="result-total" id="result-total">из 5</div>
       </div>
-      <button class="btn btn-gold btn-full btn-lg" onclick="go('s-home')"><span data-t="result.homeBtn">На главную</span></button>
+      <span class="grade-badge grade-5" id="grade-badge">Отлично</span>
+      <div style="background:var(--cream);padding:14px;border-radius:10px;margin-bottom:24px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div style="text-align:left;"><span style="font-size:.78rem;color:var(--muted);" data-t="result.percent">Точность:</span><p style="font-weight:700;color:var(--lapis);" id="res-percent">0%</p></div>
+        <div style="text-align:left;"><span style="font-size:.78rem;color:var(--muted);" data-t="result.time">Время:</span><p style="font-weight:700;color:var(--lapis);" id="res-time">00:00</p></div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="go('s-home')">🏠 <span data-t="result.homeBtn">На главную</span></button>
     </div>
   </div></div>
   <div class="girih-bottom"></div>
 </div>
 
-</body>
 <script>
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby74bqHXRzLjRczUsasZ2eHrdYLCoCptEu3Uoi0jj6OS0c1iJayZykNLm8uYMPvMQf9/exec';
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzgOCrVjpdgi1st9Bp8KmxM8zhVAgLii8PcsLlwQEUo61mMwnInnu9MHRLAwWXxgOSRYA/exec";
 
-const I18N = {
+let currentLang = localStorage.getItem('eq_lang') || 'ru';
+let teacherUser = JSON.parse(localStorage.getItem('eq_teacher')) || null;
+let activeAuthMode = 'login';
+let activeDashTab = 'tests';
+let generatedQrCode = null;
+
+let dynamicQuizData = [];
+let quizSession = { currentIdx: 0, score: 0, timeSpent: 0, timerInterval: null, questionTimer: 0, timeLimitPerQ: 30, startTime: null };
+
+const dict = {
   ru: {
-    'hero.badge':'Платформа нового поколения','hero.title':'Тесты, которые <em>оживляют</em><br>любой урок',
-    'hero.subtitle':'Создавайте тесты, делитесь QR-кодом, получайте результаты в реальном времени — всё на базе одной Google Таблицы.',
-    'hero.teacherBtn':'Я учитель','hero.studentBtn':'Я ученик',
-    'feat1.title':'Быстрое создание','feat1.text':'Тест за 2 минуты. Вопросы хранятся в твоей Google Таблице.',
-    'feat2.title':'Без установки','feat2.text':'Ученики сканируют QR и сразу проходят тест с телефона.',
-    'feat3.title':'Аналитика класса','feat3.text':'Результаты по классам и группам — мгновенно в таблице.',
-    'feat4.title':'Двуязычность','feat4.text':'Интерфейс и тесты — на узбекском и русском языках.',
-    'nav.back':'← Назад','nav.toDashboard':'← Панель','nav.logout':'Выйти',
-    'auth.loginTab':'Вход','auth.registerTab':'Регистрация','auth.email':'Email','auth.password':'Пароль',
-    'auth.name':'Имя и фамилия','auth.loginBtn':'Войти','auth.registerBtn':'Зарегистрироваться',
-    'auth.loginError':'Неверный email или пароль','auth.emailExists':'Этот email уже зарегистрирован',
-    'auth.fillAll':'Заполните все поля','auth.connError':'Ошибка соединения с сервером',
-    'dash.title':'Панель учителя','dash.welcome':'Добро пожаловать,','dash.createBtn':'Создать тест',
-    'dash.statTests':'Тестов создано','dash.statStudents':'Прохождений','dash.statAvg':'Средний балл',
-    'dash.tabTests':'Мои тесты','dash.tabBank':'База вопросов','dash.tabResults':'Результаты',
-    'dash.noTests':'Тестов пока нет. Создай первый!',
-    'bank.addTitle':'Добавить вопрос в базу','bank.subject':'Предмет','bank.lang':'Язык вопроса',
-    'bank.sinf':'Класс (Sinf)','bank.daraja':'Сложность (Daraja)',
-    'bank.question':'Текст вопроса','bank.correct':'Правильный вариант','bank.fillAll':'Заполните все поля',
-    'bank.addBtn':'Добавить вопрос','bank.added':'✓ Вопрос добавлен в Google Таблицу',
-    'results.student':'Ученик','results.class':'Класс','results.subject':'Предмет','results.score':'Балл',
-    'results.grade':'Оценка','results.time':'Время','results.empty':'Пока нет результатов',
-    'createTest.title':'Новый тест','createTest.subtitle':'Параметры прохождения и QR-доступ для учеников',
-    'createTest.subject':'Предмет / Тема','createTest.class':'Класс / Группа',
-    'createTest.sinf':'Номер класса','createTest.daraja':'Сложность вопросов',
-    'createTest.count':'Кол-во вопросов','createTest.time':'Время/вопрос (сек)',
-    'createTest.lang':'Язык теста для ученика',
-    'createTest.fillAll':'Заполните предмет и класс','createTest.submitBtn':'Создать тест и получить QR →',
-    'createTest.noQuestions':'В базе нет вопросов по этому предмету и языку',
-    'daraja.mix':'Смешанная (все уровни)','daraja.oson':'Лёгкий (oson)',
-    'daraja.orta':'Средний (o\'rta)','daraja.qiyin':'Тяжёлый (qiyin)',
-    'qr.title':'Тест готов! 🎉','qr.subtitle':'Покажите QR-код ученикам или отправьте ссылку',
-    'qr.code':'Код теста:','qr.copyBtn':'Скопировать ссылку','qr.toDashboard':'К результатам','qr.copied':'Ссылка скопирована!',
-    'student.entryTitle':'Вход на тест','student.entrySubtitle':'Введите код теста и свои данные',
-    'student.testCode':'Код теста','student.name':'Имя и фамилия','student.class':'Класс / Группа',
-    'student.entryError':'Тест с таким кодом не найден или заполните все поля',
-    'student.startBtn':'Начать тест →','student.loading':'Загрузка вопросов...','student.noQuestions':'Вопросы не найдены',
-    'quiz.question':'Вопрос','quiz.of':'из','quiz.correct':'верно','quiz.questionLabel':'ВОПРОС','quiz.nextBtn':'Следующий вопрос →',
-    'result.title':'Тест завершён!','result.correctPct':'Правильных','result.timeSpent':'Время','result.homeBtn':'На главную',
-    'result.grade5':'Отлично! Превосходный результат 🌟','result.grade4':'Хорошо! Ты справился с большинством вопросов 👍',
-    'result.grade3':'Удовлетворительно. Стоит повторить материал 📚','result.grade2':'Нужно подтянуть тему 💪',
-    'lang.ru':'Русский','lang.uz':'Узбекский'
+    "hero.badge": "⚡ Платформа нового поколения",
+    "hero.title": "Тесты, которые *оживляют*<br>любой урок",
+    "hero.subtitle": "Создавайте тесты, делитесь QR-кодом, получайте результаты в реальном времени — всё на базе одной Google Таблицы.",
+    "hero.teacherBtn": "Я учитель",
+    "hero.studentBtn": "Я ученик",
+    "feat1.title": "Быстрое создание", "feat1.text": "Тест за 2 минуты. Вопросы хранятся в твоей Google Таблице.",
+    "feat2.title": "Без установки", "feat2.text": "Ученики сканируют QR и сразу проходят тест с телефона.",
+    "feat3.title": "Аналитика класса", "feat3.text": "Результаты по классам и группам — мгновенно в таблице.",
+    "feat4.title": "Двуязычность", "feat4.text": "Интерфейс и тесты — на узбекском и русском языках.",
+    "nav.back": "← Назад", "nav.logout": "Выйти", "nav.toDashboard": "← Панель",
+    "auth.loginTab": "Вход", "auth.registerTab": "Регистрация",
+    "auth.email": "Email", "auth.password": "Пароль", "auth.name": "Имя и фамилия",
+    "auth.loginError": "Неверный email или пароль", "auth.loginBtn": "Войти", "auth.registerBtn": "Зарегистрироваться",
+    "dash.title": "Панель учителя", "dash.welcome": "Добро пожаловать,",
+    "dash.createBtn": "Создать тест", "dash.statTests": "Тестов создано", "dash.statStudents": "Прохождений", "dash.statAvg": "Средний балл",
+    "dash.tabTests": "Мои тесты", "dash.tabBank": "База вопросов", "dash.tabResults": "Результаты",
+    "dash.noTests": "Тестов пока нет. Создай первый!",
+    "bank.addTitle": "Добавить вопрос в базу", "bank.subject": "Предмет", "bank.lang": "Язык вопроса",
+    "bank.sinf": "Класс (Sinf)", "bank.daraja": "Сложность (Daraja)", "bank.question": "Текст вопроса", "bank.correct": "Правильный вариант",
+    "bank.fillAll": "Заполните все поля", "bank.addBtn": "Добавить вопрос", "bank.added": "✓ Вопрос добавлен в Google Таблицу",
+    "lang.ru": "Русский", "lang.uz": "Узбекский",
+    "daraja.oson": "Лёгкий (oson)", "daraja.orta": "Средний (o'rta)", "daraja.qiyin": "Тяжёлый (qiyin)", "daraja.mix": "Смешанная (все уровни)",
+    "results.student": "Ученик", "results.class": "Класс", "results.subject": "Предмет", "results.score": "Балл", "results.grade": "Оценка", "results.time": "Время", "results.empty": "Пока нет результатов",
+    "createTest.title": "Новый тест", "createTest.subtitle": "Параметры прохождения и QR-доступ для учеников",
+    "createTest.subject": "Предмет / Тема", "createTest.class": "Класс / Группа", "createTest.sinf": "Номер класса", "createTest.daraja": "Сложность вопросов",
+    "createTest.count": "Кол-во вопросов", "createTest.time": "Время/вопрос (сек)", "createTest.lang": "Язык теста для ученика", "createTest.fillAll": "Заполните предмет и класс", "createTest.submitBtn": "Создать тест и получить QR →",
+    "qr.title": "Тест готов! 🎉", "qr.subtitle": "Покажите QR-код ученикам или отправьте ссылку", "qr.code": "Код теста:", "qr.copyBtn": "Скопировать ссылку", "qr.toDashboard": "К результатам",
+    "student.entryTitle": "Вход на тест", "student.entrySubtitle": "Введите код теста и свои данные", "student.testCode": "Код теста", "student.name": "Имя и фамилия", "student.class": "Класс / Группа", "student.entryError": "Тест с таким кодом или вопросами не найден", "student.startBtn": "Начать тест →",
+    "quiz.question": "Вопрос", "quiz.of": "из", "quiz.correct": "верно", "quiz.questionLabel": "ВОПРОС", "quiz.nextBtn": "Следующий вопрос →",
+    "result.title": "Тест завершён!", "result.percent": "Точность:", "result.time": "Время:", "result.homeBtn": "На главную",
+    "result.grade5": "Превосходно! Отличный результат!", "result.grade4": "Хорошая работа! Ты отлично справился!", "result.grade3": "Удовлетворительно. Можно лучше!", "result.grade2": "Нужно повторить материал."
   },
   uz: {
-    'hero.badge':'Yangi avlod platformasi','hero.title':'Har qanday darsni <em>jonlantiradigan</em><br>testlar',
-    'hero.subtitle':'Test yarating, QR-kod orqali ulashing, natijalarni real vaqtda oling — barchasi bitta Google jadvali asosida.',
-    'hero.teacherBtn':'Men o\'qituvchiman','hero.studentBtn':'Men o\'quvchiman',
-    'feat1.title':'Tezkor yaratish','feat1.text':'2 daqiqada test. Savollar Google jadvalingizda saqlanadi.',
-    'feat2.title':'O\'rnatishsiz','feat2.text':'O\'quvchilar QR kodni skanerlab, telefondan testni boshlaydi.',
-    'feat3.title':'Sinf tahlili','feat3.text':'Sinflar va guruhlar bo\'yicha natijalar — jadvalda darhol.',
-    'feat4.title':'Ikki tillilik','feat4.text':'Interfeys va testlar — o\'zbek va rus tillarida.',
-    'nav.back':'← Orqaga','nav.toDashboard':'← Panel','nav.logout':'Chiqish',
-    'auth.loginTab':'Kirish','auth.registerTab':'Ro\'yxatdan o\'tish','auth.email':'Email','auth.password':'Parol',
-    'auth.name':'Ism va familiya','auth.loginBtn':'Kirish','auth.registerBtn':'Ro\'yxatdan o\'tish',
-    'auth.loginError':'Email yoki parol noto\'g\'ri','auth.emailExists':'Bu email allaqachon ro\'yxatdan o\'tgan',
-    'auth.fillAll':'Barcha maydonlarni to\'ldiring','auth.connError':'Server bilan ulanishda xatolik',
-    'dash.title':'O\'qituvchi paneli','dash.welcome':'Xush kelibsiz,','dash.createBtn':'Test yaratish',
-    'dash.statTests':'Yaratilgan testlar','dash.statStudents':'Topshirishlar','dash.statAvg':'O\'rtacha ball',
-    'dash.tabTests':'Mening testlarim','dash.tabBank':'Savollar bazasi','dash.tabResults':'Natijalar',
-    'dash.noTests':'Hozircha testlar yo\'q. Birinchisini yarating!',
-    'bank.addTitle':'Bazaga savol qo\'shish','bank.subject':'Fan','bank.lang':'Savol tili',
-    'bank.sinf':'Sinf','bank.daraja':'Daraja',
-    'bank.question':'Savol matni','bank.correct':'To\'g\'ri javob','bank.fillAll':'Barcha maydonlarni to\'ldiring',
-    'bank.addBtn':'Savol qo\'shish','bank.added':'✓ Savol Google jadvaliga qo\'shildi',
-    'results.student':'O\'quvchi','results.class':'Sinf','results.subject':'Fan','results.score':'Ball',
-    'results.grade':'Baho','results.time':'Vaqt','results.empty':'Hozircha natijalar yo\'q',
-    'createTest.title':'Yangi test','createTest.subtitle':'Topshirish parametrlari va o\'quvchilar uchun QR-kirish',
-    'createTest.subject':'Fan / Mavzu','createTest.class':'Sinf / Guruh',
-    'createTest.sinf':'Sinf raqami','createTest.daraja':'Savollar darajasi',
-    'createTest.count':'Savollar soni','createTest.time':'Savolga vaqt (sek)',
-    'createTest.lang':'O\'quvchi uchun test tili',
-    'createTest.fillAll':'Fan va sinfni to\'ldiring','createTest.submitBtn':'Test yaratish va QR olish →',
-    'createTest.noQuestions':'Bu fan va til bo\'yicha bazada savollar yo\'q',
-    'daraja.mix':'Aralash (barcha darajalar)','daraja.oson':'Oson',
-    'daraja.orta':'O\'rta','daraja.qiyin':'Qiyin',
-    'qr.title':'Test tayyor! 🎉','qr.subtitle':'O\'quvchilarga QR-kodni ko\'rsating yoki havolani yuboring',
-    'qr.code':'Test kodi:','qr.copyBtn':'Havolani nusxalash','qr.toDashboard':'Natijalarga','qr.copied':'Havola nusxalandi!',
-    'student.entryTitle':'Testga kirish','student.entrySubtitle':'Test kodini va ma\'lumotlaringizni kiriting',
-    'student.testCode':'Test kodi','student.name':'Ism va familiya','student.class':'Sinf / Guruh',
-    'student.entryError':'Bu kod bilan test topilmadi yoki barcha maydonlarni to\'ldiring',
-    'student.startBtn':'Testni boshlash →','student.loading':'Savollar yuklanmoqda...','student.noQuestions':'Savollar topilmadi',
-    'quiz.question':'Savol','quiz.of':'/ ','quiz.correct':'to\'g\'ri','quiz.questionLabel':'SAVOL','quiz.nextBtn':'Keyingi savol →',
-    'result.title':'Test tugadi!','result.correctPct':'To\'g\'ri javoblar','result.timeSpent':'Vaqt','result.homeBtn':'Bosh sahifa',
-    'result.grade5':'A\'lo! Zo\'r natija 🌟','result.grade4':'Yaxshi! Savollarning ko\'pchiligini to\'g\'ri topdingiz 👍',
-    'result.grade3':'Qoniqarli. Mavzuni qaytadan ko\'rib chiqing 📚','result.grade2':'Mavzuni mustahkamlash kerak 💪',
-    'lang.ru':'Rus tili','lang.uz':'O\'zbek tili'
+    "hero.badge": "⚡ Yangi avlod platformasi",
+    "hero.title": "Har qanday darsni *jonlantiradigan*<br>testlar",
+    "hero.subtitle": "Testlar yarating, QR-kod ulashing, natijalarni real vaqtda oling — barchasi bitta Google Jadval asosida.",
+    "hero.teacherBtn": "Men o'qituvchiman",
+    "hero.studentBtn": "Men o'quvchiman",
+    "feat1.title": "Tezkor yaratish", "feat1.text": "2 daqiqada test. Savollar sizning Google Jadvalingizda saqlanadi.",
+    "feat2.title": "O'rnatishsiz", "feat2.text": "O'quvchilar QR-kodni skanerlab, telefondan test topshirishadi.",
+    "feat3.title": "Sinf tahlili", "feat3.text": "Sinf va guruhlar bo'yicha natijalar — joriy vaqtda jadvalda.",
+    "feat4.title": "Ikki tilli", "feat4.text": "Interfeys va testlar — o'zbek va rus tillarida.",
+    "nav.back": "← Orqaga", "nav.logout": "Chiqish", "nav.toDashboard": "← Panel",
+    "auth.loginTab": "Kirish", "auth.registerTab": "Ro'yxatdan o'tish",
+    "auth.email": "Email", "auth.password": "Parol", "auth.name": "Ism va familiya",
+    "auth.loginError": "Email yoki parol xato", "auth.loginBtn": "Kirish", "auth.registerBtn": "Ro'yxatdan o'tish",
+    "dash.title": "O'qituvchi paneli", "dash.welcome": "Xush kelibsiz,",
+    "dash.createBtn": "Test yaratish", "dash.statTests": "Yaratilgan testlar", "dash.statStudents": "Topshirishlar", "dash.statAvg": "O'rtacha ball",
+    "dash.tabTests": "Mening testlarim", "dash.tabBank": "Savollar bazasi", "dash.tabResults": "Natijalar",
+    "dash.noTests": "Testlar hali yo'q. Birinchisini yarating!",
+    "bank.addTitle": "Bazaga savol qo'shish", "bank.subject": "Fan", "bank.lang": "Savol tili",
+    "bank.sinf": "Sinf", "bank.daraja": "Daraja (Murakkablik)", "bank.question": "Savol matni", "bank.correct": "To'g'ri variant",
+    "bank.fillAll": "Barcha maydonlarni to'ldiring", "bank.addBtn": "Savol qo'shish", "bank.added": "✓ Savol Google Jadvalga qo'shildi",
+    "lang.ru": "Ruscha", "lang.uz": "O'zbekcha",
+    "daraja.oson": "Oson", "daraja.orta": "O'rta", "daraja.qiyin": "Qiyin", "daraja.mix": "Aralash (barcha darajalar)",
+    "results.student": "O'quvchi", "results.class": "Sinf", "results.subject": "Fan", "results.score": "Ball", "results.grade": "Baho", "results.time": "Vaqt", "results.empty": "Natijalar hali yo'q",
+    "createTest.title": "Yangi test", "createTest.subtitle": "Topshirish parametrlari va o'quvchilar uchun QR-giriş",
+    "createTest.subject": "Fan / Mavzu", "createTest.class": "Sinf / Guruh", "createTest.sinf": "Sinf raqami", "createTest.daraja": "Savollar murakkabligi",
+    "createTest.count": "Savollar soni", "createTest.time": "Vaqt/savol (sek)", "createTest.lang": "O'quvchi uchun test tili", "createTest.fillAll": "Fan va sinfni to'ldiring", "createTest.submitBtn": "Test yaratish va QR olish →",
+    "qr.title": "Test tayyor! 🎉", "qr.subtitle": "QR-kodni o'quvchilarga ko'rsating yoki havolani yuboring", "qr.code": "Test kodi:", "qr.copyBtn": "Havolani nusxalash", "qr.toDashboard": "Natijalarga",
+    "student.entryTitle": "Testga kirish", "student.entrySubtitle": "Test kodi va ma'lumotlaringizni kiriting", "student.testCode": "Test kodi", "student.name": "Ism va familiya", "student.class": "Sinf / Guruh", "student.entryError": "Bunday kodli test yoki savollar topilmadi", "student.startBtn": "Testni boshlash →",
+    "quiz.question": "Savol", "quiz.of": "dan", "quiz.correct": "to'g'ri", "quiz.questionLabel": "SAVOL", "quiz.nextBtn": "Keyingi savol →",
+    "result.title": "Test yakunlandi!", "result.percent": "Anriqlik:", "result.time": "Vaqt:", "result.homeBtn": "Asosiy sahifaga",
+    "result.grade5": "Ajoyib! Juda yaxshi natija!", "result.grade4": "Yaxshi ish! Barakalla!", "result.grade3": "Qoniqarli. Yana harakat qil!", "result.grade2": "Mavzuni qayta takrorlash kerak."
   }
 };
 
-let currentLang = localStorage.getItem('eduquiz_lang') || 'ru';
-function setLang(lang) { currentLang=lang; localStorage.setItem('eduquiz_lang',lang); applyTranslations(); document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===lang)); }
-function applyTranslations() { document.querySelectorAll('[data-t]').forEach(el=>{const txt=I18N[currentLang][el.getAttribute('data-t')];if(txt!==undefined)el.innerHTML=txt;}); document.documentElement.lang=currentLang; }
-function t(key){return I18N[currentLang][key]||key;}
-
-function go(screenId){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active','fade-in'));const next=document.getElementById(screenId);if(next){next.classList.add('active','fade-in');window.scrollTo(0,0);}}
-
-let session=JSON.parse(localStorage.getItem('eduquiz_session')||'null');
-function saveSession(s){session=s;localStorage.setItem('eduquiz_session',JSON.stringify(s));}
-function logout(){session=null;localStorage.removeItem('eduquiz_session');go('s-home');}
-
-async function apiGet(params){const res=await fetch(WEB_APP_URL+'?'+new URLSearchParams(params).toString());return res.json();}
-async function apiPost(body){const res=await fetch(WEB_APP_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});return res.json();}
-
-function switchAuthMode(mode){
-  document.getElementById('toggle-login').classList.toggle('active',mode==='login');
-  document.getElementById('toggle-register').classList.toggle('active',mode==='register');
-  document.getElementById('auth-login-form').classList.toggle('hidden',mode!=='login');
-  document.getElementById('auth-register-form').classList.toggle('hidden',mode!=='register');
+function t(key){
+  return dict[currentLang][key] || key;
 }
 
-async function handleLogin(){
-  const email=document.getElementById('login-email').value.trim();
-  const pass=document.getElementById('login-pass').value;
-  const errEl=document.getElementById('login-error');
-  const btn=document.getElementById('login-submit-btn');
-  errEl.classList.remove('show');
-  if(!email||!pass){errEl.textContent=t('auth.fillAll');errEl.classList.add('show');return;}
-  btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
-  try{
-    const res=await apiPost({action:'login',email,password:pass});
-    if(res.status==='ok'){saveSession({teacherId:res.teacherId,name:res.name,plan:res.plan});enterDashboard();}
-    else{errEl.textContent=t('auth.loginError');errEl.classList.add('show');}
-  }catch(e){errEl.textContent=t('auth.connError');errEl.classList.add('show');}
-  btn.disabled=false;btn.innerHTML=`<span data-t="auth.loginBtn">${t('auth.loginBtn')}</span>`;
+function applyTranslations(){
+  document.querySelectorAll('[data-t]').forEach(el => {
+    const key = el.getAttribute('data-t');
+    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+      el.placeholder = t(key);
+    } else {
+      el.innerHTML = t(key);
+    }
+  });
+}
+
+function setLang(lang){
+  currentLang = lang;
+  localStorage.setItem('eq_lang', lang);
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+  applyTranslations();
+}
+
+function go(screenId){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById(screenId);
+  if(target){
+    target.classList.add('active');
+    target.classList.add('fade-in');
+    setTimeout(() => target.classList.remove('fade-in'), 350);
+  }
+}
+
+async function apiPost(body){
+  const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(body) });
+  const json = await res.json();
+  if(!json.success) throw new Error(json.error || 'API Error');
+  return json.data;
+}
+
+function switchAuthMode(mode){
+  activeAuthMode = mode;
+  document.getElementById('toggle-login').classList.toggle('active', mode === 'login');
+  document.getElementById('toggle-register').classList.toggle('active', mode === 'register');
+  document.getElementById('auth-login-form').classList.toggle('hidden', mode !== 'login');
+  document.getElementById('auth-register-form').classList.toggle('hidden', mode !== 'register');
 }
 
 async function handleRegister(){
-  const name=document.getElementById('reg-name').value.trim();
-  const email=document.getElementById('reg-email').value.trim();
-  const pass=document.getElementById('reg-pass').value;
-  const errEl=document.getElementById('reg-error');
-  const btn=document.getElementById('reg-submit-btn');
-  errEl.classList.remove('show');
-  if(!name||!email||!pass){errEl.textContent=t('auth.fillAll');errEl.classList.add('show');return;}
-  btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
-  try{
-    const res=await apiPost({action:'register',name,email,password:pass});
-    if(res.status==='ok'){saveSession({teacherId:res.teacherId,name:res.name,plan:res.plan});enterDashboard();}
-    else if(res.message==='email_exists'){errEl.textContent=t('auth.emailExists');errEl.classList.add('show');}
-    else{errEl.textContent=t('auth.connError');errEl.classList.add('show');}
-  }catch(e){errEl.textContent=t('auth.connError');errEl.classList.add('show');}
-  btn.disabled=false;btn.innerHTML=`<span data-t="auth.registerBtn">${t('auth.registerBtn')}</span>`;
+  const name = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-pass').value.trim();
+  const err = document.getElementById('reg-error');
+  err.classList.remove('show');
+
+  if(!name || !email || !password){
+    err.textContent = currentLang === 'uz' ? "Barcha maydonlarni to'ldiring" : "Заполните все поля";
+    err.classList.add('show');
+    return;
+  }
+  setBtnLoading('reg-submit-btn', true);
+  try {
+    const user = await apiPost({ action: 'teacherRegister', name, email, password });
+    teacherUser = user;
+    localStorage.setItem('eq_teacher', JSON.stringify(user));
+    loadDashboard();
+  } catch(e) {
+    err.textContent = e.message;
+    err.classList.add('show');
+  } finally {
+    setBtnLoading('reg-submit-btn', false);
+  }
 }
 
-async function enterDashboard(){
-  document.getElementById('dash-teacher-name').textContent=session.name;
-  document.getElementById('dash-plan').textContent=(session.plan||'free').toUpperCase();
-  go('s-dashboard');loadDashboardData();
+async function handleLogin(){
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-pass').value.trim();
+  const err = document.getElementById('login-error');
+  err.classList.remove('show');
+
+  if(!email || !password){
+    err.textContent = currentLang === 'uz' ? "Barcha maydonlarni to'ldiring" : "Заполните все поля";
+    err.classList.add('show');
+    return;
+  }
+  setBtnLoading('login-submit-btn', true);
+  try {
+    const user = await apiPost({ action: 'teacherLogin', email, password });
+    teacherUser = user;
+    localStorage.setItem('eq_teacher', JSON.stringify(user));
+    loadDashboard();
+  } catch(e) {
+    err.textContent = t('auth.loginError');
+    err.classList.add('show');
+  } finally {
+    setBtnLoading('login-submit-btn', false);
+  }
 }
 
-function switchDashTab(tabName,el){
-  document.querySelectorAll('.tabs .tab').forEach(tb=>tb.classList.remove('active'));el.classList.add('active');
-  document.getElementById('dash-tab-tests').classList.toggle('hidden',tabName!=='tests');
-  document.getElementById('dash-tab-bank').classList.toggle('hidden',tabName!=='bank');
-  document.getElementById('dash-tab-results').classList.toggle('hidden',tabName!=='results');
-  if(tabName==='results')loadResults();
+function logout(){
+  teacherUser = null;
+  localStorage.removeItem('eq_teacher');
+  go('s-home');
 }
 
-async function loadDashboardData(){
-  try{const tests=await apiGet({action:'getTeacherTests',teacherId:session.teacherId});renderTestsList(tests);document.getElementById('stat-tests').textContent=Array.isArray(tests)?tests.length:0;}catch(e){console.error(e);}
-  try{
-    const results=await apiGet({action:'getResults',teacherId:session.teacherId});
-    if(Array.isArray(results)){
-      document.getElementById('stat-students').textContent=results.length;
-      if(results.length){const avg=results.reduce((s,r)=>s+parseInt((r['%']||'0').toString().replace('%','')),0)/results.length;document.getElementById('stat-avg').textContent=Math.round(avg)+'%';}
-      else document.getElementById('stat-avg').textContent='—';
+function setBtnLoading(btnId, loading){
+  const btn = document.getElementById(btnId);
+  if(!btn) return;
+  if(loading){
+    btn.disabled = true;
+    btn.dataset.oldText = btn.innerHTML;
+    btn.innerHTML = `<span class="loader"></span>`;
+  } else {
+    btn.disabled = false;
+    if(btn.dataset.oldText) btn.innerHTML = btn.dataset.oldText;
+  }
+}
+
+async function loadDashboard(){
+  if(!teacherUser) { go('s-teacher-auth'); return; }
+  document.getElementById('dash-teacher-name').textContent = teacherUser.name;
+  document.getElementById('dash-plan').textContent = teacherUser.plan || 'FREE';
+  go('s-dashboard');
+
+  try {
+    const data = await apiPost({ action: 'loadDashboardData', email: teacherUser.email });
+    document.getElementById('stat-tests').textContent = data.stats.testsCount;
+    document.getElementById('stat-students').textContent = data.stats.studentsCount;
+    document.getElementById('stat-avg').textContent = data.stats.avgScore;
+    
+    renderTests(data.tests);
+    renderResults(data.results);
+    populateSubjectDataList(data.tests);
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+function renderTests(tests) {
+  const container = document.getElementById('tests-list');
+  container.innerHTML = '';
+  
+  if(!tests || tests.length === 0) {
+    document.getElementById('tests-empty').classList.remove('hidden');
+    return;
+  }
+  
+  let validTestsCount = 0;
+
+  tests.forEach(t => {
+    // ЗАЩИТА: Если тест некорректный или поле testCode отсутствует/не является строкой, пропускаем её
+    if (!t || !t.testCode || typeof t.testCode !== 'string') {
+      return; 
     }
-  }catch(e){console.error(e);}
-  try{
-    const subjects=await apiGet({action:'getSubjects'});
-    const dl=document.getElementById('subject-list');dl.innerHTML='';
-    (subjects||[]).forEach(s=>{const o=document.createElement('option');o.value=s;dl.appendChild(o);});
-  }catch(e){}
-}
-
-function renderTestsList(tests){
-  const list=document.getElementById('tests-list');const empty=document.getElementById('tests-empty');
-  if(!Array.isArray(tests)||tests.length===0){empty.classList.remove('hidden');list.innerHTML='';return;}
-  empty.classList.add('hidden');
-  list.innerHTML=tests.map(test=>`
-    <div class="row-item">
-      <div class="row-icon">📝</div>
+    
+    validTestsCount++;
+    const parts = t.testCode.split('-');
+    const subj = parts[0] || '';
+    
+    const div = document.createElement('div');
+    div.className = 'row-item';
+    div.innerHTML = `
+      <div class="row-icon">📋</div>
       <div class="row-info">
-        <div class="row-name">${escapeHtml(test['Предмет'])} — ${escapeHtml(test['Класс']||'')} · ${escapeHtml(test['Sinf']||'')} sinf</div>
-        <div class="row-meta">${test['КолВопросов']} ${t('quiz.question').toLowerCase()} · ${test['Время']}s · ${escapeHtml(test['Daraja']||'—')} · <b>${test['TestCode']}</b></div>
+        <div class="row-name">${t.subject} (${t.sinf}-Sinf)</div>
+        <div class="row-meta">КОД: <b>${t.testCode}</b> • Вопросов: ${t.qty} • Язык: ${t.lang.toUpperCase()}</div>
       </div>
       <div class="row-actions">
-        <button class="btn btn-sm btn-secondary" onclick="showExistingQr('${escapeHtml(test['TestCode'])}')">QR</button>
+        <button class="btn btn-secondary btn-sm" onclick="showExistingQr('${t.testCode}', '${t.subject}')">QR</button>
       </div>
-    </div>
-  `).join('');
+    `;
+    container.appendChild(div);
+  });
+  
+  document.getElementById('tests-empty').classList.toggle('hidden', validTestsCount > 0);
 }
 
-function showExistingQr(code){
-  document.getElementById('qr-test-code').textContent=code;
-  const url=`${window.location.origin}${window.location.pathname}?code=${encodeURIComponent(code)}`;
-  document.getElementById('qr-url-text').textContent=url;
-  const qrContainer=document.getElementById('qrcode-canvas');qrContainer.innerHTML='';
-  new QRCode(qrContainer,{text:url,width:160,height:160,colorDark:"#1B3A6B",colorLight:"#FFFFFF"});
-  go('s-qr');
+function renderResults(results){
+  const tbody = document.getElementById('results-tbody');
+  tbody.innerHTML = '';
+  
+  let validResultsCount = 0;
+  
+  if(results && results.length > 0){
+    results.forEach(r => {
+      if(!r || !r.testCode) return;
+      validResultsCount++;
+      
+      const tr = document.createElement('tr');
+      let gClass = 'badge-gray';
+      if(r.grade.includes('5') || r.grade.includes('Отлично') || r.grade.includes('Ajoyib')) gClass='badge-green';
+      else if(r.grade.includes('4') || r.grade.includes('Хорошо') || r.grade.includes('Yaxshi')) gClass='badge-blue';
+      else if(r.grade.includes('3') || r.grade.includes('Удовл') || r.grade.includes('Qoniqarli')) gClass='badge-yellow';
+      
+      tr.innerHTML = `
+        <td><b>${r.studentName}</b></td>
+        <td>${r.className}</td>
+        <td>${r.testCode.split('-')[0]}</td>
+        <td>${r.score} / ${r.totalQuestions}</td>
+        <td><span class="badge ${gClass}">${r.grade}</span></td>
+        <td>${formatSeconds(r.duration)}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+  document.getElementById('results-empty').classList.toggle('hidden', validResultsCount > 0);
 }
 
-async function loadResults(){
-  const tbody=document.getElementById('results-tbody');const empty=document.getElementById('results-empty');
-  try{
-    const results=await apiGet({action:'getResults',teacherId:session.teacherId});
-    if(!Array.isArray(results)||results.length===0){tbody.innerHTML='';empty.classList.remove('hidden');return;}
-    empty.classList.add('hidden');
-    tbody.innerHTML=results.map(r=>`<tr><td>${escapeHtml(r['Ученик'])}</td><td>${escapeHtml(r['Класс']||'—')}</td><td>${escapeHtml(r['Предмет'])}</td><td>${r['Балл']}/${r['Всего']} (${r['%']})</td><td><span class="badge ${gradeBadgeClass(r['Оценка'])}">${escapeHtml(r['Оценка'])}</span></td><td>${formatSeconds(r['Время'])}</td></tr>`).join('');
-  }catch(e){console.error(e);}
+function populateSubjectDataList(tests){
+  const dl = document.getElementById('subject-list');
+  dl.innerHTML = '';
+  const seen = new Set();
+  tests.forEach(t => {
+    if(t.subject && !seen.has(t.subject)){
+      seen.add(t.subject);
+      const opt = document.createElement('option');
+      opt.value = t.subject;
+      dl.appendChild(opt);
+    }
+  });
 }
 
-function gradeBadgeClass(grade){if(/5|Отлично|A'lo/i.test(grade))return'badge-green';if(/4|Хорошо|Yaxshi/i.test(grade))return'badge-blue';if(/3|Удовл|Qoniqarli/i.test(grade))return'badge-yellow';return'badge-gray';}
-function formatSeconds(s){s=parseInt(s)||0;return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
-function escapeHtml(str){return(str===undefined||str===null)?'':String(str).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function switchDashTab(tab, el){
+  activeDashTab = tab;
+  document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  
+  document.getElementById('dash-tab-tests').classList.toggle('hidden', tab !== 'tests');
+  document.getElementById('dash-tab-bank').classList.toggle('hidden', tab !== 'bank');
+  document.getElementById('dash-tab-results').classList.toggle('hidden', tab !== 'results');
+}
 
-// ── CREATE TEST — добавлены sinf и daraja ──
+async function submitQuestion(){
+  const subject = document.getElementById('q-subject').value.trim();
+  const lang = document.getElementById('q-lang').value;
+  const sinf = document.getElementById('q-sinf').value;
+  const daraja = document.getElementById('q-daraja').value;
+  const text = document.getElementById('q-text-input').value.trim();
+  const optA = document.getElementById('q-opt-a').value.trim();
+  const optB = document.getElementById('q-opt-b').value.trim();
+  const optC = document.getElementById('q-opt-c').value.trim();
+  const optD = document.getElementById('q-opt-d').value.trim();
+  const correct = document.getElementById('q-correct').value;
+  
+  const err = document.getElementById('q-error');
+  const successHint = document.getElementById('q-success');
+  err.classList.remove('show');
+  successHint.style.display = 'none';
+
+  if(!subject || !text || !optA || !optB || !optC || !optD){
+    err.classList.add('show');
+    return;
+  }
+
+  try {
+    await apiPost({
+      action: 'addQuestion', subject, lang, sinf, daraja, text,
+      opts: { A: optA, B: optB, C: optC, D: optD }, correct
+    });
+    successHint.style.display = 'block';
+    document.getElementById('q-text-input').value = '';
+    document.getElementById('q-opt-a').value = '';
+    document.getElementById('q-opt-b').value = '';
+    document.getElementById('q-opt-c').value = '';
+    document.getElementById('q-opt-d').value = '';
+  } catch(e){
+    alert(e.message);
+  }
+}
+
 function openCreateTest(){
-  document.getElementById('ct-subject').value='';
-  document.getElementById('ct-class').value='';
-  document.getElementById('ct-count').value=5;
-  document.getElementById('ct-time').value=30;
-  document.getElementById('ct-sinf').value='2';
-  document.getElementById('ct-daraja').value='';
   document.getElementById('ct-error').classList.remove('show');
   go('s-create-test');
 }
 
 async function submitCreateTest(){
-  const subject=document.getElementById('ct-subject').value.trim();
-  const className=document.getElementById('ct-class').value.trim();
-  const count=parseInt(document.getElementById('ct-count').value)||5;
-  const timeSec=parseInt(document.getElementById('ct-time').value)||30;
-  const lang=document.getElementById('ct-lang').value;
-  const sinf=document.getElementById('ct-sinf').value;
-  const daraja=document.getElementById('ct-daraja').value;
-  const errEl=document.getElementById('ct-error');const btn=document.getElementById('ct-submit-btn');
-  errEl.classList.remove('show');
-  if(!subject||!className){errEl.textContent=t('createTest.fillAll');errEl.classList.add('show');return;}
-  btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
-  try{
-    const res=await apiPost({action:'createTest',teacherId:session.teacherId,subject,className,count,timeSec,lang,sinf,daraja});
-    if(res.status==='ok'){
-      document.getElementById('qr-test-code').textContent=res.testCode;
-      const url=`${window.location.origin}${window.location.pathname}?code=${encodeURIComponent(res.testCode)}`;
-      document.getElementById('qr-url-text').textContent=url;
-      const qrContainer=document.getElementById('qrcode-canvas');qrContainer.innerHTML='';
-      new QRCode(qrContainer,{text:url,width:160,height:160,colorDark:"#1B3A6B",colorLight:"#FFFFFF"});
-      go('s-qr');loadDashboardData();
-    }else{errEl.textContent=t('auth.connError');errEl.classList.add('show');}
-  }catch(e){errEl.textContent=t('auth.connError');errEl.classList.add('show');}
-  btn.disabled=false;btn.innerHTML=`<span data-t="createTest.submitBtn">${t('createTest.submitBtn')}</span>`;
+  const subj = document.getElementById('ct-subject').value.trim();
+  const cls = document.getElementById('ct-class').value.trim();
+  const sinf = document.getElementById('ct-sinf').value;
+  const daraja = document.getElementById('ct-daraja').value;
+  const qty = parseInt(document.getElementById('ct-count').value) || 5;
+  const time = parseInt(document.getElementById('ct-time').value) || 30;
+  const lang = document.getElementById('ct-lang').value;
+
+  if(!subj || !cls){
+    document.getElementById('ct-error').classList.add('show');
+    return;
+  }
+
+  setBtnLoading('ct-submit-btn', true);
+  const cleanSubj = subj.replace(/[^a-zA-Z0-9а-яА-Я]/g, '').substring(0,3).toUpperCase();
+  const randomHex = Math.floor(Math.random()*16777215).toString(16).toUpperCase().padStart(6,'0');
+  const testCode = `${cleanSubj}-${randomHex}`;
+
+  try {
+    await apiPost({
+      action: 'createTest', testCode, subject: subj, className: cls,
+      sinf, daraja, qty, time, lang, teacherEmail: teacherUser.email
+    });
+    showQrScreen(testCode, subj);
+  } catch(e){
+    alert(e.message);
+  } finally {
+    setBtnLoading('ct-submit-btn', false);
+  }
 }
 
-function copyQuizLink(){navigator.clipboard.writeText(document.getElementById('qr-url-text').textContent);alert(t('qr.copied'));}
+function showQrScreen(code, subj){
+  document.getElementById('qr-test-code').textContent = code;
+  const link = `${window.location.origin}${window.location.pathname}?code=${code}`;
+  document.getElementById('qr-url-text').textContent = link;
 
-// ── QUESTION BANK — добавлены sinf и daraja ──
-async function submitQuestion(){
-  const subject=document.getElementById('q-subject').value.trim();
-  const lang=document.getElementById('q-lang').value;
-  const sinf=document.getElementById('q-sinf').value;
-  const daraja=document.getElementById('q-daraja').value;
-  const question=document.getElementById('q-text-input').value.trim();
-  const optA=document.getElementById('q-opt-a').value.trim();
-  const optB=document.getElementById('q-opt-b').value.trim();
-  const optC=document.getElementById('q-opt-c').value.trim();
-  const optD=document.getElementById('q-opt-d').value.trim();
-  const correctLetter=document.getElementById('q-correct').value;
-  const correctMap={A:optA,B:optB,C:optC,D:optD};
-  const correct=correctMap[correctLetter];
-  const errEl=document.getElementById('q-error');const successEl=document.getElementById('q-success');
-  errEl.classList.remove('show');successEl.style.display='none';
-  if(!subject||!question||!optA||!optB||!optC||!optD){errEl.classList.add('show');return;}
-  try{
-    const res=await apiPost({action:'addQuestion',subject,question,optA,optB,optC,optD,correct,lang,sinf,daraja});
-    if(res.status==='ok'){
-      successEl.style.display='block';
-      document.getElementById('q-text-input').value='';
-      document.getElementById('q-opt-a').value='';document.getElementById('q-opt-b').value='';
-      document.getElementById('q-opt-c').value='';document.getElementById('q-opt-d').value='';
-    }else{errEl.classList.add('show');}
-  }catch(e){errEl.classList.add('show');}
+  const canvasWrap = document.getElementById('qrcode-canvas');
+  canvasWrap.innerHTML = '';
+  generatedQrCode = new QRCode(canvasWrap, { text: link, width: 160, height: 160 });
+  go('s-qr');
 }
 
-// ── STUDENT FLOW ──
-let dynamicQuizData=[],currentQ=0,score=0,answered=false;
-let timerInterval=null,timeLeft=30,startTime=null;
-let quizSession={testCode:'',subject:'',className:'',studentName:'',timeSec:30};
-const letters=['А','Б','В','Г'];
+function showExistingQr(code, subj){
+  showQrScreen(code, subj);
+}
+
+function copyQuizLink(){
+  const txt = document.getElementById('qr-url-text').textContent;
+  navigator.clipboard.writeText(txt).then(() => {
+    alert(currentLang === 'uz' ? "Havola nusxalandi!" : "Ссылка скопирована!");
+  });
+}
+
+// ══════════════ УЧЕНИК: ПРОХОЖДЕНИЕ ТЕСТА ══════════════
 
 async function loadQuestionsFromGoogle(){
-  const code=document.getElementById('student-test-code').value.trim().toUpperCase();
-  const name=document.getElementById('student-name-input').value.trim();
-  const className=document.getElementById('student-class-input').value.trim();
-  const errEl=document.getElementById('student-entry-error');const btn=document.getElementById('start-test-btn');
-  errEl.classList.remove('show');
-  if(!code||!name||!className){errEl.classList.add('show');return;}
-  btn.disabled=true;btn.innerHTML=`<span class="loader"></span> ${t('student.loading')}`;
-  try{
-    const cfg=await apiGet({action:'getTestConfig',code});
-    if(!cfg||cfg.error){errEl.classList.add('show');btn.disabled=false;btn.innerHTML=`<span data-t="student.startBtn">${t('student.startBtn')}</span>`;return;}
-    const questions=await apiGet({action:'getQuestions',code});
-    if(!Array.isArray(questions)||questions.length===0){alert(t('student.noQuestions'));btn.disabled=false;btn.innerHTML=`<span data-t="student.startBtn">${t('student.startBtn')}</span>`;return;}
-    dynamicQuizData=questions;
-    quizSession={testCode:code,subject:cfg['Предмет'],className,studentName:name,timeSec:parseInt(cfg['Время'])||30};
-    currentQ=0;score=0;startTime=Date.now();go('s-question');showQuestion();
-  }catch(e){console.error(e);errEl.textContent=t('auth.connError');errEl.classList.add('show');}
-  btn.disabled=false;btn.innerHTML=`<span data-t="student.startBtn">${t('student.startBtn')}</span>`;
+  const code = document.getElementById('student-test-code').value.trim().toUpperCase();
+  const name = document.getElementById('student-name-input').value.trim();
+  const cls = document.getElementById('student-class-input').value.trim();
+  const err = document.getElementById('student-entry-error');
+  err.classList.remove('show');
+
+  if(!code || !name || !cls){
+    err.textContent = currentLang === 'uz' ? "Barcha maydonlarni to'ldiring" : "Заполните все поля";
+    err.classList.add('show');
+    return;
+  }
+
+  setBtnLoading('start-test-btn', true);
+  try {
+    const testMetaRes = await fetch(`${WEB_APP_URL}?action=getTest&code=${code}`);
+    const testMetaJson = await testMetaRes.json();
+    if(!testMetaJson.success) throw new Error();
+
+    const tMeta = testMetaJson.data;
+    
+    // Переопределяем язык интерфейса ученика на тот, что задал учитель для теста
+    if(tMeta.lang) setLang(tMeta.lang);
+
+    const qList = await apiPost({
+      action: 'getQuestions', subject: tMeta.subject, lang: tMeta.lang, sinf: tMeta.sinf, daraja: tMeta.daraja
+    });
+
+    if(!qList || qList.length === 0){
+      err.textContent = t('student.entryError');
+      err.classList.add('show');
+      return;
+    }
+
+    // Перемешиваем и ограничиваем количество вопросов параметром из теста
+    let shuffled = qList.sort(() => 0.5 - Math.random());
+    dynamicQuizData = shuffled.slice(0, tMeta.qty);
+
+    quizSession = {
+      currentIdx: 0, score: 0, timeSpent: 0, timerInterval: null,
+      questionTimer: tMeta.time, timeLimitPerQ: tMeta.time,
+      startTime: Date.now(), studentName: name, className: cls,
+      testCode: code, subject: tMeta.subject
+    };
+
+    startQuizGame();
+  } catch(e){
+    err.textContent = t('student.entryError');
+    err.classList.add('show');
+  } finally {
+    setBtnLoading('start-test-btn', false);
+  }
 }
 
-function showQuestion(){
-  answered=false;const data=dynamicQuizData[currentQ];
-  document.getElementById('q-current').textContent=currentQ+1;
-  document.getElementById('q-total').textContent=dynamicQuizData.length;
-  document.getElementById('q-num-label').textContent=currentQ+1;
-  document.getElementById('q-score-num').textContent=score;
-  document.getElementById('progress-fill').style.width=((currentQ+1)/dynamicQuizData.length*100)+'%';
-  document.getElementById('q-text').textContent=data.question;
+function startQuizGame(){
+  go('s-question');
+  renderCurrentQuestion();
+  quizSession.timerInterval = setInterval(quizTicker, 1000);
+}
+
+function renderCurrentQuestion(){
+  const q = dynamicQuizData[quizSession.currentIdx];
+  document.getElementById('q-current').textContent = quizSession.currentIdx + 1;
+  document.getElementById('q-total').textContent = dynamicQuizData.length;
+  document.getElementById('q-score-num').textContent = quizSession.score;
+  document.getElementById('q-num-label').textContent = quizSession.currentIdx + 1;
+  document.getElementById('q-text').textContent = q.q;
+
+  const progressPct = ((quizSession.currentIdx + 1) / dynamicQuizData.length) * 100;
+  document.getElementById('progress-fill').style.width = `${progressPct}%`;
+
+  const container = document.getElementById('options-container');
+  container.innerHTML = '';
   document.getElementById('next-btn-wrap').classList.add('hidden');
-  const container=document.getElementById('options-container');container.innerHTML='';
-  data.options.forEach((opt,i)=>{if(!opt)return;const b=document.createElement('button');b.className='option-btn';b.innerHTML=`<span class="option-letter">${letters[i]}</span>${escapeHtml(opt)}`;b.onclick=()=>selectAnswer(opt,data.correct,b);container.appendChild(b);});
-  clearInterval(timerInterval);timeLeft=quizSession.timeSec;updateTimerView();
-  timerInterval=setInterval(()=>{timeLeft--;updateTimerView();if(timeLeft<=0){clearInterval(timerInterval);if(!answered)autoTimeOut();}},1000);
+
+  quizSession.questionTimer = quizSession.timeLimitPerQ;
+  updateTimerDisplay();
+
+  const letters = ['A','B','C','D'];
+  q.options.forEach((opt, idx) => {
+    if(!opt || opt.toString().trim() === '') return;
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="option-letter">${letters[idx]}</span> <span class="opt-text">${opt}</span>`;
+    // ЗАЩИТА СРАВНЕНИЯ: Записываем чистый вариант ответа и букву в dataset, чтобы избежать багов с обрезанием подстрок
+    btn.dataset.letter = letters[idx];
+    btn.dataset.answer = opt.toString().trim();
+    btn.onclick = () => selectAnswer(btn);
+    container.appendChild(btn);
+  });
 }
 
-function updateTimerView(){document.getElementById('timer-display').textContent=timeLeft;document.getElementById('timer-badge').className='timer-badge'+(timeLeft<=10?' warning':'');}
+function updateTimerDisplay(){
+  const display = document.getElementById('timer-display');
+  const badge = document.getElementById('timer-badge');
+  display.textContent = quizSession.questionTimer;
+  badge.classList.toggle('warning', quizSession.questionTimer <= 5);
+}
 
-function selectAnswer(chosenText,correctText,clickedBtn){
-  if(answered)return;answered=true;clearInterval(timerInterval);
-  document.querySelectorAll('.option-btn').forEach(b=>{b.disabled=true;if(b.innerText.substring(1).trim()===String(correctText).trim())b.classList.add('correct');});
-  if(String(chosenText).trim()===String(correctText).trim())score++;else clickedBtn.classList.add('wrong');
+function quizTicker(){
+  quizSession.questionTimer--;
+  updateTimerDisplay();
+  if(quizSession.questionTimer <= 0){
+    autoTimeOut();
+  }
+}
+
+function selectAnswer(selectedBtn){
+  clearInterval(quizSession.timerInterval);
+  const container = document.getElementById('options-container');
+  const buttons = container.querySelectorAll('.option-btn');
+  buttons.forEach(b => b.disabled = true);
+
+  const q = dynamicQuizData[quizSession.currentIdx];
+  const correctLetter = q.correct.toString().trim(); // 'A', 'B', 'C' или 'D'
+
+  let isCorrect = (selectedBtn.dataset.letter === correctLetter);
+
+  if(isCorrect){
+    selectedBtn.classList.add('correct');
+    quizSession.score++;
+    document.getElementById('q-score-num').textContent = quizSession.score;
+  } else {
+    selectedBtn.classList.add('wrong');
+    buttons.forEach(b => {
+      if(b.dataset.letter === correctLetter) b.classList.add('correct');
+    });
+  }
   document.getElementById('next-btn-wrap').classList.remove('hidden');
 }
 
 function autoTimeOut(){
-  answered=true;const correctText=dynamicQuizData[currentQ].correct;
-  document.querySelectorAll('.option-btn').forEach(b=>{b.disabled=true;if(b.innerText.substring(1).trim()===String(correctText).trim())b.classList.add('correct');});
+  clearInterval(quizSession.timerInterval);
+  const container = document.getElementById('options-container');
+  const buttons = container.querySelectorAll('.option-btn');
+  buttons.forEach(b => b.disabled = true);
+
+  const q = dynamicQuizData[quizSession.currentIdx];
+  const correctLetter = q.correct.toString().trim();
+
+  buttons.forEach(b => {
+    if(b.dataset.letter === correctLetter) b.classList.add('correct');
+  });
   document.getElementById('next-btn-wrap').classList.remove('hidden');
 }
 
-function nextQuestion(){currentQ++;if(currentQ<dynamicQuizData.length)showQuestion();else processQuizEnd();}
-
-async function processQuizEnd(){
-  clearInterval(timerInterval);const elapsed=Math.round((Date.now()-startTime)/1000);
-  const pct=Math.round((score/dynamicQuizData.length)*100);
-  let grade,gradeClass;
-  if(pct>=85){grade=currentLang==='uz'?"A'lo":"Отлично";gradeClass='grade-5';}
-  else if(pct>=70){grade=currentLang==='uz'?"Yaxshi":"Хорошо";gradeClass='grade-4';}
-  else if(pct>=50){grade=currentLang==='uz'?"Qoniqarli":"Удовлетворительно";gradeClass='grade-3';}
-  else{grade=currentLang==='uz'?"Qoniqarsiz":"Неудовлетворительно";gradeClass='grade-2';}
-  document.getElementById('result-score').textContent=score;
-  document.getElementById('result-total').textContent=`${currentLang==='uz'?'/':'из'} ${dynamicQuizData.length}`;
-  document.getElementById('res-percent').textContent=pct+'%';
-  document.getElementById('res-time').textContent=formatSeconds(elapsed);
-  const msgKey=gradeClass==='grade-5'?'result.grade5':gradeClass==='grade-4'?'result.grade4':gradeClass==='grade-3'?'result.grade3':'result.grade2';
-  document.getElementById('result-msg').textContent=t(msgKey);
-  const badge=document.getElementById('grade-badge');badge.textContent=grade;badge.className=`grade-badge ${gradeClass}`;
-  go('s-student-result');
-  try{await apiPost({action:'submitResult',studentName:quizSession.studentName,className:quizSession.className,subject:quizSession.subject,testCode:quizSession.testCode,score,total:dynamicQuizData.length,grade,timeSpent:elapsed});}
-  catch(e){console.error('Не удалось сохранить результат:',e);}
+function nextQuestion(){
+  quizSession.currentIdx++;
+  if(quizSession.currentIdx < dynamicQuizData.length){
+    renderCurrentQuestion();
+    quizSession.timerInterval = setInterval(quizTicker, 1000);
+  } else {
+    finishQuizAndSendResult();
+  }
 }
 
-document.addEventListener('DOMContentLoaded',()=>{
+async function finishQuizAndSendResult(){
+  clearInterval(quizSession.timerInterval);
+  const elapsed = Math.floor((Date.now() - quizSession.startTime) / 1000);
+  const pct = Math.round((quizSession.score / dynamicQuizData.length) * 100);
+
+  let grade = '';
+  let gradeClass = '';
+  if(pct >= 85) { grade = currentLang==='uz'?"Ajoyib (5)":"Отлично (5)"; gradeClass='grade-5'; }
+  else if(pct >= 70) { grade = currentLang==='uz'?"Yaxshi (4)":"Хорошо (4)"; gradeClass='grade-4'; }
+  else if(pct >= 55) { grade = currentLang==='uz'?"Qoniqarli (3)":"Удовлетворительно (3)"; gradeClass='grade-3'; }
+  else { grade = currentLang==='uz'?"Qoniqarsiz (2)":"Неудовлетворительно (2)"; gradeClass='grade-2'; }
+
+  document.getElementById('result-score').textContent = quizSession.score;
+  document.getElementById('result-total').textContent = `${currentLang === 'uz' ? '/' : 'из'} ${dynamicQuizData.length}`;
+  document.getElementById('res-percent').textContent = pct + '%';
+  document.getElementById('res-time').textContent = formatSeconds(elapsed);
+
+  const msgKey = gradeClass === 'grade-5' ? 'result.grade5' : gradeClass === 'grade-4' ? 'result.grade4' : gradeClass === 'grade-3' ? 'result.grade3' : 'result.grade2';
+  document.getElementById('result-msg').textContent = t(msgKey);
+
+  const badge = document.getElementById('grade-badge');
+  badge.textContent = grade;
+  badge.className = `grade-badge ${gradeClass}`;
+
+  go('s-student-result');
+
+  try {
+    await apiPost({
+      action: 'submitResult', studentName: quizSession.studentName, className: quizSession.className,
+      testCode: quizSession.testCode, score: quizSession.score, total: dynamicQuizData.length,
+      grade, duration: elapsed
+    });
+  } catch(e){
+    console.error('Не удалось сохранить результат:', e);
+  }
+}
+
+function formatSeconds(sec){
+  const m = Math.floor(sec / 60).toString().padStart(2,'0');
+  const s = (sec % 60).toString().padStart(2,'0');
+  return `${m}:${s}`;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
   applyTranslations();
-  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===currentLang));
-  const params=new URLSearchParams(window.location.search);const code=params.get('code');
-  if(code){document.getElementById('student-test-code').value=code.toUpperCase();go('s-student-entry');}
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === currentLang));
+
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  if(code){
+    document.getElementById('student-test-code').value = code.toUpperCase();
+    go('s-student-entry');
+  }
+
+  if(teacherUser){
+    loadDashboard();
+  }
 });
 </script>
+</body>
 </html>
