@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EduQuiz — Образовательная платформа</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root {
     --lapis: #1B3A6B;
@@ -893,6 +894,25 @@
 <!-- JAVASCRIPT                            -->
 <!-- ══════════════════════════════════════ -->
 <script>
+// ── TELEGRAM MINI APP ───────────────────
+let tg = null;
+try {
+  tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+  if (tg) {
+    tg.ready();
+    tg.expand();               // на весь экран
+    // Автоматически подставить имя ученика из Telegram
+    const u = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
+    if (u) {
+      const name = [u.first_name, u.last_name].filter(Boolean).join(' ');
+      window.addEventListener('DOMContentLoaded', () => {
+        const inp = document.getElementById('student-name-input');
+        if (inp && name) inp.value = name;
+      });
+    }
+  }
+} catch (e) { /* приложение работает и вне Telegram */ }
+
 // ── NAVIGATION ──────────────────────────
 function go(screenId) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active','fade-in'));
