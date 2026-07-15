@@ -485,20 +485,26 @@
           <h2 class="page-title" style="margin-bottom:4px;">O'qituvchi kirishi</h2>
           <p style="color:var(--muted);font-size:0.93rem;">Imtihonlarni boshqarish uchun kiring</p>
         </div>
-        <div class="form-group">
-          <label>Login</label>
-          <input type="text" id="lg-login" placeholder="Loginingiz" autocomplete="username">
+        <!-- вход из Telegram-бота: кнопка -->
+        <div id="lg-mini" style="display:none;">
+          <button class="btn btn-full btn-lg" onclick="loginMiniApp()"
+                  style="background:#2AABEE;color:#fff;border:none;">
+            Kirish →
+          </button>
+          <p class="text-center" style="margin-top:12px;font-size:0.9rem;color:var(--muted);">
+            <b id="lg-who">—</b> sifatida
+          </p>
         </div>
-        <div class="form-group">
-          <label>Parol</label>
-          <input type="password" id="lg-pass" placeholder="Parolni kiriting" autocomplete="current-password">
-          <div class="error-msg" id="login-error">Login yoki parol noto'g'ri</div>
+
+        <!-- вход из браузера: кнопка Telegram -->
+        <div id="lg-web" style="display:none;">
+          <div id="tg-widget" style="display:flex;justify-content:center;min-height:48px;"></div>
+          <p class="text-center" style="margin-top:14px;font-size:0.85rem;color:var(--muted);line-height:1.6;">
+            Telegram hisobingiz bilan kiring.<br>Parol kerak emas.
+          </p>
         </div>
-        <button class="btn btn-primary btn-full btn-lg" onclick="teacherLogin()" style="margin-top:8px;">Kirish →</button>
-        <p class="text-center" style="margin-top:18px;font-size:0.9rem;color:var(--muted);">
-          Hisobingiz yo'qmi?
-          <a href="#" onclick="go('s-teacher-register');return false;" style="color:var(--lapis);font-weight:700;">Ro'yxatdan o'ting</a>
-        </p>
+
+        <div class="error-msg" id="login-error" style="margin-top:12px;">Kirib bo'lmadi</div>
       </div>
     </div>
   </div>
@@ -508,60 +514,6 @@
 <!-- ══════════════════════════════════════ -->
 <!-- SCREEN 3: ПАНЕЛЬ УЧИТЕЛЯ              -->
 <!-- ══════════════════════════════════════ -->
-<!-- ЭКРАН: РЕГИСТРАЦИЯ УЧИТЕЛЯ (только из Telegram) -->
-<div class="screen" id="s-teacher-register">
-  <div class="header">
-    <div class="header-inner">
-      <div class="logo">Edu<span>Quiz</span></div>
-      <button class="header-back" onclick="go('s-teacher-login')">← Orqaga</button>
-    </div>
-  </div>
-  <div class="main-narrow" style="display:flex;align-items:center;flex:1;">
-    <div style="width:100%">
-      <div class="card">
-        <div class="text-center" style="margin-bottom:24px;">
-          <div style="font-size:2.6rem;margin-bottom:10px;">📝</div>
-          <h2 class="page-title" style="margin-bottom:4px;">Ro'yxatdan o'tish</h2>
-          <p style="color:var(--muted);font-size:0.93rem;">Bir marta — keyin login va parol bilan kirasiz</p>
-        </div>
-
-        <div id="rg-need-tg" style="display:none;padding:16px;background:var(--cream);border:1.5px solid var(--gold);border-radius:10px;">
-          <p style="font-weight:700;color:var(--lapis);margin-bottom:6px;">Telegram orqali oching</p>
-          <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;">
-            Ro'yxatdan o'tish faqat <b>@eduquiz_pm_bot</b> orqali mumkin.
-            Botni oching va menyudan platformani ishga tushiring.
-          </p>
-        </div>
-
-        <div id="rg-form">
-          <div style="padding:12px 14px;background:var(--cream);border-radius:10px;margin-bottom:18px;font-size:0.88rem;">
-            ✅ Telegram: <b id="rg-tg-name">—</b>
-          </div>
-          <div class="form-group">
-            <label>Ismingiz</label>
-            <input type="text" id="rg-name" placeholder="Masalan: Dilnoza Karimova">
-          </div>
-          <div class="form-group">
-            <label>Login</label>
-            <input type="text" id="rg-login" placeholder="lotin harflari va raqamlar" autocomplete="username">
-          </div>
-          <div class="form-group">
-            <label>Parol</label>
-            <input type="password" id="rg-pass" placeholder="kamida 6 ta belgi" autocomplete="new-password">
-          </div>
-          <div class="form-group">
-            <label>Parolni takrorlang</label>
-            <input type="password" id="rg-pass2" placeholder="yana bir marta" autocomplete="new-password">
-            <div class="error-msg" id="rg-error">Xatolik</div>
-          </div>
-          <button class="btn btn-gold btn-full btn-lg" onclick="teacherRegister()">Ro'yxatdan o'tish →</button>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="ornament-footer"></div>
-</div>
-
 <!-- ══════════════════════════════════════ -->
 <div class="screen" id="s-teacher-dashboard">
   <div class="header">
@@ -785,6 +737,7 @@ const api = (path, body) => fetch(path, {
 
 function enterDashboard(){
   document.getElementById('me-name').textContent = ME ? ME.name : '';
+  document.getElementById('login-error').classList.remove('show');
   go('s-teacher-dashboard');
   loadResults();
 }
@@ -795,70 +748,53 @@ function logout(){
   location.href = location.pathname;
 }
 
-async function teacherLogin() {
-  const err = document.getElementById('login-error');
-  const login = document.getElementById('lg-login').value.trim();
-  const pass  = document.getElementById('lg-pass').value;
-  if (!login || !pass) { err.textContent = "Login va parolni kiriting"; err.classList.add('show'); return; }
+const BOT = 'eduquiz_pm_bot';        // имя бота для кнопки в браузере
+
+function loginFail(msg){
+  const e = document.getElementById('login-error');
+  e.textContent = msg; e.classList.add('show');
+}
+
+async function tgLogin(payload){
   try {
-    const r = await api('/api/login', { login, password: pass });
+    const r = await api('/api/tg-auth', payload);
     if (r.ok) {
       TOKEN = r.token; ME = r.me;
       try { localStorage.setItem('eq_token', TOKEN); } catch(e) {}
-      err.classList.remove('show');
       enterDashboard();
       return;
     }
-    err.textContent = "Login yoki parol noto'g'ri";
-  } catch(e) { err.textContent = "Internet bilan bog'lanib bo'lmadi"; }
-  err.classList.add('show');
+    loginFail("Telegram tekshiruvi o'tmadi");
+  } catch(e) { loginFail("Internet bilan bog'lanib bo'lmadi"); }
 }
 
-async function teacherRegister() {
-  const err = document.getElementById('rg-error');
-  const show = m => { err.textContent = m; err.classList.add('show'); };
+function loginMiniApp(){
   let initData = '';
   try { initData = Telegram.WebApp.initData || ''; } catch(e) {}
-  if (!initData) { show("Telegram orqali oching"); return; }
-
-  const name  = document.getElementById('rg-name').value.trim();
-  const login = document.getElementById('rg-login').value.trim();
-  const p1    = document.getElementById('rg-pass').value;
-  const p2    = document.getElementById('rg-pass2').value;
-
-  if (name.length < 2) { show("Ismingizni kiriting"); return; }
-  if (!/^[a-zA-Z0-9_.]{3,20}$/.test(login)) { show("Login: 3-20 ta lotin harfi yoki raqam"); return; }
-  if (p1.length < 6)   { show("Parol kamida 6 ta belgi"); return; }
-  if (p1 !== p2)       { show("Parollar mos kelmadi"); return; }
-
-  try {
-    const r = await api('/api/register', { initData, name, login, password: p1 });
-    if (r.ok) {
-      TOKEN = r.token; ME = r.me;
-      try { localStorage.setItem('eq_token', TOKEN); } catch(e) {}
-      err.classList.remove('show');
-      enterDashboard();
-      return;
-    }
-    show(r.error === 'login_taken'  ? "Bu login band, boshqasini tanlang"
-       : r.error === 'tg_taken'     ? "Bu Telegram allaqachon ro'yxatdan o'tgan"
-       : r.error === 'bad_initdata' ? "Telegram tekshiruvi o'tmadi. Botni qayta oching"
-       : "Xatolik yuz berdi");
-  } catch(e) { show("Internet bilan bog'lanib bo'lmadi"); }
+  if (!initData) { loginFail("Telegram ma'lumoti topilmadi"); return; }
+  tgLogin({ initData });
 }
 
-// Allow Enter key in login
-document.getElementById('teacher-pass').addEventListener('keydown', e => {
-  if (e.key === 'Enter') teacherLogin();
-});
+// сюда Telegram вернёт данные из кнопки на сайте
+window.onTelegramAuth = user => tgLogin({ widget: user });
 
-// ── TABS ─────────────────────────────────
-let EXAM_LINK = "";
-function genCode(){
-  const abc="ABCDEFGHJKMNPQRSTUVWXYZ23456789"; let c="";
-  for(let i=0;i<4;i++) c+=abc[Math.floor(Math.random()*abc.length)];
-  return c;
+function mountTelegramButton(){
+  const box = document.getElementById('tg-widget');
+  if (!box || box.dataset.done) return;
+  box.dataset.done = '1';
+  const sc = document.createElement('script');
+  sc.async = true;
+  sc.src = 'https://telegram.org/js/telegram-widget.js?22';
+  sc.setAttribute('data-telegram-login', BOT);
+  sc.setAttribute('data-size', 'large');
+  sc.setAttribute('data-radius', '10');
+  sc.setAttribute('data-userpic', 'false');
+  sc.setAttribute('data-request-access', 'write');
+  sc.setAttribute('data-onauth', 'onTelegramAuth(user)');
+  sc.onerror = () => loginFail("Telegram tugmasi yuklanmadi");
+  box.appendChild(sc);
 }
+
 async function createExam(){
   const titleEl=document.getElementById('ex-title');
   if(!titleEl.value.trim()){
@@ -1175,20 +1111,20 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // регистрация возможна только из Telegram — показываем нужный блок
+  // из бота — своя кнопка, из браузера — кнопка Telegram
   let tgu = null, initData = '';
   try { tgu = Telegram.WebApp.initDataUnsafe.user; initData = Telegram.WebApp.initData || ''; } catch(e) {}
   const inTG = !!(tgu && tgu.id && initData);
-  document.getElementById('rg-form').style.display    = inTG ? 'block' : 'none';
-  document.getElementById('rg-need-tg').style.display = inTG ? 'none'  : 'block';
+  document.getElementById('lg-mini').style.display = inTG ? 'block' : 'none';
+  document.getElementById('lg-web').style.display  = inTG ? 'none'  : 'block';
   if (inTG) {
-    const full = [tgu.first_name, tgu.last_name].filter(Boolean).join(' ');
-    document.getElementById('rg-tg-name').textContent = full || ('id ' + tgu.id);
-    const nm = document.getElementById('rg-name');
-    if (!nm.value) nm.value = full;
+    document.getElementById('lg-who').textContent =
+      [tgu.first_name, tgu.last_name].filter(Boolean).join(' ') || ('id ' + tgu.id);
+  } else {
+    mountTelegramButton();
   }
 
-  // уже входили с этого устройства? заходим без пароля
+  // уже заходили с этого устройства? впускаем сразу
   let saved = '';
   try { saved = localStorage.getItem('eq_token') || ''; } catch(e) {}
   if (!saved) return;
