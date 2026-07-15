@@ -633,43 +633,46 @@
       <button class="header-back" onclick="go('s-teacher-dashboard')">← Назад</button>
     </div>
   </div>
-  <div class="main">
-    <h1 class="page-title">Создать новый тест</h1>
-    <p class="page-subtitle">Заполните основные данные и добавьте вопросы</p>
+  <div class="main-narrow">
+    <h1 class="page-title">Создать экзамен</h1>
+    <p class="page-subtitle">Настройте пакет и получите ссылку для группы</p>
 
-    <div class="card" style="margin-bottom:20px;">
+    <div class="card">
       <div class="form-group">
-        <label>Название теста</label>
-        <input type="text" placeholder="Например: Алгебра — Тема 5" value="Биология — Клетка">
+        <label>Название экзамена</label>
+        <input type="text" id="ex-title" placeholder="4-sinf — Matematika" value="">
+      </div>
+      <div class="form-group">
+        <label>Предметы (можно несколько)</label>
+        <div style="display:grid;gap:8px;">
+          <label class="correct-radio" style="font-size:0.95rem;"><input type="checkbox" class="ex-subj" value="math" checked> 🧮 Matematika</label>
+          <label class="correct-radio" style="font-size:0.95rem;"><input type="checkbox" class="ex-subj" value="critical"> 🧠 Tanqidiy fikrlash</label>
+          <label class="correct-radio" style="font-size:0.95rem;"><input type="checkbox" class="ex-subj" value="english"> 🇬🇧 Ingliz tili</label>
+        </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div class="form-group">
-          <label>Время на вопрос (сек)</label>
-          <select><option>15</option><option selected>30</option><option>45</option><option>60</option></select>
+          <label>Кол-во вопросов</label>
+          <input type="number" id="ex-count" value="15" min="5" max="80">
         </div>
         <div class="form-group">
-          <label>Предмет</label>
-          <select><option>Биология</option><option>Алгебра</option><option>История</option><option>Химия</option></select>
+          <label>Сек на вопрос (0 = без таймера)</label>
+          <input type="number" id="ex-time" value="45" min="0" max="300">
         </div>
       </div>
-    </div>
-
-    <div id="questions-list">
-      <div class="question-block">
-        <div class="q-header"><span class="q-num">ВОПРОС 1</span><button class="btn btn-sm btn-secondary" onclick="removeQ(this)">✕</button></div>
-        <input type="text" placeholder="Текст вопроса..." value="Что является основной единицей жизни?">
-        <div class="answer-row"><input type="text" placeholder="Вариант А" value="Атом"><label class="correct-radio"><input type="radio" name="q1" onchange="markCorrect(this,'A')"> Верный</label></div>
-        <div class="answer-row"><input type="text" placeholder="Вариант Б" value="Клетка"><label class="correct-radio"><input type="radio" name="q1" checked onchange="markCorrect(this,'B')"> Верный</label></div>
-        <div class="answer-row"><input type="text" placeholder="Вариант В" value="Молекула"><label class="correct-radio"><input type="radio" name="q1" onchange="markCorrect(this,'C')"> Верный</label></div>
-        <div class="answer-row"><input type="text" placeholder="Вариант Г" value="Орган"><label class="correct-radio"><input type="radio" name="q1" onchange="markCorrect(this,'D')"> Верный</label></div>
+      <div class="form-group">
+        <label>Активен до (пусто = бессрочно)</label>
+        <input type="text" id="ex-till" placeholder="2026-07-15 20:00">
       </div>
-    </div>
-
-    <button class="btn btn-secondary btn-full mt-16" onclick="addQuestion()">+ Добавить вопрос</button>
-
-    <div class="gap-12 mt-24">
-      <button class="btn btn-primary btn-lg" onclick="go('s-qr')">Сохранить и получить QR →</button>
-      <button class="btn btn-secondary">Сохранить черновик</button>
+      <div class="form-group">
+        <label class="correct-radio" style="font-size:0.95rem;"><input type="checkbox" id="ex-expl" checked> Показывать ученику разбор после ответа</label>
+      </div>
+      <button class="btn btn-primary btn-full btn-lg" onclick="createExam()">Создать и получить ссылку →</button>
+      <div id="ex-link-box" style="display:none;margin-top:20px;padding:16px;background:var(--cream);border-radius:10px;border:1.5px solid var(--gold);">
+        <p style="font-weight:700;color:var(--lapis);margin-bottom:8px;">✅ Экзамен создан!</p>
+        <p style="font-size:0.85rem;word-break:break-all;margin-bottom:12px;" id="ex-link-text"></p>
+        <button class="btn btn-gold btn-full" onclick="copyExamLink()">📋 Скопировать ссылку для группы</button>
+      </div>
     </div>
   </div>
   <div class="ornament-footer"></div>
@@ -953,6 +956,36 @@ document.getElementById('teacher-pass').addEventListener('keydown', e => {
 });
 
 // ── TABS ─────────────────────────────────
+let EXAM_LINK = "";
+function genCode(){
+  const abc="ABCDEFGHJKMNPQRSTUVWXYZ23456789"; let c="";
+  for(let i=0;i<4;i++) c+=abc[Math.floor(Math.random()*abc.length)];
+  return c;
+}
+async function createExam(){
+  const subjects=[...document.querySelectorAll('.ex-subj:checked')].map(x=>x.value);
+  if(!subjects.length){ alert("Выберите хотя бы один предмет"); return; }
+  const code=genCode();
+  const till=document.getElementById('ex-till').value.trim();
+  const body={ code, title:document.getElementById('ex-title').value.trim()||"Imtihon",
+    subjects, q_count:+document.getElementById('ex-count').value||15,
+    time_per_q:+document.getElementById('ex-time').value||0,
+    show_expl:document.getElementById('ex-expl').checked,
+    active_till: till? new Date(till.replace(' ','T')).toISOString() : null };
+  try{
+    const res=await fetch(SB_URL+"/rest/v1/exams",{method:"POST",
+      headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"application/json",Prefer:"return=minimal"},
+      body:JSON.stringify(body)});
+    if(!res.ok) throw 0;
+    EXAM_LINK=location.origin+"/?exam="+code;
+    document.getElementById('ex-link-text').textContent=EXAM_LINK;
+    document.getElementById('ex-link-box').style.display='block';
+  }catch(e){ alert("Не удалось создать. Проверьте интернет."); }
+}
+function copyExamLink(){
+  navigator.clipboard.writeText(EXAM_LINK).then(()=>alert("Скопировано! Вставьте в группу класса."));
+}
+
 const MARK_WORD = {5:"Отлично",4:"Хорошо",3:"Удовл.",2:"Неудовл."};
 const MARK_CLASS = {5:"badge-green",4:"badge-blue",3:"badge-yellow",2:""};
 
@@ -1047,16 +1080,21 @@ const QUIZ_SIZE = 15;   // вопросов за один тест
 let picked = [];          // выбранные вопросы текущего теста
 
 function pickQuestions(){
-  let arr = bank.filter(r => r.subject === SUBJECT);
-  if (SUBJECT === 'math') {
-    // визуальные логико-математические задачи тоже включаем в математику
-    arr = arr.concat(bank.filter(r => r.subject === 'critical' && r.svg));
+  let arr;
+  if (EXAM) {
+    arr = bank.filter(r => EXAM.subjects.includes(r.subject));
+  } else {
+    arr = bank.filter(r => r.subject === SUBJECT);
+    if (SUBJECT === 'math') {
+      arr = arr.concat(bank.filter(r => r.subject === 'critical' && r.svg));
+    }
   }
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
-  picked = arr.slice(0, Math.min(QUIZ_SIZE, arr.length));
+  const N = EXAM ? EXAM.q_count : QUIZ_SIZE;
+  picked = arr.slice(0, Math.min(N, arr.length));
 }
 
 function buildQuiz(){
@@ -1147,7 +1185,10 @@ function showQuestion() {
 
   // Timer
   clearInterval(timerInterval);
-  timeLeft = 45;
+  const TPQ = EXAM ? EXAM.time_per_q : 45;
+  document.getElementById('timer-badge').style.display = TPQ>0 ? '' : 'none';
+  if (TPQ === 0) return;
+  timeLeft = TPQ;
   updateTimer();
   timerInterval = setInterval(() => {
     timeLeft--;
@@ -1167,6 +1208,7 @@ function updateTimer() {
 
 // Показать объяснение (разбор) после ответа
 function showExplanation() {
+  if (EXAM && !EXAM.show_expl) return;
   const data = quizData[currentQ];
   if (data.expl) {
     const box = document.getElementById('explanation-box');
@@ -1265,8 +1307,26 @@ async function saveResult(elapsed, pct, grade){
   } catch(e) { /* нет сети — результат просто не запишется */ }
 }
 
+let EXAM = null;
+async function loadExam(code){
+  const res=await fetch(SB_URL+"/rest/v1/exams?code=eq."+encodeURIComponent(code)+"&select=*",
+    {headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY}});
+  const rows=await res.json();
+  if(!rows.length) return;
+  EXAM=rows[0];
+  if(EXAM.active_till && new Date(EXAM.active_till)<new Date()){
+    alert(LANG==='uz'?"Imtihon muddati tugagan":"Срок экзамена истёк"); EXAM=null; return;
+  }
+  window.EXAM_CODE=EXAM.code;
+  // скрыть выбор предмета (задан учителем), скрыть кнопку "Я учитель"
+  const sg=document.getElementById('subj-grid'); if(sg) sg.parentElement.style.display='none';
+  go('s-student-name');
+  const w=document.querySelector('#s-student-name .page-title'); if(w) w.textContent=EXAM.title;
+}
+
 window.addEventListener('DOMContentLoaded', () => {
-  loadBank().catch(()=>{});
+  const code=new URLSearchParams(location.search).get('exam');
+  loadBank().then(()=>{ if(code) loadExam(code); }).catch(()=>{});
   const first=document.querySelector('.subj-btn[data-subj="math"]');
   if(first) pickSubject(first);
 });
