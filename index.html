@@ -432,6 +432,11 @@
     line-height: 1.55;
   }
 
+  /* QUESTION IMAGE */
+  #q-image { margin: 14px 0 4px; text-align: center; }
+  #q-image:empty { display: none; }
+  #q-image svg { max-width: 100%; height: auto; }
+
   /* ORNAMENT FOOTER */
   .ornament-footer {
     height: 8px;
@@ -825,7 +830,10 @@
   <div class="header">
     <div class="header-inner">
       <div class="logo">Edu<span>Quiz</span></div>
+      <div style="display:flex;gap:8px;align-items:center;">
+      <button class="header-back" id="lang-btn" onclick="toggleLang()">RU</button>
       <div class="timer-badge" id="timer-badge">⏱ <span id="timer-display">45</span></div>
+      </div>
     </div>
   </div>
   <div class="main-narrow">
@@ -840,11 +848,12 @@
     <div class="card">
       <p style="font-size:0.82rem;color:var(--gold);font-weight:700;margin-bottom:10px;">ВОПРОС <span id="q-num-label">1</span></p>
       <h2 style="font-size:1.25rem;font-weight:700;color:var(--lapis);line-height:1.4;margin-bottom:4px;" id="q-text">Загрузка...</h2>
-      <p style="color:var(--muted);font-size:0.85rem;margin-bottom:20px;">Выберите один правильный ответ</p>
+      <div id="q-image"></div>
+      <p style="color:var(--muted);font-size:0.85rem;margin-bottom:20px;" id="pick-label">Bitta to'g'ri javobni tanlang</p>
       <div class="options-grid" id="options-container"></div>
       <div class="explanation-box" id="explanation-box"></div>
       <div id="next-btn-wrap" style="display:none;margin-top:20px;">
-        <button class="btn btn-primary btn-full" onclick="nextQuestion()">Следующий вопрос →</button>
+        <button class="btn btn-primary btn-full" onclick="nextQuestion()" id="next-label">Keyingi savol →</button>
       </div>
     </div>
   </div>
@@ -973,69 +982,45 @@ function removeQ(btn) {
   btn.closest('.question-block').remove();
 }
 
-// ── QUIZ DATA (настоящие вопросы 4 класса: математика + логика) ──
-const quizData = [
-  {
-    q: "Вычисли: 24 + 36 : 6 − 5",
-    opts: ["5", "20", "25", "30"],
-    correct: 2,
-    expl: "Сначала деление: 36 : 6 = 6. Потом слева направо: 24 + 6 − 5 = 25."
-  },
-  {
-    q: "Сколько раз цифра 3 встречается при записи чисел от 1 до 40?",
-    opts: ["4", "10", "14", "13"],
-    correct: 2,
-    expl: "В разряде единиц: 3, 13, 23, 33 — 4 раза. В разряде десятков: 30–39 — 10 раз. Всего 4 + 10 = 14."
-  },
-  {
-    q: "Яблоко и груша вместе стоят 900 сум. Груша и слива — 700 сум. Яблоко и слива — 800 сум. Сколько стоит груша?",
-    opts: ["300", "400", "450", "500"],
-    correct: 1,
-    expl: "Сложим все три пары: 900 + 700 + 800 = 2400. Каждый фрукт посчитан дважды, значит все три вместе = 2400 : 2 = 1200. Груша = 1200 − 800 = 400."
-  },
-  {
-    q: "Кружок работает с 3-го числа (это вторник) по 17-е число каждый день, кроме воскресений. Сколько дней работает кружок?",
-    opts: ["13", "12", "14", "15"],
-    correct: 0,
-    expl: "С 3-го по 17-е — это 15 дней. Воскресенья попадают на 8-е и 15-е — 2 дня. 15 − 2 = 13."
-  },
-  {
-    q: "В классе 30 учеников, и каждый занимается хотя бы одним кружком. Футболом занимаются 18 человек, шахматами — 15. Сколько человек занимаются и футболом, и шахматами?",
-    opts: ["3", "2", "4", "5"],
-    correct: 0,
-    expl: "Если сложить: 18 + 15 = 33. Это больше 30 на 3 — значит, 3 человека посчитаны дважды, они занимаются обоими."
-  },
-  {
-    q: "Тренер сказал: «Если Санжар не выйдет на поле, выйдет Тимур. Если выйдет Санжар, то Отабек заменит Азиза.» Известно, что Тимур не вышел. Кто вышел на поле?",
-    opts: ["Санжар и Отабек", "Тимур и Азиз", "Только Санжар", "Нельзя определить"],
-    correct: 0,
-    expl: "Тимур не вышел. Значит вышел Санжар (иначе по правилу вышел бы Тимур). А раз вышел Санжар — Отабек заменил Азиза."
-  },
-  {
-    q: "Все, кто любит теннис, любят плавание. Все, кто любит плавание, любят бег. Дилшод любит теннис. Что точно верно?",
-    opts: ["Дилшод любит бег", "Дилшод не любит бег", "Дилшод любит только теннис", "Нельзя определить"],
-    correct: 0,
-    expl: "Теннис → плавание → бег. Дилшод любит теннис, значит любит плавание, а значит и бег."
-  },
-  {
-    q: "Учитель считает, что в школе нужно больше уроков музыки, потому что музыка развивает память. Какое утверждение усиливает это мнение?",
-    opts: ["Дети, занимающиеся музыкой, лучше запоминают стихи", "Некоторым детям музыка не нравится", "Уроки музыки требуют инструментов", "Музыку часто играют на праздниках"],
-    correct: 0,
-    expl: "Усиливает тот факт, который прямо показывает улучшение памяти — «лучше запоминают стихи». Остальные варианты к памяти отношения не имеют."
-  },
-  {
-    q: "Продолжи ряд: 1, 2, 4, 7, 11, ...",
-    opts: ["14", "15", "16", "18"],
-    correct: 2,
-    expl: "Разница между числами растёт: +1, +2, +3, +4. Значит дальше +5: 11 + 5 = 16."
-  },
-  {
-    q: "Большой кубик покрасили со всех сторон, а затем разрезали на 27 одинаковых маленьких кубиков (3×3×3). У скольких маленьких кубиков покрашена ровно одна сторона?",
-    opts: ["6", "8", "12", "1"],
-    correct: 0,
-    expl: "Ровно одна покрашенная сторона — только у кубиков в центре каждой грани. Граней у куба 6, значит таких кубиков 6."
-  }
-];
+// ── QUIZ DATA (олимпиадные задания автора) ──
+// ── SUPABASE (склад вопросов) ────────────
+const SB_URL = "https://ytffcogqzcntxobqxbvp.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0ZmZjb2dxemNudHhvYnF4YnZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMTkwODYsImV4cCI6MjA5OTU5NTA4Nn0.ZxpzOY_0OT-BuByo4p-dm-vLiha55JYmVBJzCNQrWJ4";
+
+let LANG = 'uz';                 // язык по умолчанию — узбекский
+let bank = [];                   // вопросы из склада
+let quizData = [];               // текущий тест
+
+const UI = {
+  uz: { start:"Testni boshlash →", name:"Ismingiz", welcome:"Xush kelibsiz!", enterName:"Testni boshlash uchun ismingizni kiriting", qOf:["Savol","dan"], correct:"to'g'ri", pick:"Bitta to'g'ri javobni tanlang", next:"Keyingi savol →", done:"Test yakunlandi!", of:"dan", loading:"Savollar yuklanmoqda...", loadErr:"Savollarni yuklab bo'lmadi. Internetni tekshiring." },
+  ru: { start:"Начать тест →", name:"Ваше имя", welcome:"Добро пожаловать!", enterName:"Введите своё имя, чтобы начать тест", qOf:["Вопрос","из"], correct:"верно", pick:"Выберите один правильный ответ", next:"Следующий вопрос →", done:"Тест завершён!", of:"из", loading:"Загрузка вопросов...", loadErr:"Не удалось загрузить вопросы. Проверьте интернет." }
+};
+
+function toggleLang(){
+  LANG = LANG === 'uz' ? 'ru' : 'uz';
+  document.querySelectorAll('#lang-btn').forEach(b=>b.textContent = LANG==='uz' ? 'RU' : 'UZ');
+  buildQuiz();
+  const qs=document.getElementById('s-question');
+  if(qs && qs.classList.contains('active')) showQuestion();
+}
+
+function buildQuiz(){
+  quizData = bank.map(r => ({
+    q:    LANG==='uz' ? r.question_uz    : r.question_ru,
+    opts: LANG==='uz' ? r.options_uz     : r.options_ru,
+    correct: r.correct - 1,
+    expl: LANG==='uz' ? r.explanation_uz : r.explanation_ru,
+    svg:  r.svg || null
+  }));
+}
+
+async function loadBank(){
+  const url = SB_URL + "/rest/v1/questions?status=eq.approved&grade=eq.4&select=question_ru,question_uz,options_ru,options_uz,correct,explanation_ru,explanation_uz,svg&order=id";
+  const res = await fetch(url, { headers: { apikey: SB_KEY, Authorization: "Bearer "+SB_KEY } });
+  if(!res.ok) throw new Error("load failed");
+  bank = await res.json();
+  buildQuiz();
+}
 
 // ── QUIZ STATE ────────────────────────────
 let currentQ = 0;
@@ -1046,15 +1031,20 @@ let timeLeft = 45;
 let startTime = null;
 let totalElapsed = 0;
 
-const letters = ['А', 'Б', 'В', 'Г'];
+const letters = ['А', 'Б', 'В', 'Г', 'Д'];
 
-function startQuiz() {
+async function startQuiz() {
   const nameInput = document.getElementById('student-name-input').value.trim();
   if (!nameInput) {
     document.getElementById('student-name-input').focus();
     document.getElementById('student-name-input').style.borderColor = 'var(--danger)';
     return;
   }
+  if (bank.length === 0) {
+    try { await loadBank(); }
+    catch(e){ alert(UI[LANG].loadErr); return; }
+  }
+  if (quizData.length === 0) { alert(UI[LANG].loadErr); return; }
   currentQ = 0;
   score = 0;
   totalElapsed = 0;
@@ -1073,6 +1063,10 @@ function showQuestion() {
   document.getElementById('q-score-label').textContent = `${score} / ${currentQ} верно`;
   document.getElementById('progress-fill').style.width = ((currentQ + 1) / quizData.length * 100) + '%';
   document.getElementById('q-text').textContent = data.q;
+  document.getElementById('pick-label').textContent = UI[LANG].pick;
+  document.getElementById('next-label').textContent = UI[LANG].next;
+  const imgBox = document.getElementById('q-image');
+  imgBox.innerHTML = data.svg ? data.svg : '';
   document.getElementById('next-btn-wrap').style.display = 'none';
 
   // Скрыть объяснение при показе нового вопроса
@@ -1191,6 +1185,8 @@ function showResult() {
 
   go('s-student-result');
 }
+
+window.addEventListener('DOMContentLoaded', () => { loadBank().catch(()=>{}); });
 
 function retakeQuiz() {
   go('s-student-name');
