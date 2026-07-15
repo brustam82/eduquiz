@@ -1004,8 +1004,21 @@ function toggleLang(){
   if(qs && qs.classList.contains('active')) showQuestion();
 }
 
+const QUIZ_SIZE = 15;   // вопросов за один тест
+let picked = [];          // выбранные вопросы текущего теста
+
+function pickQuestions(){
+  const arr = [...bank];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  picked = arr.slice(0, Math.min(QUIZ_SIZE, arr.length));
+}
+
 function buildQuiz(){
-  quizData = bank.map(r => ({
+  if (picked.length === 0) pickQuestions();
+  quizData = picked.map(r => ({
     q:    LANG==='uz' ? r.question_uz    : r.question_ru,
     opts: LANG==='uz' ? r.options_uz     : r.options_ru,
     correct: r.correct - 1,
@@ -1044,6 +1057,8 @@ async function startQuiz() {
     try { await loadBank(); }
     catch(e){ alert(UI[LANG].loadErr); return; }
   }
+  pickQuestions();
+  buildQuiz();
   if (quizData.length === 0) { alert(UI[LANG].loadErr); return; }
   currentQ = 0;
   score = 0;
