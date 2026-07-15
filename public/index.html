@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EduQuiz — Образовательная платформа</title>
+<title>EduQuiz — Ta'lim platformasi</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
@@ -469,53 +469,12 @@
 <body>
 
 <!-- ══════════════════════════════════════ -->
-<!-- SCREEN 1: ГЛАВНАЯ                      -->
-<!-- ══════════════════════════════════════ -->
-<div class="screen active" id="s-home">
-  <div class="hero">
-    <div class="hero-pattern"></div>
-    <h1>EduQuiz — <span>умные тесты</span><br>для живого класса</h1>
-    <p>Создавайте викторины за минуты. Ученики проходят с телефона. Результаты — мгновенно.</p>
-    <div class="hero-btns">
-      <button class="btn btn-gold btn-lg" onclick="go('s-teacher-login')">🎓 Я учитель</button>
-      <button class="btn btn-outline btn-lg" onclick="go('s-student-name')">✏️ Я ученик</button>
-    </div>
-  </div>
-  <div class="main">
-    <div class="features">
-      <div class="feature-card">
-        <div class="feature-icon">⚡</div>
-        <h3>Быстрое создание</h3>
-        <p>Тест из 10 вопросов — за 2 минуты. Импорт из текста или с нуля.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">📱</div>
-        <h3>Без установки</h3>
-        <p>Ученики сканируют QR и сразу начинают. Никаких приложений.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">📊</div>
-        <h3>Аналитика класса</h3>
-        <p>Таблица результатов, сложные вопросы, прогресс каждого.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🏆</div>
-        <h3>Геймификация</h3>
-        <p>Таймер, баллы, рейтинг — мотивирует учиться веселее.</p>
-      </div>
-    </div>
-  </div>
-  <div class="ornament-footer"></div>
-</div>
 
 <!-- ══════════════════════════════════════ -->
-<!-- SCREEN 2: ВХОД УЧИТЕЛЯ                -->
-<!-- ══════════════════════════════════════ -->
-<div class="screen" id="s-teacher-login">
+<div class="screen active" id="s-teacher-login">
   <div class="header">
     <div class="header-inner">
       <div class="logo">Edu<span>Quiz</span></div>
-      <button class="header-back" onclick="go('s-home')">← Назад</button>
     </div>
   </div>
   <div class="main-narrow" style="display:flex;align-items:center;flex:1;">
@@ -523,19 +482,15 @@
       <div class="card">
         <div class="text-center" style="margin-bottom:28px;">
           <div style="width:60px;height:60px;background:linear-gradient(135deg,var(--lapis),var(--lapis-light));border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 16px;">🎓</div>
-          <h2 class="page-title" style="margin-bottom:4px;">Вход для учителя</h2>
-          <p style="color:var(--muted);font-size:0.93rem;">Войдите, чтобы управлять тестами</p>
+          <h2 class="page-title" style="margin-bottom:4px;">O'qituvchi kirishi</h2>
+          <p style="color:var(--muted);font-size:0.93rem;">Imtihonlarni boshqarish uchun kiring</p>
         </div>
         <div class="form-group">
-          <label>Email</label>
-          <input type="text" id="teacher-email" placeholder="teacher@school.uz" value="teacher@school.uz">
+          <label>Parol</label>
+          <input type="password" id="teacher-pass" placeholder="Parolni kiriting" value="">
+          <div class="error-msg" id="login-error">Parol noto'g'ri</div>
         </div>
-        <div class="form-group">
-          <label>Пароль</label>
-          <input type="password" id="teacher-pass" placeholder="Введите пароль" value="">
-          <div class="error-msg" id="login-error">Неверный пароль</div>
-        </div>
-        <button class="btn btn-primary btn-full btn-lg" onclick="teacherLogin()" style="margin-top:8px;">Войти →</button>
+        <button class="btn btn-primary btn-full btn-lg" onclick="teacherLogin()" style="margin-top:8px;">Kirish →</button>
       </div>
     </div>
   </div>
@@ -549,74 +504,27 @@
   <div class="header">
     <div class="header-inner">
       <div class="logo">Edu<span>Quiz</span></div>
-      <button class="header-back" onclick="go('s-home')">Выйти</button>
+      <button class="header-back" onclick="location.reload()">Chiqish</button>
     </div>
   </div>
   <div class="main">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:28px;">
       <div>
-        <h1 class="page-title">Панель учителя</h1>
-        <p style="color:var(--muted);">Добро пожаловать, Алишер Набиев 👋</p>
+        <h1 class="page-title">O'qituvchi paneli</h1>
+        <p style="color:var(--muted);">Imtihon yarating va natijalarni kuzating</p>
       </div>
-      <button class="btn btn-gold" onclick="go('s-create-quiz')">+ Создать тест</button>
-    </div>
-    <div class="stats-row">
-      <div class="stat-card"><div class="stat-num">5</div><div class="stat-label">Тестов создано</div></div>
-      <div class="stat-card"><div class="stat-num">148</div><div class="stat-label">Учеников прошли</div></div>
-      <div class="stat-card"><div class="stat-num">72%</div><div class="stat-label">Средний балл</div></div>
-      <div class="stat-card"><div class="stat-num">3</div><div class="stat-label">Активных сессий</div></div>
+      <button class="btn btn-gold" onclick="go('s-create-quiz')">+ Yangi imtihon</button>
     </div>
 
-    <div class="tabs">
-      <div class="tab active" onclick="switchTab('t-quizzes','tab-quizzes',this)">Мои тесты</div>
-      <div class="tab" onclick="switchTab('t-results','tab-results',this)">Результаты</div>
-    </div>
+    <div id="t-results">
 
-    <div id="t-quizzes">
-      <div class="card card-sm">
-        <div class="quiz-row">
-          <div class="quiz-icon">🧮</div>
-          <div class="quiz-info">
-            <div class="quiz-name">Алгебра — Квадратные уравнения</div>
-            <div class="quiz-meta">10 вопросов · 5 мин · <span class="badge badge-green">Активен</span></div>
-          </div>
-          <div class="quiz-actions">
-            <button class="btn btn-sm btn-primary" onclick="go('s-qr')">QR</button>
-            <button class="btn btn-sm btn-secondary" onclick="go('s-results')">📊</button>
-          </div>
-        </div>
-        <div class="quiz-row">
-          <div class="quiz-icon">🌍</div>
-          <div class="quiz-info">
-            <div class="quiz-name">История Узбекистана — Тест #3</div>
-            <div class="quiz-meta">8 вопросов · 4 мин · <span class="badge badge-blue">Черновик</span></div>
-          </div>
-          <div class="quiz-actions">
-            <button class="btn btn-sm btn-secondary">✏️</button>
-            <button class="btn btn-sm btn-secondary">🗑</button>
-          </div>
-        </div>
-        <div class="quiz-row">
-          <div class="quiz-icon">⚗️</div>
-          <div class="quiz-info">
-            <div class="quiz-name">Химия — Периодическая таблица</div>
-            <div class="quiz-meta">15 вопросов · 8 мин · <span class="badge badge-yellow">Завершён</span></div>
-          </div>
-          <div class="quiz-actions">
-            <button class="btn btn-sm btn-secondary" onclick="go('s-results')">📊</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="t-results" style="display:none;">
       <div class="card card-sm">
         <table id="live-results">
-          <tr><th>Ученик</th><th>Предмет</th><th>Балл</th><th>%</th><th>Оценка</th><th>Время</th><th>Дата</th></tr>
+          <tr><th>O'quvchi</th><th>Ball</th><th>%</th><th>Baho</th><th>Vaqt</th><th>Sana</th></tr>
         </table>
-        <p id="no-results" style="color:var(--muted);padding:14px 4px;display:none;">Пока нет результатов.</p>
+        <p id="no-results" style="color:var(--muted);padding:14px 4px;display:none;">Hozircha natijalar yo'q.</p>
       </div>
-      <button class="btn btn-secondary mt-16" onclick="loadResults()">↻ Обновить</button>
+      <button class="btn btn-secondary mt-16" onclick="loadResults()">↻ Yangilash</button>
     </div>
   </div>
   <div class="ornament-footer"></div>
@@ -629,48 +537,47 @@
   <div class="header">
     <div class="header-inner">
       <div class="logo">Edu<span>Quiz</span></div>
-      <button class="header-back" onclick="go('s-teacher-dashboard')">← Назад</button>
+      <button class="header-back" onclick="go('s-teacher-dashboard')">← Orqaga</button>
     </div>
   </div>
   <div class="main-narrow">
-    <h1 class="page-title">Создать экзамен</h1>
-    <p class="page-subtitle">Настройте пакет и получите ссылку для группы</p>
+    <h1 class="page-title">Imtihon yaratish</h1>
+    <p class="page-subtitle">Sozlang va sinf guruhi uchun havola oling</p>
 
     <div class="card">
       <div class="form-group">
-        <label>Название экзамена</label>
-        <input type="text" id="ex-title" placeholder="4-sinf — Matematika" value="">
-      </div>
-      <div class="form-group">
-        <label>Предметы (можно несколько)</label>
-        <div style="display:grid;gap:8px;">
-          <label class="correct-radio" style="font-size:0.95rem;"><input type="checkbox" class="ex-subj" value="math" checked> 🧮 Matematika</label>
-          <label class="correct-radio" style="font-size:0.95rem;"><input type="checkbox" class="ex-subj" value="critical"> 🧠 Tanqidiy fikrlash</label>
-          <label class="correct-radio" style="font-size:0.95rem;"><input type="checkbox" class="ex-subj" value="english"> 🇬🇧 Ingliz tili</label>
-        </div>
+        <label>Imtihon nomi</label>
+        <input type="text" id="ex-title" placeholder="Matematika — olimpiada" value="">
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div class="form-group">
-          <label>Кол-во вопросов</label>
-          <input type="number" id="ex-count" value="15" min="5" max="80">
+          <label>Savollar soni</label>
+          <input type="number" id="ex-count" value="8" min="1" max="80">
         </div>
         <div class="form-group">
-          <label>Сек на вопрос (0 = без таймера)</label>
-          <input type="number" id="ex-time" value="45" min="0" max="300">
+          <label>Savolga soniya (0 = taymersiz)</label>
+          <input type="number" id="ex-time" value="60" min="0" max="300">
         </div>
       </div>
       <div class="form-group">
-        <label>Активен до (пусто = бессрочно)</label>
-        <input type="text" id="ex-till" placeholder="2026-07-15 20:00">
+        <label>Amal qilish muddati (bo'sh = cheksiz)</label>
+        <input type="text" id="ex-till" placeholder="2026-07-20 20:00">
       </div>
       <div class="form-group">
-        <label class="correct-radio" style="font-size:0.95rem;"><input type="checkbox" id="ex-expl" checked> Показывать ученику разбор после ответа</label>
+        <label>Telegram ID — natijalar shu yerga keladi</label>
+        <input type="text" id="ex-tg" placeholder="Masalan: 123456789">
+        <p style="color:var(--muted);font-size:0.8rem;margin-top:6px;line-height:1.5;" id="ex-tg-hint">
+          Botga <b>/start</b> yozing, so'ng ID raqamingizni kiriting.
+        </p>
       </div>
-      <button class="btn btn-primary btn-full btn-lg" onclick="createExam()">Создать и получить ссылку →</button>
+      <div class="form-group">
+        <label class="correct-radio" style="font-size:0.95rem;"><input type="checkbox" id="ex-expl" checked> Javobdan keyin izohni ko'rsatish</label>
+      </div>
+      <button class="btn btn-primary btn-full btn-lg" onclick="createExam()">Yaratish va havola olish →</button>
       <div id="ex-link-box" style="display:none;margin-top:20px;padding:16px;background:var(--cream);border-radius:10px;border:1.5px solid var(--gold);">
-        <p style="font-weight:700;color:var(--lapis);margin-bottom:8px;">✅ Экзамен создан!</p>
+        <p style="font-weight:700;color:var(--lapis);margin-bottom:8px;">✅ Imtihon yaratildi!</p>
         <p style="font-size:0.85rem;word-break:break-all;margin-bottom:12px;" id="ex-link-text"></p>
-        <button class="btn btn-gold btn-full" onclick="copyExamLink()">📋 Скопировать ссылку для группы</button>
+        <button class="btn btn-gold btn-full" onclick="copyExamLink()">📋 Guruh uchun havolani nusxalash</button>
       </div>
     </div>
   </div>
@@ -678,126 +585,12 @@
 </div>
 
 <!-- ══════════════════════════════════════ -->
-<!-- SCREEN 5: QR КОД                      -->
-<!-- ══════════════════════════════════════ -->
-<div class="screen" id="s-qr">
-  <div class="header">
-    <div class="header-inner">
-      <div class="logo">Edu<span>Quiz</span></div>
-      <button class="header-back" onclick="go('s-teacher-dashboard')">← Панель</button>
-    </div>
-  </div>
-  <div class="main-narrow" style="display:flex;align-items:center;flex:1;">
-    <div style="width:100%">
-      <div class="card text-center">
-        <h2 class="page-title" style="margin-bottom:6px;">Тест готов! 🎉</h2>
-        <p style="color:var(--muted);margin-bottom:28px;">Покажите QR-код ученикам или поделитесь ссылкой</p>
-        <div class="qr-box" id="qr-visual">
-          <svg width="140" height="140" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
-            <!-- QR decorative pattern -->
-            <rect x="0" y="0" width="50" height="50" rx="4" fill="none" stroke="#1B3A6B" stroke-width="4"/>
-            <rect x="8" y="8" width="34" height="34" rx="2" fill="#1B3A6B"/>
-            <rect x="90" y="0" width="50" height="50" rx="4" fill="none" stroke="#1B3A6B" stroke-width="4"/>
-            <rect x="98" y="8" width="34" height="34" rx="2" fill="#1B3A6B"/>
-            <rect x="0" y="90" width="50" height="50" rx="4" fill="none" stroke="#1B3A6B" stroke-width="4"/>
-            <rect x="8" y="98" width="34" height="34" rx="2" fill="#1B3A6B"/>
-            <!-- data cells -->
-            <rect x="60" y="0" width="10" height="10" rx="1" fill="#1B3A6B"/>
-            <rect x="74" y="0" width="10" height="10" rx="1" fill="#1B3A6B"/>
-            <rect x="60" y="14" width="10" height="10" rx="1" fill="#1B3A6B"/>
-            <rect x="60" y="28" width="10" height="10" rx="1" fill="#1B3A6B"/>
-            <rect x="74" y="28" width="10" height="10" rx="1" fill="#1B3A6B"/>
-            <rect x="0" y="60" width="10" height="10" rx="1" fill="#1B3A6B"/>
-            <rect x="14" y="60" width="10" height="10" rx="1" fill="#1B3A6B"/>
-            <rect x="28" y="60" width="10" height="10" rx="1" fill="#1B3A6B"/>
-            <rect x="28" y="74" width="10" height="10" rx="1" fill="#1B3A6B"/>
-            <rect x="14" y="74" width="10" height="10" rx="1" fill="#1B3A6B"/>
-            <rect x="60" y="60" width="10" height="10" rx="1" fill="#C9952A"/>
-            <rect x="74" y="60" width="10" height="10" rx="1" fill="#C9952A"/>
-            <rect x="60" y="74" width="10" height="10" rx="1" fill="#1B3A6B"/>
-            <rect x="74" y="74" width="10" height="10" rx="1" fill="#C9952A"/>
-            <rect x="90" y="60" width="10" height="10" rx="1" fill="#1B3A6B"/>
-            <rect x="104" y="60" width="10" height="10" rx="1" fill="#1B3A6B"/>
-            <rect x="118" y="60" width="10" height="10" rx="1" fill="#1B3A6B"/>
-            <rect x="90" y="74" width="10" height="10" rx="1" fill="#C9952A"/>
-            <rect x="118" y="74" width="10" height="10" rx="1" fill="#1B3A6B"/>
-            <rect x="90" y="90" width="10" height="10" rx="1" fill="#1B3A6B"/>
-            <rect x="104" y="90" width="10" height="10" rx="1" fill="#1B3A6B"/>
-            <rect x="118" y="90" width="10" height="10" rx="1" fill="#C9952A"/>
-            <rect x="90" y="104" width="10" height="10" rx="1" fill="#C9952A"/>
-            <rect x="118" y="104" width="10" height="10" rx="1" fill="#1B3A6B"/>
-            <rect x="90" y="118" width="10" height="10" rx="1" fill="#1B3A6B"/>
-            <rect x="104" y="118" width="10" height="10" rx="1" fill="#1B3A6B"/>
-          </svg>
-        </div>
-        <p style="font-size:0.82rem;color:var(--muted);margin-bottom:16px;">eduquizplatform.vercel.app/join/<b style="color:var(--lapis);">BIO-2024</b></p>
-        <div class="gap-12" style="justify-content:center;margin-bottom:20px;">
-          <button class="btn btn-primary">📋 Скопировать ссылку</button>
-          <button class="btn btn-secondary">🖨 Распечатать</button>
-        </div>
-        <div class="divider"></div>
-        <button class="btn btn-gold btn-full" onclick="go('s-results')">📊 Смотреть результаты в реальном времени</button>
-      </div>
-    </div>
-  </div>
-  <div class="ornament-footer"></div>
-</div>
 
-<!-- ══════════════════════════════════════ -->
-<!-- SCREEN 6: РЕЗУЛЬТАТЫ КЛАССА           -->
-<!-- ══════════════════════════════════════ -->
-<div class="screen" id="s-results">
-  <div class="header">
-    <div class="header-inner">
-      <div class="logo">Edu<span>Quiz</span></div>
-      <button class="header-back" onclick="go('s-teacher-dashboard')">← Панель</button>
-    </div>
-  </div>
-  <div class="main">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
-      <div>
-        <h1 class="page-title">Результаты: Биология — Клетка</h1>
-        <p style="color:var(--muted);">Прошли 8 из 22 учеников · Ожидаем...</p>
-      </div>
-      <span class="badge badge-green" style="font-size:0.88rem;padding:7px 14px;">🟢 Сессия активна</span>
-    </div>
-
-    <div class="stats-row" style="margin-bottom:24px;">
-      <div class="stat-card"><div class="stat-num">8</div><div class="stat-label">Прошли</div></div>
-      <div class="stat-card"><div class="stat-num">78%</div><div class="stat-label">Средний балл</div></div>
-      <div class="stat-card"><div class="stat-num">3:21</div><div class="stat-label">Среднее время</div></div>
-      <div class="stat-card"><div class="stat-num">Q3</div><div class="stat-label">Трудный вопрос</div></div>
-    </div>
-
-    <div class="card card-sm">
-      <table>
-        <tr><th>#</th><th>Ученик</th><th>Баллы</th><th>%</th><th>Оценка</th><th>Время</th></tr>
-        <tr><td>🥇 1</td><td><b>Камила Рашидова</b></td><td>10/10</td><td>100%</td><td><span class="badge badge-green">5</span></td><td>2:58</td></tr>
-        <tr><td>🥈 2</td><td>Бобур Юсупов</td><td>9/10</td><td>90%</td><td><span class="badge badge-green">5</span></td><td>3:14</td></tr>
-        <tr><td>🥉 3</td><td>Дилноза Хасанова</td><td>8/10</td><td>80%</td><td><span class="badge badge-blue">4</span></td><td>3:30</td></tr>
-        <tr><td>4</td><td>Санжар Тошматов</td><td>7/10</td><td>70%</td><td><span class="badge badge-blue">4</span></td><td>3:50</td></tr>
-        <tr><td>5</td><td>Малика Юнусова</td><td>6/10</td><td>60%</td><td><span class="badge badge-yellow">3</span></td><td>4:12</td></tr>
-        <tr><td>6</td><td>Тимур Абдуллаев</td><td>5/10</td><td>50%</td><td><span class="badge badge-yellow">3</span></td><td>4:55</td></tr>
-        <tr><td>7</td><td>Нилуфар Каримова</td><td>9/10</td><td>90%</td><td><span class="badge badge-green">5</span></td><td>3:05</td></tr>
-        <tr><td>8</td><td>Одил Исмоилов</td><td>4/10</td><td>40%</td><td><span class="badge" style="background:#FEF2F2;color:#991B1B;">2</span></td><td>5:00</td></tr>
-      </table>
-    </div>
-    <div class="gap-12 mt-24">
-      <button class="btn btn-secondary">📥 Экспорт в Excel</button>
-      <button class="btn btn-primary" onclick="go('s-qr')">← QR-код</button>
-    </div>
-  </div>
-  <div class="ornament-footer"></div>
-</div>
-
-<!-- ══════════════════════════════════════ -->
-<!-- SCREEN 7: УЧЕНИК — ИМЯ               -->
 <!-- ══════════════════════════════════════ -->
 <div class="screen" id="s-student-name">
   <div class="header">
     <div class="header-inner">
       <div class="logo">Edu<span>Quiz</span></div>
-      <button class="header-back" onclick="go('s-home')">← Назад</button>
     </div>
   </div>
   <div class="main-narrow" style="display:flex;align-items:center;flex:1;">
@@ -805,22 +598,14 @@
       <div class="card">
         <div class="text-center" style="margin-bottom:28px;">
           <div style="font-size:3rem;margin-bottom:12px;">✏️</div>
-          <h2 class="page-title" style="margin-bottom:4px;">Добро пожаловать!</h2>
-          <p style="color:var(--muted);">Введите своё имя, чтобы начать тест</p>
+          <h2 class="page-title" style="margin-bottom:4px;">Xush kelibsiz!</h2>
+          <p style="color:var(--muted);">Testni boshlash uchun ismingizni kiriting</p>
         </div>
         <div class="form-group">
-          <label>Ваше имя</label>
-          <input type="text" id="student-name-input" placeholder="Например: Камила Рашидова">
+          <label>Ismingiz</label>
+          <input type="text" id="student-name-input" placeholder="Masalan: Kamila Rashidova">
         </div>
-        <div class="form-group">
-          <label id="subj-label">Fanni tanlang</label>
-          <div style="display:grid;grid-template-columns:1fr;gap:8px;" id="subj-grid">
-            <button type="button" class="btn btn-secondary btn-full subj-btn" data-subj="math" onclick="pickSubject(this)">🧮 Matematika</button>
-            <button type="button" class="btn btn-secondary btn-full subj-btn" data-subj="critical" onclick="pickSubject(this)">🧠 Tanqidiy fikrlash</button>
-            <button type="button" class="btn btn-secondary btn-full subj-btn" data-subj="english" onclick="pickSubject(this)">🇬🇧 Ingliz tili</button>
-          </div>
-        </div>
-        <button class="btn btn-gold btn-full btn-lg mt-8" onclick="startQuiz()">Начать тест →</button>
+        <button class="btn btn-gold btn-full btn-lg mt-8" onclick="startQuiz()">Testni boshlash →</button>
       </div>
     </div>
   </div>
@@ -835,23 +620,22 @@
     <div class="header-inner">
       <div class="logo">Edu<span>Quiz</span></div>
       <div style="display:flex;gap:8px;align-items:center;">
-      <button class="header-back" id="lang-btn" onclick="toggleLang()">RU</button>
-      <div class="timer-badge" id="timer-badge">⏱ <span id="timer-display">45</span></div>
+<div class="timer-badge" id="timer-badge">⏱ <span id="timer-display">45</span></div>
       </div>
     </div>
   </div>
   <div class="main-narrow">
     <div class="progress-wrap">
       <div class="progress-label">
-        <span>Вопрос <span id="q-current">1</span> из <span id="q-total">10</span></span>
-        <span id="q-score-label">0 / 0 верно</span>
+        <span>Savol <span id="q-current">1</span> / <span id="q-total">10</span></span>
+        <span id="q-score-label">0 / 0 to'g'ri</span>
       </div>
       <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:10%"></div></div>
     </div>
 
     <div class="card">
-      <p style="font-size:0.82rem;color:var(--gold);font-weight:700;margin-bottom:10px;">ВОПРОС <span id="q-num-label">1</span></p>
-      <h2 style="font-size:1.25rem;font-weight:700;color:var(--lapis);line-height:1.4;margin-bottom:4px;" id="q-text">Загрузка...</h2>
+      <p style="font-size:0.82rem;color:var(--gold);font-weight:700;margin-bottom:10px;">SAVOL <span id="q-num-label">1</span></p>
+      <h2 style="font-size:1.25rem;font-weight:700;color:var(--lapis);line-height:1.4;margin-bottom:4px;" id="q-text">Yuklanmoqda...</h2>
       <div id="q-image"></div>
       <p style="color:var(--muted);font-size:0.85rem;margin-bottom:20px;" id="pick-label">Bitta to'g'ri javobni tanlang</p>
       <div class="options-grid" id="options-container"></div>
@@ -876,10 +660,10 @@
   <div class="main-narrow" style="display:flex;align-items:center;flex:1;">
     <div style="width:100%;text-align:center;">
       <div class="card">
-        <h2 class="page-title" style="margin-bottom:24px;" id="result-title">Тест завершён!</h2>
+        <h2 class="page-title" style="margin-bottom:24px;" id="result-title">Test yakunlandi!</h2>
         <div class="result-circle">
           <div class="result-score" id="result-score">0</div>
-          <div class="result-total" id="result-total">из 10</div>
+          <div class="result-total" id="result-total">10 dan</div>
         </div>
         <div class="grade-badge" id="grade-badge">—</div>
         <p style="color:var(--muted);margin-bottom:24px;" id="result-msg">—</p>
@@ -887,15 +671,13 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
           <div style="background:var(--cream);border-radius:10px;padding:14px;">
             <div style="font-weight:800;font-size:1.4rem;color:var(--lapis);" id="res-percent">0%</div>
-            <div style="font-size:0.8rem;color:var(--muted);">Правильных</div>
+            <div style="font-size:0.8rem;color:var(--muted);">To'g'ri javoblar</div>
           </div>
           <div style="background:var(--cream);border-radius:10px;padding:14px;">
             <div style="font-weight:800;font-size:1.4rem;color:var(--lapis);" id="res-time">0:00</div>
-            <div style="font-size:0.8rem;color:var(--muted);">Затрачено времени</div>
+            <div style="font-size:0.8rem;color:var(--muted);">Sarflangan vaqt</div>
           </div>
         </div>
-        <button class="btn btn-gold btn-full btn-lg" onclick="go('s-home')">На главную</button>
-        <button class="btn btn-secondary btn-full mt-8" onclick="retakeQuiz()">Пройти снова</button>
       </div>
     </div>
   </div>
@@ -950,6 +732,7 @@ async function teacherLogin() {
       TPASS = pass;
       err.classList.remove('show');
       go('s-teacher-dashboard');
+      loadResults();
       return;
     }
   } catch(e) { /* нет сети */ }
@@ -970,11 +753,11 @@ function genCode(){
   return c;
 }
 async function createExam(){
-  const subjects=[...document.querySelectorAll('.ex-subj:checked')].map(x=>x.value);
-  if(!subjects.length){ alert("Выберите хотя бы один предмет"); return; }
   const till=document.getElementById('ex-till').value.trim();
   const body={ password:TPASS, title:document.getElementById('ex-title').value.trim()||"Imtihon",
-    subjects, q_count:+document.getElementById('ex-count').value||15,
+    subjects:['math'],
+    teacher_chat_id: document.getElementById('ex-tg').value.trim() || null,
+    q_count:+document.getElementById('ex-count').value||8,
     time_per_q:+document.getElementById('ex-time').value||0,
     show_expl:document.getElementById('ex-expl').checked,
     active_till: till? new Date(till.replace(' ','T')).toISOString() : null };
@@ -987,13 +770,13 @@ async function createExam(){
     EXAM_LINK=location.origin+"/?exam="+out.code;
     document.getElementById('ex-link-text').textContent=EXAM_LINK;
     document.getElementById('ex-link-box').style.display='block';
-  }catch(e){ alert("Не удалось создать. Проверьте интернет."); }
+  }catch(e){ alert("Yaratib bo'lmadi. Internetni tekshiring."); }
 }
 function copyExamLink(){
-  navigator.clipboard.writeText(EXAM_LINK).then(()=>alert("Скопировано! Вставьте в группу класса."));
+  navigator.clipboard.writeText(EXAM_LINK).then(()=>alert("Nusxalandi! Sinf guruhiga joylashtiring."));
 }
 
-const MARK_WORD = {5:"Отлично",4:"Хорошо",3:"Удовл.",2:"Неудовл."};
+const MARK_WORD = {5:"A'lo",4:"Yaxshi",3:"Qoniqarli",2:"Qoniqarsiz"};
 const MARK_CLASS = {5:"badge-green",4:"badge-blue",3:"badge-yellow",2:""};
 
 async function loadResults(){
@@ -1009,12 +792,11 @@ async function loadResults(){
     const rows = out.results;
     t.querySelectorAll('tr:not(:first-child)').forEach(r=>r.remove());
     empty.style.display = rows.length ? 'none' : 'block';
-    const subjName = {math:"Математика",critical:"Логика",english:"Англ."};
     rows.forEach(r=>{
       const m = Math.floor(r.duration_s/60), s = r.duration_s%60;
       const d = new Date(r.created_at);
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${r.student}</td><td>${subjName[r.subject]||r.subject}</td>`+
+      tr.innerHTML = `<td>${r.student}</td>`+
         `<td>${r.correct}/${r.total}</td><td>${r.percent}%</td>`+
         `<td><span class="badge ${MARK_CLASS[r.grade_mark]||''}" ${r.grade_mark===2?'style="background:#FEF2F2;color:#991B1B;"':''}>${MARK_WORD[r.grade_mark]||r.grade_mark}</span></td>`+
         `<td>${m}:${String(s).padStart(2,'0')}</td>`+
@@ -1024,82 +806,27 @@ async function loadResults(){
   } catch(e){ empty.style.display='block'; }
 }
 
-function switchTab(showId, hideId, clickedTab) {
-  if (showId === 't-results') loadResults();
-  document.getElementById('t-quizzes').style.display = 'none';
-  document.getElementById('t-results').style.display = 'none';
-  document.getElementById(showId).style.display = 'block';
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  clickedTab.classList.add('active');
-}
-
-// ── QUIZ BUILDER ─────────────────────────
-let qCount = 1;
-function addQuestion() {
-  qCount++;
-  const n = qCount;
-  const list = document.getElementById('questions-list');
-  const div = document.createElement('div');
-  div.className = 'question-block';
-  div.innerHTML = `
-    <div class="q-header"><span class="q-num">ВОПРОС ${n}</span><button class="btn btn-sm btn-secondary" onclick="removeQ(this)">✕</button></div>
-    <input type="text" placeholder="Текст вопроса...">
-    <div class="answer-row"><input type="text" placeholder="Вариант А"><label class="correct-radio"><input type="radio" name="q${n}"> Верный</label></div>
-    <div class="answer-row"><input type="text" placeholder="Вариант Б"><label class="correct-radio"><input type="radio" name="q${n}"> Верный</label></div>
-    <div class="answer-row"><input type="text" placeholder="Вариант В"><label class="correct-radio"><input type="radio" name="q${n}"> Верный</label></div>
-    <div class="answer-row"><input type="text" placeholder="Вариант Г"><label class="correct-radio"><input type="radio" name="q${n}"> Верный</label></div>
-  `;
-  list.appendChild(div);
-  div.querySelector('input[type="text"]').focus();
-}
-function removeQ(btn) {
-  btn.closest('.question-block').remove();
-}
-
 // ── QUIZ DATA (олимпиадные задания автора) ──
 // ── SUPABASE (склад вопросов) ────────────
 const SB_URL = "https://ytffcogqzcntxobqxbvp.supabase.co";
 const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0ZmZjb2dxemNudHhvYnF4YnZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMTkwODYsImV4cCI6MjA5OTU5NTA4Nn0.ZxpzOY_0OT-BuByo4p-dm-vLiha55JYmVBJzCNQrWJ4";
 
-let LANG = 'uz';                 // язык по умолчанию — узбекский
-let SUBJECT = 'math';            // выбранный предмет
-
-function pickSubject(btn){
-  SUBJECT = btn.dataset.subj;
-  document.querySelectorAll('.subj-btn').forEach(b=>{
-    b.classList.remove('btn-primary'); b.classList.add('btn-secondary');
-  });
-  btn.classList.remove('btn-secondary'); btn.classList.add('btn-primary');
-}
+const LANG = 'uz';               // только узбекский
+const SUBJECT = 'math';          // только математика
 let bank = [];                   // вопросы из склада
 let quizData = [];               // текущий тест
 
 const UI = {
-  uz: { start:"Testni boshlash →", name:"Ismingiz", welcome:"Xush kelibsiz!", enterName:"Testni boshlash uchun ismingizni kiriting", qOf:["Savol","dan"], correct:"to'g'ri", pick:"Bitta to'g'ri javobni tanlang", next:"Keyingi savol →", done:"Test yakunlandi!", of:"dan", loading:"Savollar yuklanmoqda...", loadErr:"Savollarni yuklab bo'lmadi. Internetni tekshiring." },
-  ru: { start:"Начать тест →", name:"Ваше имя", welcome:"Добро пожаловать!", enterName:"Введите своё имя, чтобы начать тест", qOf:["Вопрос","из"], correct:"верно", pick:"Выберите один правильный ответ", next:"Следующий вопрос →", done:"Тест завершён!", of:"из", loading:"Загрузка вопросов...", loadErr:"Не удалось загрузить вопросы. Проверьте интернет." }
+  uz: { pick:"Bitta to'g'ri javobni tanlang", next:"Keyingi savol →",
+        loadErr:"Savollarni yuklab bo'lmadi. Internetni tekshiring." }
 };
 
-function toggleLang(){
-  LANG = LANG === 'uz' ? 'ru' : 'uz';
-  document.querySelectorAll('#lang-btn').forEach(b=>b.textContent = LANG==='uz' ? 'RU' : 'UZ');
-  buildQuiz();
-  const qs=document.getElementById('s-question');
-  if(qs && qs.classList.contains('active')) showQuestion();
-}
-
-const QUIZ_SIZE = 15;   // вопросов за один тест
+const QUIZ_SIZE = 99;   // берём все доступные вопросы
 let picked = [];          // выбранные вопросы текущего теста
 
 function pickQuestions(){
-  let arr;
-  if (EXAM) {
-    arr = bank.filter(r => EXAM.subjects.includes(r.subject));
-  } else {
-    arr = bank.filter(r => r.subject === SUBJECT);
-    if (SUBJECT === 'math') {
-      arr = arr.concat(bank.filter(r => r.subject === 'critical' && r.svg));
-    }
-  }
+  // в банке лежат только вопросы с картинками — фильтровать больше нечего
+  let arr = bank.slice();
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
@@ -1111,16 +838,17 @@ function pickQuestions(){
 function buildQuiz(){
   if (picked.length === 0) pickQuestions();
   quizData = picked.map(r => ({
-    q:    LANG==='uz' ? r.question_uz    : r.question_ru,
-    opts: LANG==='uz' ? r.options_uz     : r.options_ru,
+    q:    r.question_uz,
+    opts: r.options_uz,
     correct: r.correct - 1,
-    expl: LANG==='uz' ? r.explanation_uz : r.explanation_ru,
+    expl: r.explanation_uz,
     svg:  r.svg || null
   }));
 }
 
 async function loadBank(){
-  const url = SB_URL + "/rest/v1/questions?status=eq.approved&grade=eq.4&select=subject,question_ru,question_uz,options_ru,options_uz,correct,explanation_ru,explanation_uz,svg&order=id";
+  // только одобренные вопросы С КАРТИНКОЙ — класс и предмет роли не играют
+  const url = SB_URL + "/rest/v1/questions?status=eq.approved&svg=not.is.null&select=subject,question_uz,options_uz,correct,explanation_uz,svg&order=id";
   const res = await fetch(url, { headers: { apikey: SB_KEY, Authorization: "Bearer "+SB_KEY } });
   if(!res.ok) throw new Error("load failed");
   bank = await res.json();
@@ -1137,7 +865,7 @@ let startTime = null;
 let totalElapsed = 0;
 let answerLog = [];
 
-const letters = ['А', 'Б', 'В', 'Г', 'Д'];
+const letters = ['A', 'B', 'C', 'D', 'E'];
 
 async function startQuiz() {
   const nameInput = document.getElementById('student-name-input').value.trim();
@@ -1169,7 +897,7 @@ function showQuestion() {
   document.getElementById('q-current').textContent = currentQ + 1;
   document.getElementById('q-total').textContent = quizData.length;
   document.getElementById('q-num-label').textContent = currentQ + 1;
-  document.getElementById('q-score-label').textContent = `${score} / ${currentQ} верно`;
+  document.getElementById('q-score-label').textContent = `${score} / ${currentQ} to'g'ri`;
   document.getElementById('progress-fill').style.width = ((currentQ + 1) / quizData.length * 100) + '%';
   document.getElementById('q-text').textContent = data.q;
   document.getElementById('pick-label').textContent = UI[LANG].pick;
@@ -1280,21 +1008,21 @@ function showResult() {
 
   const grade = pct >= 90 ? 5 : pct >= 70 ? 4 : pct >= 50 ? 3 : 2;
   const msgs = {
-    5: "Отлично! Превосходный результат 🌟",
-    4: "Хорошо! Ты справился с большинством вопросов 👍",
-    3: "Удовлетворительно. Стоит повторить материал 📚",
-    2: "Нужно подтянуть тему. Попробуй ещё раз 💪"
+    5: "A'lo! Ajoyib natija 🌟",
+    4: "Yaxshi! Ko'p savollarga to'g'ri javob berding 👍",
+    3: "Qoniqarli. Mavzuni takrorlagan ma'qul 📚",
+    2: "Mavzuni mustahkamlash kerak. Yana urinib ko'r 💪"
   };
   const gradeClasses = { 5:'grade-5', 4:'grade-4', 3:'grade-3', 2:'grade-2' };
 
   document.getElementById('result-score').textContent = score;
-  document.getElementById('result-total').textContent = `из ${quizData.length}`;
+  document.getElementById('result-total').textContent = `${quizData.length} dan`;
   document.getElementById('result-msg').textContent = msgs[grade];
   document.getElementById('res-percent').textContent = pct + '%';
   document.getElementById('res-time').textContent = `${mins}:${String(secs).padStart(2,'0')}`;
 
   const badge = document.getElementById('grade-badge');
-  badge.textContent = `Оценка: ${grade}`;
+  badge.textContent = `Baho: ${grade}`;
   badge.className = 'grade-badge ' + gradeClasses[grade];
 
   go('s-student-result');
@@ -1321,28 +1049,35 @@ let EXAM = null;
 async function loadExam(code){
   const res=await fetch("/api/exam?code="+encodeURIComponent(code));
   const out=await res.json();
-  if(out.error==='expired'){
-    alert(LANG==='uz'?"Imtihon muddati tugagan":"Срок экзамена истёк"); return;
-  }
-  if(!out.ok) return;
+  if(out.error==='expired'){ alert("Imtihon muddati tugagan"); return; }
+  if(!out.ok){ alert("Imtihon topilmadi"); return; }
   EXAM=out.exam;
   window.EXAM_CODE=EXAM.code;
-  // скрыть выбор предмета (задан учителем), скрыть кнопку "Я учитель"
-  const sg=document.getElementById('subj-grid'); if(sg) sg.parentElement.style.display='none';
-  go('s-student-name');
   const w=document.querySelector('#s-student-name .page-title'); if(w) w.textContent=EXAM.title;
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  const code=new URLSearchParams(location.search).get('exam');
-  loadBank().then(()=>{ if(code) loadExam(code); }).catch(()=>{});
-  const first=document.querySelector('.subj-btn[data-subj="math"]');
-  if(first) pickSubject(first);
-});
+  // Telegram ID учителя подставляем сам, если открыто через бота
+  try {
+    const tgu = window.Telegram && Telegram.WebApp
+              && Telegram.WebApp.initDataUnsafe
+              && Telegram.WebApp.initDataUnsafe.user;
+    if (tgu && tgu.id) {
+      const f = document.getElementById('ex-tg');
+      if (f) {
+        f.value = tgu.id;
+        f.readOnly = true;
+        document.getElementById('ex-tg-hint').innerHTML =
+          "✅ Telegram orqali aniqlandi: <b>" + (tgu.first_name || '') + "</b>";
+      }
+    }
+  } catch(e) {}
 
-function retakeQuiz() {
-  go('s-student-name');
-}
+  const code = new URLSearchParams(location.search).get('exam');
+  if (!code) return;                 // нет кода → учитель остаётся на экране входа
+  go('s-student-name');              // есть код → сразу ученику
+  loadBank().then(()=>loadExam(code)).catch(()=>{});
+});
 </script>
 </body>
 </html>
