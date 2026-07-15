@@ -486,11 +486,19 @@
           <p style="color:var(--muted);font-size:0.93rem;">Imtihonlarni boshqarish uchun kiring</p>
         </div>
         <div class="form-group">
+          <label>Login</label>
+          <input type="text" id="lg-login" placeholder="Loginingiz" autocomplete="username">
+        </div>
+        <div class="form-group">
           <label>Parol</label>
-          <input type="password" id="teacher-pass" placeholder="Parolni kiriting" value="">
-          <div class="error-msg" id="login-error">Parol noto'g'ri</div>
+          <input type="password" id="lg-pass" placeholder="Parolni kiriting" autocomplete="current-password">
+          <div class="error-msg" id="login-error">Login yoki parol noto'g'ri</div>
         </div>
         <button class="btn btn-primary btn-full btn-lg" onclick="teacherLogin()" style="margin-top:8px;">Kirish →</button>
+        <p class="text-center" style="margin-top:18px;font-size:0.9rem;color:var(--muted);">
+          Hisobingiz yo'qmi?
+          <a href="#" onclick="go('s-teacher-register');return false;" style="color:var(--lapis);font-weight:700;">Ro'yxatdan o'ting</a>
+        </p>
       </div>
     </div>
   </div>
@@ -500,18 +508,73 @@
 <!-- ══════════════════════════════════════ -->
 <!-- SCREEN 3: ПАНЕЛЬ УЧИТЕЛЯ              -->
 <!-- ══════════════════════════════════════ -->
+<!-- ЭКРАН: РЕГИСТРАЦИЯ УЧИТЕЛЯ (только из Telegram) -->
+<div class="screen" id="s-teacher-register">
+  <div class="header">
+    <div class="header-inner">
+      <div class="logo">Edu<span>Quiz</span></div>
+      <button class="header-back" onclick="go('s-teacher-login')">← Orqaga</button>
+    </div>
+  </div>
+  <div class="main-narrow" style="display:flex;align-items:center;flex:1;">
+    <div style="width:100%">
+      <div class="card">
+        <div class="text-center" style="margin-bottom:24px;">
+          <div style="font-size:2.6rem;margin-bottom:10px;">📝</div>
+          <h2 class="page-title" style="margin-bottom:4px;">Ro'yxatdan o'tish</h2>
+          <p style="color:var(--muted);font-size:0.93rem;">Bir marta — keyin login va parol bilan kirasiz</p>
+        </div>
+
+        <div id="rg-need-tg" style="display:none;padding:16px;background:var(--cream);border:1.5px solid var(--gold);border-radius:10px;">
+          <p style="font-weight:700;color:var(--lapis);margin-bottom:6px;">Telegram orqali oching</p>
+          <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;">
+            Ro'yxatdan o'tish faqat <b>@eduquiz_pm_bot</b> orqali mumkin.
+            Botni oching va menyudan platformani ishga tushiring.
+          </p>
+        </div>
+
+        <div id="rg-form">
+          <div style="padding:12px 14px;background:var(--cream);border-radius:10px;margin-bottom:18px;font-size:0.88rem;">
+            ✅ Telegram: <b id="rg-tg-name">—</b>
+          </div>
+          <div class="form-group">
+            <label>Ismingiz</label>
+            <input type="text" id="rg-name" placeholder="Masalan: Dilnoza Karimova">
+          </div>
+          <div class="form-group">
+            <label>Login</label>
+            <input type="text" id="rg-login" placeholder="lotin harflari va raqamlar" autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label>Parol</label>
+            <input type="password" id="rg-pass" placeholder="kamida 6 ta belgi" autocomplete="new-password">
+          </div>
+          <div class="form-group">
+            <label>Parolni takrorlang</label>
+            <input type="password" id="rg-pass2" placeholder="yana bir marta" autocomplete="new-password">
+            <div class="error-msg" id="rg-error">Xatolik</div>
+          </div>
+          <button class="btn btn-gold btn-full btn-lg" onclick="teacherRegister()">Ro'yxatdan o'tish →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ornament-footer"></div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
 <div class="screen" id="s-teacher-dashboard">
   <div class="header">
     <div class="header-inner">
       <div class="logo">Edu<span>Quiz</span></div>
-      <button class="header-back" onclick="location.reload()">Chiqish</button>
+      <button class="header-back" onclick="logout()">Chiqish</button>
     </div>
   </div>
   <div class="main">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:28px;">
       <div>
         <h1 class="page-title">O'qituvchi paneli</h1>
-        <p style="color:var(--muted);">Imtihon yarating va natijalarni kuzating</p>
+        <p style="color:var(--muted);"><b id="me-name">—</b> · imtihonlaringiz natijalari</p>
       </div>
       <button class="btn btn-gold" onclick="go('s-create-quiz')">+ Yangi imtihon</button>
     </div>
@@ -520,7 +583,7 @@
 
       <div class="card card-sm">
         <table id="live-results">
-          <tr><th>O'quvchi</th><th>Ball</th><th>%</th><th>Baho</th><th>Vaqt</th><th>Sana</th></tr>
+          <tr><th>O'quvchi</th><th>Imtihon</th><th>Ball</th><th>%</th><th>Baho</th><th>Vaqt</th><th>Sana</th></tr>
         </table>
         <p id="no-results" style="color:var(--muted);padding:14px 4px;display:none;">Hozircha natijalar yo'q.</p>
       </div>
@@ -562,13 +625,6 @@
       <div class="form-group">
         <label>Amal qilish muddati (bo'sh = cheksiz)</label>
         <input type="text" id="ex-till" placeholder="2026-07-20 20:00">
-      </div>
-      <div class="form-group">
-        <label>Telegram ID — natijalar shu yerga keladi</label>
-        <input type="text" id="ex-tg" placeholder="Masalan: 123456789">
-        <p style="color:var(--muted);font-size:0.8rem;margin-top:6px;line-height:1.5;" id="ex-tg-hint">
-          Botga <b>/start</b> yozing, so'ng ID raqamingizni kiriting.
-        </p>
       </div>
       <div class="form-group">
         <label class="correct-radio" style="font-size:0.95rem;"><input type="checkbox" id="ex-expl" checked> Javobdan keyin izohni ko'rsatish</label>
@@ -719,25 +775,76 @@ function go(screenId) {
 }
 
 // ── TEACHER LOGIN ────────────────────────
-let TPASS = "";                  // пароль учителя на время сессии, в коде его нет
+let TOKEN = "";                  // пропуск учителя; выдаёт сервер, живёт 30 дней
+let ME = null;                   // { name, login }
+
+const api = (path, body) => fetch(path, {
+  method: 'POST', headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(body)
+}).then(r => r.json());
+
+function enterDashboard(){
+  document.getElementById('me-name').textContent = ME ? ME.name : '';
+  go('s-teacher-dashboard');
+  loadResults();
+}
+
+function logout(){
+  TOKEN = ""; ME = null;
+  try { localStorage.removeItem('eq_token'); } catch(e) {}
+  location.href = location.pathname;
+}
+
 async function teacherLogin() {
-  const pass = document.getElementById('teacher-pass').value;
   const err = document.getElementById('login-error');
+  const login = document.getElementById('lg-login').value.trim();
+  const pass  = document.getElementById('lg-pass').value;
+  if (!login || !pass) { err.textContent = "Login va parolni kiriting"; err.classList.add('show'); return; }
   try {
-    const r = await (await fetch('/api/stats', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: pass, limit: 1 })
-    })).json();
+    const r = await api('/api/login', { login, password: pass });
     if (r.ok) {
-      TPASS = pass;
+      TOKEN = r.token; ME = r.me;
+      try { localStorage.setItem('eq_token', TOKEN); } catch(e) {}
       err.classList.remove('show');
-      go('s-teacher-dashboard');
-      loadResults();
+      enterDashboard();
       return;
     }
-  } catch(e) { /* нет сети */ }
+    err.textContent = "Login yoki parol noto'g'ri";
+  } catch(e) { err.textContent = "Internet bilan bog'lanib bo'lmadi"; }
   err.classList.add('show');
-  document.getElementById('teacher-pass').focus();
+}
+
+async function teacherRegister() {
+  const err = document.getElementById('rg-error');
+  const show = m => { err.textContent = m; err.classList.add('show'); };
+  let initData = '';
+  try { initData = Telegram.WebApp.initData || ''; } catch(e) {}
+  if (!initData) { show("Telegram orqali oching"); return; }
+
+  const name  = document.getElementById('rg-name').value.trim();
+  const login = document.getElementById('rg-login').value.trim();
+  const p1    = document.getElementById('rg-pass').value;
+  const p2    = document.getElementById('rg-pass2').value;
+
+  if (name.length < 2) { show("Ismingizni kiriting"); return; }
+  if (!/^[a-zA-Z0-9_.]{3,20}$/.test(login)) { show("Login: 3-20 ta lotin harfi yoki raqam"); return; }
+  if (p1.length < 6)   { show("Parol kamida 6 ta belgi"); return; }
+  if (p1 !== p2)       { show("Parollar mos kelmadi"); return; }
+
+  try {
+    const r = await api('/api/register', { initData, name, login, password: p1 });
+    if (r.ok) {
+      TOKEN = r.token; ME = r.me;
+      try { localStorage.setItem('eq_token', TOKEN); } catch(e) {}
+      err.classList.remove('show');
+      enterDashboard();
+      return;
+    }
+    show(r.error === 'login_taken'  ? "Bu login band, boshqasini tanlang"
+       : r.error === 'tg_taken'     ? "Bu Telegram allaqachon ro'yxatdan o'tgan"
+       : r.error === 'bad_initdata' ? "Telegram tekshiruvi o'tmadi. Botni qayta oching"
+       : "Xatolik yuz berdi");
+  } catch(e) { show("Internet bilan bog'lanib bo'lmadi"); }
 }
 
 // Allow Enter key in login
@@ -753,10 +860,15 @@ function genCode(){
   return c;
 }
 async function createExam(){
+  const titleEl=document.getElementById('ex-title');
+  if(!titleEl.value.trim()){
+    titleEl.focus(); titleEl.style.borderColor='var(--danger)';
+    alert("Imtihon nomini kiriting"); return;
+  }
+  titleEl.style.borderColor='';
   const till=document.getElementById('ex-till').value.trim();
-  const body={ password:TPASS, title:document.getElementById('ex-title').value.trim()||"Imtihon",
+  const body={ token:TOKEN, title:titleEl.value.trim(),
     subjects:['math'],
-    teacher_chat_id: document.getElementById('ex-tg').value.trim() || null,
     q_count:+document.getElementById('ex-count').value||8,
     time_per_q:+document.getElementById('ex-time').value||0,
     show_expl:document.getElementById('ex-expl').checked,
@@ -768,7 +880,8 @@ async function createExam(){
     const out=await res.json();
     if(!out.ok) throw 0;
     EXAM_LINK=location.origin+"/?exam="+out.code;
-    document.getElementById('ex-link-text').textContent=EXAM_LINK;
+    document.getElementById('ex-link-text').innerHTML=
+      '<b>Kod: '+out.code+'</b><br>'+EXAM_LINK;
     document.getElementById('ex-link-box').style.display='block';
   }catch(e){ alert("Yaratib bo'lmadi. Internetni tekshiring."); }
 }
@@ -783,11 +896,7 @@ async function loadResults(){
   const t = document.getElementById('live-results');
   const empty = document.getElementById('no-results');
   try {
-    const res = await fetch("/api/stats", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password: TPASS, limit: 100 })
-    });
-    const out = await res.json();
+    const out = await api("/api/stats", { token: TOKEN, limit: 100 });
     if (!out.ok) throw 0;
     const rows = out.results;
     t.querySelectorAll('tr:not(:first-child)').forEach(r=>r.remove());
@@ -797,6 +906,7 @@ async function loadResults(){
       const d = new Date(r.created_at);
       const tr = document.createElement('tr');
       tr.innerHTML = `<td>${r.student}</td>`+
+        `<td>${r.exam_title || '—'}${r.exam_code ? `<br><span style="font-size:0.72rem;color:var(--muted);letter-spacing:0.5px;">${r.exam_code}</span>` : ''}</td>`+
         `<td>${r.correct}/${r.total}</td><td>${r.percent}%</td>`+
         `<td><span class="badge ${MARK_CLASS[r.grade_mark]||''}" ${r.grade_mark===2?'style="background:#FEF2F2;color:#991B1B;"':''}>${MARK_WORD[r.grade_mark]||r.grade_mark}</span></td>`+
         `<td>${m}:${String(s).padStart(2,'0')}</td>`+
@@ -986,6 +1096,7 @@ function autoExpire() {
     b.disabled = true;
     if (i === quizData[currentQ].correct) b.classList.add('correct');
   });
+  answerLog.push({ q: quizData[currentQ].q, ok: false });   // время вышло = ошибка
   showExplanation();
   document.getElementById('next-btn-wrap').style.display = 'block';
 }
@@ -1056,27 +1167,36 @@ async function loadExam(code){
   const w=document.querySelector('#s-student-name .page-title'); if(w) w.textContent=EXAM.title;
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  // Telegram ID учителя подставляем сам, если открыто через бота
-  try {
-    const tgu = window.Telegram && Telegram.WebApp
-              && Telegram.WebApp.initDataUnsafe
-              && Telegram.WebApp.initDataUnsafe.user;
-    if (tgu && tgu.id) {
-      const f = document.getElementById('ex-tg');
-      if (f) {
-        f.value = tgu.id;
-        f.readOnly = true;
-        document.getElementById('ex-tg-hint').innerHTML =
-          "✅ Telegram orqali aniqlandi: <b>" + (tgu.first_name || '') + "</b>";
-      }
-    }
-  } catch(e) {}
-
+window.addEventListener('DOMContentLoaded', async () => {
   const code = new URLSearchParams(location.search).get('exam');
-  if (!code) return;                 // нет кода → учитель остаётся на экране входа
-  go('s-student-name');              // есть код → сразу ученику
-  loadBank().then(()=>loadExam(code)).catch(()=>{});
+  if (code) {                        // ученик пришёл по ссылке
+    go('s-student-name');
+    loadBank().then(()=>loadExam(code)).catch(()=>{});
+    return;
+  }
+
+  // регистрация возможна только из Telegram — показываем нужный блок
+  let tgu = null, initData = '';
+  try { tgu = Telegram.WebApp.initDataUnsafe.user; initData = Telegram.WebApp.initData || ''; } catch(e) {}
+  const inTG = !!(tgu && tgu.id && initData);
+  document.getElementById('rg-form').style.display    = inTG ? 'block' : 'none';
+  document.getElementById('rg-need-tg').style.display = inTG ? 'none'  : 'block';
+  if (inTG) {
+    const full = [tgu.first_name, tgu.last_name].filter(Boolean).join(' ');
+    document.getElementById('rg-tg-name').textContent = full || ('id ' + tgu.id);
+    const nm = document.getElementById('rg-name');
+    if (!nm.value) nm.value = full;
+  }
+
+  // уже входили с этого устройства? заходим без пароля
+  let saved = '';
+  try { saved = localStorage.getItem('eq_token') || ''; } catch(e) {}
+  if (!saved) return;
+  try {
+    const r = await api('/api/me', { token: saved });
+    if (r.ok) { TOKEN = saved; ME = r.me; enterDashboard(); }
+    else localStorage.removeItem('eq_token');
+  } catch(e) { /* нет сети — остаёмся на экране входа */ }
 });
 </script>
 </body>
