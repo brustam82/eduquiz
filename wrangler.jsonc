@@ -9,5 +9,8 @@
   },
   "vars": {
     "SUPABASE_URL": "https://ytffcogqzcntxobqxbvp.supabase.co"
+  },
+  "triggers": {
+    "crons": ["0 15 * * *"]
   }
 }
