@@ -813,8 +813,12 @@
           <input type="text" id="student-name-input" placeholder="Например: Камила Рашидова">
         </div>
         <div class="form-group">
-          <label>Код теста (если есть)</label>
-          <input type="text" placeholder="PM4-2026" value="PM4-2026">
+          <label id="subj-label">Fanni tanlang</label>
+          <div style="display:grid;grid-template-columns:1fr;gap:8px;" id="subj-grid">
+            <button type="button" class="btn btn-secondary btn-full subj-btn" data-subj="math" onclick="pickSubject(this)">🧮 Matematika</button>
+            <button type="button" class="btn btn-secondary btn-full subj-btn" data-subj="critical" onclick="pickSubject(this)">🧠 Tanqidiy fikrlash</button>
+            <button type="button" class="btn btn-secondary btn-full subj-btn" data-subj="english" onclick="pickSubject(this)">🇬🇧 Ingliz tili</button>
+          </div>
         </div>
         <button class="btn btn-gold btn-full btn-lg mt-8" onclick="startQuiz()">Начать тест →</button>
       </div>
@@ -988,6 +992,15 @@ const SB_URL = "https://ytffcogqzcntxobqxbvp.supabase.co";
 const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0ZmZjb2dxemNudHhvYnF4YnZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMTkwODYsImV4cCI6MjA5OTU5NTA4Nn0.ZxpzOY_0OT-BuByo4p-dm-vLiha55JYmVBJzCNQrWJ4";
 
 let LANG = 'uz';                 // язык по умолчанию — узбекский
+let SUBJECT = 'math';            // выбранный предмет
+
+function pickSubject(btn){
+  SUBJECT = btn.dataset.subj;
+  document.querySelectorAll('.subj-btn').forEach(b=>{
+    b.classList.remove('btn-primary'); b.classList.add('btn-secondary');
+  });
+  btn.classList.remove('btn-secondary'); btn.classList.add('btn-primary');
+}
 let bank = [];                   // вопросы из склада
 let quizData = [];               // текущий тест
 
@@ -1008,7 +1021,11 @@ const QUIZ_SIZE = 15;   // вопросов за один тест
 let picked = [];          // выбранные вопросы текущего теста
 
 function pickQuestions(){
-  const arr = [...bank];
+  let arr = bank.filter(r => r.subject === SUBJECT);
+  if (SUBJECT === 'math') {
+    // визуальные логико-математические задачи тоже включаем в математику
+    arr = arr.concat(bank.filter(r => r.subject === 'critical' && r.svg));
+  }
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
@@ -1028,7 +1045,7 @@ function buildQuiz(){
 }
 
 async function loadBank(){
-  const url = SB_URL + "/rest/v1/questions?status=eq.approved&grade=eq.4&select=question_ru,question_uz,options_ru,options_uz,correct,explanation_ru,explanation_uz,svg&order=id";
+  const url = SB_URL + "/rest/v1/questions?status=eq.approved&grade=eq.4&select=subject,question_ru,question_uz,options_ru,options_uz,correct,explanation_ru,explanation_uz,svg&order=id";
   const res = await fetch(url, { headers: { apikey: SB_KEY, Authorization: "Bearer "+SB_KEY } });
   if(!res.ok) throw new Error("load failed");
   bank = await res.json();
@@ -1201,7 +1218,11 @@ function showResult() {
   go('s-student-result');
 }
 
-window.addEventListener('DOMContentLoaded', () => { loadBank().catch(()=>{}); });
+window.addEventListener('DOMContentLoaded', () => {
+  loadBank().catch(()=>{});
+  const first=document.querySelector('.subj-btn[data-subj="math"]');
+  if(first) pickSubject(first);
+});
 
 function retakeQuiz() {
   go('s-student-name');
