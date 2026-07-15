@@ -612,14 +612,12 @@
 
     <div id="t-results" style="display:none;">
       <div class="card card-sm">
-        <table>
-          <tr><th>Ученик</th><th>Тест</th><th>Балл</th><th>Оценка</th><th>Время</th></tr>
-          <tr><td>Камила Рашидова</td><td>Алгебра</td><td>9/10</td><td><span class="badge badge-green">5</span></td><td>3:42</td></tr>
-          <tr><td>Бобур Юсупов</td><td>Алгебра</td><td>7/10</td><td><span class="badge badge-blue">4</span></td><td>4:15</td></tr>
-          <tr><td>Дилноза Хасанова</td><td>Алгебра</td><td>5/10</td><td><span class="badge badge-yellow">3</span></td><td>4:58</td></tr>
-          <tr><td>Санжар Тошматов</td><td>Алгебра</td><td>4/10</td><td><span class="badge badge-yellow">3</span></td><td>5:00</td></tr>
+        <table id="live-results">
+          <tr><th>Ученик</th><th>Предмет</th><th>Балл</th><th>%</th><th>Оценка</th><th>Время</th><th>Дата</th></tr>
         </table>
+        <p id="no-results" style="color:var(--muted);padding:14px 4px;display:none;">Пока нет результатов.</p>
       </div>
+      <button class="btn btn-secondary mt-16" onclick="loadResults()">↻ Обновить</button>
     </div>
   </div>
   <div class="ornament-footer"></div>
@@ -955,7 +953,35 @@ document.getElementById('teacher-pass').addEventListener('keydown', e => {
 });
 
 // ── TABS ─────────────────────────────────
+const MARK_WORD = {5:"Отлично",4:"Хорошо",3:"Удовл.",2:"Неудовл."};
+const MARK_CLASS = {5:"badge-green",4:"badge-blue",3:"badge-yellow",2:""};
+
+async function loadResults(){
+  const t = document.getElementById('live-results');
+  const empty = document.getElementById('no-results');
+  try {
+    const res = await fetch(SB_URL + "/rest/v1/results?select=student,subject,total,correct,percent,grade_mark,duration_s,created_at&order=created_at.desc&limit=100",
+      { headers: { apikey: SB_KEY, Authorization: "Bearer "+SB_KEY } });
+    const rows = await res.json();
+    t.querySelectorAll('tr:not(:first-child)').forEach(r=>r.remove());
+    empty.style.display = rows.length ? 'none' : 'block';
+    const subjName = {math:"Математика",critical:"Логика",english:"Англ."};
+    rows.forEach(r=>{
+      const m = Math.floor(r.duration_s/60), s = r.duration_s%60;
+      const d = new Date(r.created_at);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${r.student}</td><td>${subjName[r.subject]||r.subject}</td>`+
+        `<td>${r.correct}/${r.total}</td><td>${r.percent}%</td>`+
+        `<td><span class="badge ${MARK_CLASS[r.grade_mark]||''}" ${r.grade_mark===2?'style="background:#FEF2F2;color:#991B1B;"':''}>${MARK_WORD[r.grade_mark]||r.grade_mark}</span></td>`+
+        `<td>${m}:${String(s).padStart(2,'0')}</td>`+
+        `<td>${d.toLocaleDateString()} ${d.toLocaleTimeString().slice(0,5)}</td>`;
+      t.appendChild(tr);
+    });
+  } catch(e){ empty.style.display='block'; }
+}
+
 function switchTab(showId, hideId, clickedTab) {
+  if (showId === 't-results') loadResults();
   document.getElementById('t-quizzes').style.display = 'none';
   document.getElementById('t-results').style.display = 'none';
   document.getElementById(showId).style.display = 'block';
@@ -1060,6 +1086,7 @@ let timerInterval = null;
 let timeLeft = 45;
 let startTime = null;
 let totalElapsed = 0;
+let answerLog = [];
 
 const letters = ['А', 'Б', 'В', 'Г', 'Д'];
 
@@ -1076,6 +1103,7 @@ async function startQuiz() {
   }
   pickQuestions();
   buildQuiz();
+  answerLog = [];
   if (quizData.length === 0) { alert(UI[LANG].loadErr); return; }
   currentQ = 0;
   score = 0;
@@ -1164,6 +1192,7 @@ function selectAnswer(chosen, correct, clickedBtn) {
   } else {
     clickedBtn.classList.add('wrong');
   }
+  answerLog.push({ q: quizData[currentQ].q, ok: chosen === correct });
 
   showExplanation();
   document.getElementById('next-btn-wrap').style.display = 'block';
@@ -1216,6 +1245,24 @@ function showResult() {
   badge.className = 'grade-badge ' + gradeClasses[grade];
 
   go('s-student-result');
+  saveResult(elapsed, pct, grade);
+}
+
+async function saveResult(elapsed, pct, grade){
+  try {
+    await fetch(SB_URL + "/rest/v1/results", {
+      method: "POST",
+      headers: { apikey: SB_KEY, Authorization: "Bearer "+SB_KEY,
+                 "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify({
+        exam_code: window.EXAM_CODE || null,
+        student: document.getElementById('student-name-input').value.trim(),
+        subject: SUBJECT, lang: LANG,
+        total: quizData.length, correct: score, percent: pct,
+        grade_mark: grade, duration_s: elapsed, answers: answerLog
+      })
+    });
+  } catch(e) { /* нет сети — результат просто не запишется */ }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
