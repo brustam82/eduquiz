@@ -1,5 +1,5 @@
 {
-  "name": "eduquiz1",
+  "name": "eduquiz",
   "main": "worker.js",
   "compatibility_date": "2026-07-15",
   "compatibility_flags": ["nodejs_compat"],
