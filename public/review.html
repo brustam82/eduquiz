@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Savollarni tekshirish</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;background:#FFF9F0;color:#1A2E2A;padding:16px}
+.wrap{max-width:480px;margin:0 auto}
+h1{font-size:1.25rem;color:#1B7A6B;margin-bottom:12px}
+select{width:100%;padding:11px 13px;border:1.5px solid #E6DFCF;border-radius:10px;font-size:15px;background:#fff;margin-bottom:14px;font-family:inherit}
+.q{background:#fff;border:1px solid #EEE6D5;border-radius:14px;padding:15px;margin-bottom:12px}
+.q.warn{border-color:#F0997B}
+.tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:7px;background:#FFF4E6;color:#B87A12}
+.tag.w{background:#FAECE7;color:#993C1D}
+.qt{font-size:15px;font-weight:700;margin:8px 0 10px;width:100%;border:0;background:transparent;font-family:inherit;resize:vertical}
+.opt{display:flex;align-items:center;gap:9px;margin-bottom:7px}
+.opt input[type=radio]{width:18px;height:18px;accent-color:#1B7A6B}
+.opt input[type=text]{flex:1;padding:8px 10px;border:1.5px solid #E6DFCF;border-radius:9px;font-size:14px;font-family:inherit}
+.opt.ok input[type=text]{border-color:#2EA88F;background:#E8F3F0}
+.row{display:flex;gap:8px;margin-top:10px}
+.b{flex:1;border:0;border-radius:10px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.b.ok{background:#1B7A6B;color:#fff}.b.del{background:#fff;border:1.5px solid #F0C0BB;color:#A32D2D;flex:0 0 46px}
+.empty{color:#7C8B86;text-align:center;padding:30px;font-size:14px}
+.done{opacity:.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Savollarni tekshirish</h1>
+  <select id="packs" onchange="loadDrafts()"><option value="">Paketni tanlang…</option></select>
+  <div id="list"></div>
+</div>
+<script>
+var tg=window.Telegram&&window.Telegram.WebApp;if(tg&&tg.initData){tg.ready();tg.expand()}
+var TOKEN='';try{TOKEN=localStorage.getItem('eq_token')||''}catch(e){}
+async function api(p,b){var r=await fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({token:TOKEN},b))});return r.json()}
+
+async function loadPacks(){
+  var j=await api('/api/packs',{});
+  if(!j.ok)return;
+  var s=document.getElementById('packs');
+  j.packs.forEach(function(p){var o=document.createElement('option');o.value=p.id;o.textContent=p.title+' ('+p.approved+' tasdiqlangan)';s.appendChild(o)});
+}
+async function loadDrafts(){
+  var pid=document.getElementById('packs').value;var L=document.getElementById('list');L.innerHTML='';
+  if(!pid)return;
+  var j=await api('/api/drafts',{pack_id:pid});
+  if(!j.ok||!j.questions.length){L.innerHTML='<div class="empty">Bu paketda tekshiriladigan savol yo\'q</div>';return}
+  j.questions.forEach(function(q){L.appendChild(card(q))});
+}
+function card(q){
+  var d=document.createElement('div');d.className='q'+(q.ai_solved?' warn':'');
+  var opts=q.options_uz||[];
+  var html='<div style="display:flex;justify-content:space-between;align-items:center">';
+  html+='<span class="tag'+(q.ai_solved?' w':'')+'">'+(q.status==='approved'?'✓ tasdiqlangan':(q.ai_solved?'⚠ AI yechdi':'AI'))+'</span></div>';
+  html+='<textarea class="qt" rows="2">'+esc(q.question_uz||'')+'</textarea>';
+  opts.forEach(function(o,i){
+    html+='<div class="opt'+(q.correct===i+1?' ok':'')+'"><input type="radio" name="c_'+q.id+'" '+(q.correct===i+1?'checked':'')+' value="'+(i+1)+'"><input type="text" value="'+esc(o)+'"></div>';
+  });
+  html+='<div class="row"><button class="b ok">✓ Tasdiqlash</button><button class="b del">🗑</button></div>';
+  d.innerHTML=html;
+  var radios=d.querySelectorAll('input[type=radio]');
+  radios.forEach(function(r){r.onchange=function(){d.querySelectorAll('.opt').forEach(function(op,i){op.classList.toggle('ok',r.checked&&+r.value===i+1)});d.querySelectorAll('.opt').forEach(function(op){var rd=op.querySelector('input[type=radio]');op.classList.toggle('ok',rd.checked)})}});
+  d.querySelector('.b.ok').onclick=function(){approve(d,q.id)};
+  d.querySelector('.b.del').onclick=function(){del(d,q.id)};
+  return d;
+}
+async function approve(d,id){
+  var q=d.querySelector('.qt').value.trim();
+  var opts=[].map.call(d.querySelectorAll('.opt input[type=text]'),function(i){return i.value.trim()});
+  var correct=+d.querySelector('input[type=radio]:checked').value;
+  var j=await api('/api/question',{id:id,action:'approve',question:q,options:opts,correct:correct});
+  if(j.ok){d.classList.add('done');d.querySelector('.b.ok').textContent='✓ Saqlandi'}
+}
+async function del(d,id){
+  var j=await api('/api/question',{id:id,action:'delete'});
+  if(j.ok)d.remove();
+}
+function esc(s){return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;')}
+loadPacks();
+</script>
+</body>
+</html>
