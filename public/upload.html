@@ -54,6 +54,7 @@ input[type=text],select{width:100%;padding:11px 13px;border:1.5px solid #E6DFCF;
   </select>
 
   <button class="btn" id="go" onclick="upload()" disabled>Tanib olish</button>
+  <a href="/review" id="toReview" style="display:none;text-decoration:none"><button class="btn" style="background:#B87A12;margin-top:10px">📋 Tekshirishga o'tish →</button></a>
   <div class="msg" id="msg"></div>
 </div>
 
@@ -80,7 +81,7 @@ async function upload(){
   try{
     var r=await fetch('/api/ingest',{method:'POST',body:fd});
     var j=await r.json();
-    if(j.ok){msg('✅ '+j.inserted+" ta savol tanildi. Endi tekshirib tasdiqlang.",true)}
+    if(j.ok){msg('✅ '+j.inserted+" ta savol tanildi. Endi tekshirib tasdiqlang.",true);document.getElementById('toReview').style.display='block'}
     else{msg('Xato: '+(j.detail||j.hint||j.error||'qayta urining'),false)}
   }catch(e){msg("Internet xatosi. Qayta urining.",false)}
   b.disabled=false;b.textContent='Tanib olish'
