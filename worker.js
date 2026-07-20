@@ -340,29 +340,33 @@ function ingestPrompt(lang) {
   ].join('\n');
 }
 
-// вызов Gemini (принимает и текст, и файл inline_data)
+// вызов Gemini (принимает и текст, и файл inline_data). Повтор при перегрузке.
 async function callGemini(env, prompt, filePart) {
   const key = env.GEMINI_API_KEY;
   if (!key) throw new Error('no_gemini_key');
   const model = 'gemini-3.5-flash';
   const parts = [{ text: prompt }];
   if (filePart) parts.push({ inline_data: { mime_type: filePart.mime, data: filePart.b64 } });
-  const r = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts }],
-        generationConfig: { temperature: 0.3, maxOutputTokens: 8192, responseMimeType: 'application/json' }
-      })
+  const body = JSON.stringify({
+    contents: [{ parts }],
+    generationConfig: { temperature: 0.3, maxOutputTokens: 8192, responseMimeType: 'application/json' }
+  });
+  let last = '';
+  for (let attempt = 0; attempt < 4; attempt++) {
+    if (attempt) await new Promise(r => setTimeout(r, 1500 * attempt));  // пауза растёт
+    const r = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }
+    );
+    const t = await r.text();
+    if (r.ok) {
+      const j = JSON.parse(t);
+      return j?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
     }
-  );
-  const t = await r.text();
-  if (!r.ok) throw new Error(`gemini ${r.status}: ${t}`);
-  const j = JSON.parse(t);
-  const out = j?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
-  return out;
+    last = `gemini ${r.status}: ${t}`;
+    if (r.status !== 503 && r.status !== 429) break;   // повторяем только перегрузку
+  }
+  throw new Error(last);
 }
 
 // резерв: Groq (только текст). Используется, если Gemini недоступен и файл — текстовый.
