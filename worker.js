@@ -344,7 +344,7 @@ function ingestPrompt(lang) {
 async function callGemini(env, prompt, filePart) {
   const key = env.GEMINI_API_KEY;
   if (!key) throw new Error('no_gemini_key');
-  const model = 'gemini-2.0-flash';
+  const model = 'gemini-2.5-flash';
   const parts = [{ text: prompt }];
   if (filePart) parts.push({ inline_data: { mime_type: filePart.mime, data: filePart.b64 } });
   const r = await fetch(
