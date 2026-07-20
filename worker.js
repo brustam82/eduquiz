@@ -456,7 +456,7 @@ async function ingest(req, env) {
       return J({ error: 'unsupported', hint: 'PDF, rasm yoki matn yuklang (Word — PDF sifatida saqlang)' }, 415);
     }
   } catch (e) {
-    return J({ error: 'ai_failed', detail: String(e.message || e) }, 502);
+    return J({ error: 'ai_failed', detail: String(e.message || e).slice(0, 400) }, 200);
   }
 
   const parsed = parseModelJson(raw);
