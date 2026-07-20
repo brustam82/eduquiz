@@ -469,8 +469,6 @@
 <body>
 
 <!-- ══════════════════════════════════════ -->
-
-<!-- ══════════════════════════════════════ -->
 <div class="screen active" id="s-teacher-login">
   <div class="header">
     <div class="header-inner">
@@ -512,8 +510,7 @@
 </div>
 
 <!-- ══════════════════════════════════════ -->
-<!-- SCREEN 3: ПАНЕЛЬ УЧИТЕЛЯ              -->
-<!-- ══════════════════════════════════════ -->
+<!-- ПАНЕЛЬ УЧИТЕЛЯ              -->
 <!-- ══════════════════════════════════════ -->
 <div class="screen" id="s-teacher-dashboard">
   <div class="header">
@@ -528,7 +525,10 @@
         <h1 class="page-title">O'qituvchi paneli</h1>
         <p style="color:var(--muted);"><b id="me-name">—</b> · imtihonlaringiz natijalari</p>
       </div>
-      <button class="btn btn-gold" onclick="go('s-create-quiz')">+ Yangi imtihon</button>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <a href="/upload" class="btn btn-secondary">📤 Test yuklash</a>
+        <button class="btn btn-gold" onclick="openCreate()">+ Yangi imtihon</button>
+      </div>
     </div>
 
     <div id="t-results">
@@ -546,7 +546,7 @@
 </div>
 
 <!-- ══════════════════════════════════════ -->
-<!-- SCREEN 4: СОЗДАНИЕ ТЕСТА              -->
+<!-- СОЗДАНИЕ ТЕСТА              -->
 <!-- ══════════════════════════════════════ -->
 <div class="screen" id="s-create-quiz">
   <div class="header">
@@ -561,7 +561,6 @@
 
     <div class="card">
       <div class="form-group">
-        <div class="form-group">
         <label>Imtihon nomi</label>
         <input type="text" id="ex-title" placeholder="Matematika — olimpiada" value="">
       </div>
@@ -598,8 +597,6 @@
 </div>
 
 <!-- ══════════════════════════════════════ -->
-
-<!-- ══════════════════════════════════════ -->
 <div class="screen" id="s-student-name">
   <div class="header">
     <div class="header-inner">
@@ -626,7 +623,7 @@
 </div>
 
 <!-- ══════════════════════════════════════ -->
-<!-- SCREEN 8: ВОПРОС                      -->
+<!-- ВОПРОС                      -->
 <!-- ══════════════════════════════════════ -->
 <div class="screen" id="s-question">
   <div class="header">
@@ -662,7 +659,7 @@
 </div>
 
 <!-- ══════════════════════════════════════ -->
-<!-- SCREEN 9: РЕЗУЛЬТАТ УЧЕНИКА           -->
+<!-- РЕЗУЛЬТАТ УЧЕНИКА           -->
 <!-- ══════════════════════════════════════ -->
 <div class="screen" id="s-student-result">
   <div class="header">
@@ -708,8 +705,7 @@ try {
   tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
   if (tg) {
     tg.ready();
-    tg.expand();               // на весь экран
-    // Автоматически подставить имя ученика из Telegram
+    tg.expand();
     const u = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
     if (u) {
       const name = [u.first_name, u.last_name].filter(Boolean).join(' ');
@@ -731,9 +727,16 @@ function go(screenId) {
   }
 }
 
+// открыть создание экзамена + подгрузить пакеты
+function openCreate(){
+  go('s-create-quiz');
+  loadPacks();
+}
+
 // ── TEACHER LOGIN ────────────────────────
-let TOKEN = "";                  // пропуск учителя; выдаёт сервер, живёт 30 дней
-let ME = null;                   // { name, login }
+let TOKEN = "";
+let ME = null;
+let EXAM_LINK = "";
 
 const api = (path, body) => fetch(path, {
   method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -753,7 +756,7 @@ function logout(){
   location.href = location.pathname;
 }
 
-const BOT = 'eduquiz_pm_bot';        // имя бота для кнопки в браузере
+const BOT = 'eduquiz_pm_bot';
 
 function loginFail(msg){
   const e = document.getElementById('login-error');
@@ -780,7 +783,6 @@ function loginMiniApp(){
   tgLogin({ initData });
 }
 
-// сюда Telegram вернёт данные из кнопки на сайте
 window.onTelegramAuth = user => tgLogin({ widget: user });
 
 function mountTelegramButton(){
@@ -800,6 +802,29 @@ function mountTelegramButton(){
   box.appendChild(sc);
 }
 
+// ── ПАКЕТЫ (для создания экзамена) ──
+async function loadPacks(){
+  const sel = document.getElementById('ex-pack');
+  sel.innerHTML = '<option value="">Yuklanmoqda…</option>';
+  try {
+    const out = await api('/api/packs', { token: TOKEN });
+    if (!out.ok) throw 0;
+    if (!out.packs.length) {
+      sel.innerHTML = '<option value="">Paket yo\'q — avval test yuklang</option>';
+      return;
+    }
+    sel.innerHTML = '';
+    out.packs.forEach(p => {
+      const o = document.createElement('option');
+      o.value = p.id;
+      o.textContent = p.title + ' (' + p.approved + ' savol)';
+      sel.appendChild(o);
+    });
+  } catch(e) {
+    sel.innerHTML = '<option value="">Yuklab bo\'lmadi</option>';
+  }
+}
+
 async function createExam(){
   const titleEl=document.getElementById('ex-title');
   if(!titleEl.value.trim()){
@@ -807,9 +832,12 @@ async function createExam(){
     alert("Imtihon nomini kiriting"); return;
   }
   titleEl.style.borderColor='';
+  const packId = document.getElementById('ex-pack').value;
+  if(!packId){ alert("Savollar to'plamini (paket) tanlang"); return; }
   const till=document.getElementById('ex-till').value.trim();
   const body={ token:TOKEN, title:titleEl.value.trim(),
     subjects:['math'],
+    pack_id: +packId,
     q_count:+document.getElementById('ex-count').value||8,
     time_per_q:+document.getElementById('ex-time').value||0,
     show_expl:document.getElementById('ex-expl').checked,
@@ -857,53 +885,31 @@ async function loadResults(){
   } catch(e){ empty.style.display='block'; }
 }
 
-// ── QUIZ DATA (олимпиадные задания автора) ──
-// ── SUPABASE (склад вопросов) ────────────
-const SB_URL = "https://ytffcogqzcntxobqxbvp.supabase.co";
-const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0ZmZjb2dxemNudHhvYnF4YnZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMTkwODYsImV4cCI6MjA5OTU5NTA4Nn0.ZxpzOY_0OT-BuByo4p-dm-vLiha55JYmVBJzCNQrWJ4";
-
-const LANG = 'uz';               // только узбекский
-const SUBJECT = 'math';          // только математика
-let bank = [];                   // вопросы из склада
-let quizData = [];               // текущий тест
+// ── QUIZ ──────────────────────────
+const LANG = 'uz';
+const SUBJECT = 'math';
+let quizData = [];
 
 const UI = {
   uz: { pick:"Bitta to'g'ri javobni tanlang", next:"Keyingi savol →",
         loadErr:"Savollarni yuklab bo'lmadi. Internetni tekshiring." }
 };
 
-const QUIZ_SIZE = 99;   // берём все доступные вопросы
-let picked = [];          // выбранные вопросы текущего теста
-
-function pickQuestions(){
-  // в банке лежат только вопросы с картинками — фильтровать больше нечего
-  let arr = bank.slice();
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  const N = EXAM ? EXAM.q_count : QUIZ_SIZE;
-  picked = arr.slice(0, Math.min(N, arr.length));
-}
-
-function buildQuiz(){
-  if (picked.length === 0) pickQuestions();
-  quizData = picked.map(r => ({
-    q:    r.question_uz,
-    opts: r.options_uz,
+// вопросы берём из пакета экзамена через воркер (случайные N уже перемешаны сервером)
+async function loadBank(){
+  if (!EXAM || !EXAM.pack_id) { quizData = []; return; }
+  const n = EXAM.q_count || 10;
+  const res = await fetch("/api/pack-questions?pack=" + encodeURIComponent(EXAM.pack_id) + "&n=" + n);
+  if(!res.ok) throw new Error("load failed");
+  const out = await res.json();
+  const rows = (out && out.questions) ? out.questions : [];
+  quizData = rows.map(r => ({
+    q:    LANG==='ru' ? (r.question_ru||r.question_uz) : (r.question_uz||r.question_ru),
+    opts: LANG==='ru' ? (r.options_ru||r.options_uz) : (r.options_uz||r.options_ru),
     correct: r.correct - 1,
-    expl: r.explanation_uz,
+    expl: LANG==='ru' ? (r.explanation_ru||r.explanation_uz) : (r.explanation_uz||r.explanation_ru),
     svg:  r.svg || null
   }));
-}
-
-async function loadBank(){
-  // только одобренные вопросы С КАРТИНКОЙ — класс и предмет роли не играют
-  const url = SB_URL + "/rest/v1/questions?status=eq.approved&svg=not.is.null&select=subject,question_uz,options_uz,correct,explanation_uz,svg&order=id";
-  const res = await fetch(url, { headers: { apikey: SB_KEY, Authorization: "Bearer "+SB_KEY } });
-  if(!res.ok) throw new Error("load failed");
-  bank = await res.json();
-  buildQuiz();
 }
 
 // ── QUIZ STATE ────────────────────────────
@@ -925,14 +931,10 @@ async function startQuiz() {
     document.getElementById('student-name-input').style.borderColor = 'var(--danger)';
     return;
   }
-  if (bank.length === 0) {
-    try { await loadBank(); }
-    catch(e){ alert(UI[LANG].loadErr); return; }
-  }
-  pickQuestions();
-  buildQuiz();
+  try { await loadBank(); }
+  catch(e){ alert(UI[LANG].loadErr); return; }
   answerLog = [];
-  if (quizData.length === 0) { alert(UI[LANG].loadErr); return; }
+  if (quizData.length === 0) { alert("Bu imtihonda savollar yo'q."); return; }
   currentQ = 0;
   score = 0;
   totalElapsed = 0;
@@ -957,12 +959,10 @@ function showQuestion() {
   imgBox.innerHTML = data.svg ? data.svg : '';
   document.getElementById('next-btn-wrap').style.display = 'none';
 
-  // Скрыть объяснение при показе нового вопроса
   const exBox = document.getElementById('explanation-box');
   exBox.style.display = 'none';
   exBox.textContent = '';
 
-  // Build options
   const container = document.getElementById('options-container');
   container.innerHTML = '';
   data.opts.forEach((opt, i) => {
@@ -973,7 +973,6 @@ function showQuestion() {
     container.appendChild(btn);
   });
 
-  // Timer
   clearInterval(timerInterval);
   const TPQ = EXAM ? EXAM.time_per_q : 45;
   document.getElementById('timer-badge').style.display = TPQ>0 ? '' : 'none';
@@ -996,7 +995,6 @@ function updateTimer() {
   badge.className = 'timer-badge' + (timeLeft <= 10 ? ' warning' : '');
 }
 
-// Показать объяснение (разбор) после ответа
 function showExplanation() {
   if (EXAM && !EXAM.show_expl) return;
   const data = quizData[currentQ];
@@ -1037,7 +1035,7 @@ function autoExpire() {
     b.disabled = true;
     if (i === quizData[currentQ].correct) b.classList.add('correct');
   });
-  answerLog.push({ q: quizData[currentQ].q, ok: false });   // время вышло = ошибка
+  answerLog.push({ q: quizData[currentQ].q, ok: false });
   showExplanation();
   document.getElementById('next-btn-wrap').style.display = 'block';
 }
@@ -1112,11 +1110,10 @@ window.addEventListener('DOMContentLoaded', async () => {
   const code = new URLSearchParams(location.search).get('exam');
   if (code) {                        // ученик пришёл по ссылке
     go('s-student-name');
-    loadBank().then(()=>loadExam(code)).catch(()=>{});
+    loadExam(code).catch(()=>{});
     return;
   }
 
-  // из бота — своя кнопка, из браузера — кнопка Telegram
   let tgu = null, initData = '';
   try { tgu = Telegram.WebApp.initDataUnsafe.user; initData = Telegram.WebApp.initData || ''; } catch(e) {}
   const inTG = !!(tgu && tgu.id && initData);
@@ -1129,7 +1126,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     mountTelegramButton();
   }
 
-  // уже заходили с этого устройства? впускаем сразу
   let saved = '';
   try { saved = localStorage.getItem('eq_token') || ''; } catch(e) {}
   if (!saved) return;
