@@ -415,11 +415,14 @@ async function readUpload(req) {
 const B64CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 function toB64(bytes) {
   let out = '';
-  for (let i = 0; i < bytes.length; i += 3) {
-    const a = bytes[i], b = bytes[i + 1], c = bytes[i + 2];
+  const len = bytes.length;
+  for (let i = 0; i < len; i += 3) {
+    const a = bytes[i];
+    const b = i + 1 < len ? bytes[i + 1] : undefined;
+    const c = i + 2 < len ? bytes[i + 2] : undefined;
     out += B64CHARS[a >> 2];
-    out += B64CHARS[((a & 3) << 4) | (b >> 4)];
-    out += (b === undefined) ? '=' : B64CHARS[((b & 15) << 2) | (c >> 6)];
+    out += B64CHARS[((a & 3) << 4) | (b === undefined ? 0 : b >> 4)];
+    out += (b === undefined) ? '=' : B64CHARS[((b & 15) << 2) | (c === undefined ? 0 : c >> 6)];
     out += (c === undefined) ? '=' : B64CHARS[c & 63];
   }
   return out;
@@ -456,7 +459,7 @@ async function ingest(req, env) {
       return J({ error: 'unsupported', hint: 'PDF, rasm yoki matn yuklang (Word — PDF sifatida saqlang)' }, 415);
     }
   } catch (e) {
-    return J({ error: 'ai_failed', detail: String(e.message || e).slice(0, 400) }, 200);
+    return J({ error: 'ai: ' + String(e.message || e).slice(0, 300), detail: String(e.message || e).slice(0, 400) }, 200);
   }
 
   const parsed = parseModelJson(raw);
