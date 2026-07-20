@@ -81,7 +81,7 @@ async function upload(){
     var r=await fetch('/api/ingest',{method:'POST',body:fd});
     var j=await r.json();
     if(j.ok){msg('✅ '+j.inserted+" ta savol tanildi. Endi tekshirib tasdiqlang.",true)}
-    else{msg('Xato: '+(j.hint||j.error||'qayta urining'),false)}
+    else{msg('Xato: '+(j.detail||j.hint||j.error||'qayta urining'),false)}
   }catch(e){msg("Internet xatosi. Qayta urining.",false)}
   b.disabled=false;b.textContent='Tanib olish'
 }
