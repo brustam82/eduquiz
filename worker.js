@@ -629,6 +629,12 @@ export default {
       if (m === 'POST' && p === '/api/question') return await editQuestion(req, env);
       if (m === 'GET'  && p === '/api/pack-questions')
         return await packQuestions(env, url.searchParams.get('pack'), +url.searchParams.get('n') || 0);
+      if (m === 'GET' && p === '/api/ai-test') {
+        try {
+          const out = await callGemini(env, 'Ответь одним словом: работает', null);
+          return J({ ok: true, out });
+        } catch (e) { return J({ ok: false, detail: String(e.message || e).slice(0, 500) }); }
+      }
       return J({ error: 'not_found' }, 404);
     } catch (e) {
       return J({ error: String(e && e.message || e) }, 500);
