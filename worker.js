@@ -649,6 +649,74 @@ async function editQuestion(req, env) {
   return J({ ok: true });
 }
 
+// ── сводка по одному экзамену (аналитика класса) ──
+async function examSummary(req, env) {
+  const b = await req.json();
+  const id = await auth(env, b);
+  if (!id) return J({ error: 'auth' }, 401);
+  const code = String(b.code || '').slice(0, 16);
+  if (!code) return J({ error: 'code' }, 400);
+
+  // экзамен должен принадлежать этому учителю
+  const ex = await sb(env, `exams?code=eq.${encodeURIComponent(code)}&teacher_id=eq.${id}&select=code,title&limit=1`);
+  if (!ex.length) return J({ error: 'not_found' }, 404);
+
+  const rows = await sb(env,
+    `results?exam_code=eq.${encodeURIComponent(code)}`
+    + '&select=student,correct,total,percent,grade_mark,duration_s,answers,created_at&order=percent.desc&limit=1000');
+  if (!rows.length) return J({ ok: true, exam: ex[0], summary: null });
+
+  const n = rows.length;
+  const avg = Math.round(rows.reduce((s, r) => s + (r.percent || 0), 0) / n);
+  const avgTime = Math.round(rows.reduce((s, r) => s + (r.duration_s || 0), 0) / n);
+  const grades = { 5: 0, 4: 0, 3: 0, 2: 0 };
+  rows.forEach(r => { grades[r.grade_mark] = (grades[r.grade_mark] || 0) + 1; });
+
+  // сложные вопросы: по answers считаем долю ошибок на каждый номер
+  const qStat = {};   // idx -> {wrong, total}
+  rows.forEach(r => {
+    if (Array.isArray(r.answers)) {
+      r.answers.forEach((a, i) => {
+        if (!qStat[i]) qStat[i] = { wrong: 0, total: 0 };
+        qStat[i].total++;
+        if (!(a && a.ok)) qStat[i].wrong++;
+      });
+    }
+  });
+  const hard = Object.entries(qStat)
+    .map(([i, v]) => ({ q: +i + 1, wrongPct: Math.round(v.wrong / v.total * 100), total: v.total }))
+    .filter(x => x.wrongPct >= 50)
+    .sort((a, b) => b.wrongPct - a.wrongPct)
+    .slice(0, 5);
+
+  return J({
+    ok: true,
+    exam: ex[0],
+    summary: {
+      count: n, avg, avgTime, grades,
+      best: rows.slice(0, 3).map(r => ({ student: r.student, correct: r.correct, total: r.total, percent: r.percent })),
+      worst: rows.slice(-3).reverse().map(r => ({ student: r.student, correct: r.correct, total: r.total, percent: r.percent })),
+      hard
+    }
+  });
+}
+
+// ── список экзаменов учителя (для выбора в статистике) ──
+async function myExams(req, env) {
+  const b = await req.json();
+  const id = await auth(env, b);
+  if (!id) return J({ error: 'auth' }, 401);
+  const rows = await sb(env,
+    `exams?teacher_id=eq.${id}&select=code,title,created_at&order=created_at.desc&limit=200`);
+  // число попыток по каждому
+  const out = [];
+  for (const e of rows) {
+    const r = await sb(env, `results?exam_code=eq.${encodeURIComponent(e.code)}&select=student`);
+    out.push({ ...e, attempts: Array.isArray(r) ? r.length : 0 });
+  }
+  return J({ ok: true, exams: out });
+}
+
 // ── ежедневная сводка (будильник) ──
 async function dailySummary(env) {
   const exams = await sb(env,
@@ -678,6 +746,8 @@ export default {
       if (m === 'POST' && p === '/api/exam') return await createExam(req, env);
       if (m === 'GET' && p === '/api/exam') return await getExam(env, url.searchParams.get('code'));
       if (m === 'POST' && p === '/api/stats') return await stats(req, env);
+      if (m === 'POST' && p === '/api/exam-summary') return await examSummary(req, env);
+      if (m === 'POST' && p === '/api/my-exams') return await myExams(req, env);
       if (m === 'POST' && p === '/api/ingest') return await ingest(req, env);
       if (m === 'POST' && p === '/api/packs') return await packs(req, env);
       if (m === 'POST' && p === '/api/drafts') return await draftQuestions(req, env);
