@@ -531,15 +531,47 @@
       </div>
     </div>
 
-    <div id="t-results">
-
-      <div class="card card-sm">
-        <table id="live-results">
-          <tr><th>O'quvchi</th><th>Imtihon</th><th>Ball</th><th>%</th><th>Baho</th><th>Vaqt</th><th>Sana</th></tr>
-        </table>
-        <p id="no-results" style="color:var(--muted);padding:14px 4px;display:none;">Hozircha natijalar yo'q.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;">
+      <div class="card" style="cursor:pointer;text-align:center;padding:28px" onclick="openStats()">
+        <div style="font-size:2.2rem;margin-bottom:10px;">📊</div>
+        <h3 style="color:var(--lapis);font-size:1.1rem;margin-bottom:4px;">Statistika</h3>
+        <p style="color:var(--muted);font-size:0.88rem;">O'quvchilar natijalarini ko'rish</p>
       </div>
-      <button class="btn btn-secondary mt-16" onclick="loadResults()">↻ Yangilash</button>
+      <div class="card" style="cursor:pointer;text-align:center;padding:28px" onclick="openCreate()">
+        <div style="font-size:2.2rem;margin-bottom:10px;">➕</div>
+        <h3 style="color:var(--lapis);font-size:1.1rem;margin-bottom:4px;">Yangi imtihon</h3>
+        <p style="color:var(--muted);font-size:0.88rem;">Paketdan imtihon yaratish</p>
+      </div>
+      <a href="/upload" class="card" style="cursor:pointer;text-align:center;padding:28px;text-decoration:none;">
+        <div style="font-size:2.2rem;margin-bottom:10px;">📤</div>
+        <h3 style="color:var(--lapis);font-size:1.1rem;margin-bottom:4px;">Test yuklash</h3>
+        <p style="color:var(--muted);font-size:0.88rem;">Material yuklab, savol yaratish</p>
+      </a>
+    </div>
+  </div>
+  <div class="ornament-footer"></div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- СТАТИСТИКА (отдельный экран)          -->
+<!-- ══════════════════════════════════════ -->
+<div class="screen" id="s-stats">
+  <div class="header">
+    <div class="header-inner">
+      <div class="logo">Edu<span>Quiz</span></div>
+      <button class="header-back" onclick="go('s-teacher-dashboard')">← Orqaga</button>
+    </div>
+  </div>
+  <div class="main">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+      <h1 class="page-title">Statistika</h1>
+      <button class="btn btn-secondary" onclick="loadResults()">↻ Yangilash</button>
+    </div>
+    <div class="card card-sm">
+      <table id="live-results">
+        <tr><th>O'quvchi</th><th>Imtihon</th><th>Ball</th><th>%</th><th>Baho</th><th>Vaqt</th><th>Sana</th></tr>
+      </table>
+      <p id="no-results" style="color:var(--muted);padding:14px 4px;display:none;">Hozircha natijalar yo'q.</p>
     </div>
   </div>
   <div class="ornament-footer"></div>
@@ -747,6 +779,11 @@ function enterDashboard(){
   document.getElementById('me-name').textContent = ME ? ME.name : '';
   document.getElementById('login-error').classList.remove('show');
   go('s-teacher-dashboard');
+}
+
+// открыть статистику + загрузить свежие результаты
+function openStats(){
+  go('s-stats');
   loadResults();
 }
 
