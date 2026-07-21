@@ -333,7 +333,8 @@ function ingestPrompt(lang) {
     '4. У каждого вопроса ровно 4 варианта. Ровно один правильный.',
     '5. Дистракторы — правдоподобные, похожей длины, без "все верны" и абсурда.',
     '6. К каждому вопросу добавь короткое пояснение (1-2 предложения), почему ответ верный.',
-    '7. Если в задании есть рисунок, график, геометрическая фигура, схема или диаграмма — ВОСПРОИЗВЕДИ его как SVG-код и положи в поле "svg". SVG должен быть самодостаточным (<svg ...>...</svg>), без внешних ссылок, размером примерно 300x200. Если рисунка нет — поле "svg" пустое или отсутствует.',
+    '7. SVG рисуй ТОЛЬКО если для решения задачи НЕОБХОДИМ рисунок: геометрическая фигура, график, схема, диаграмма, чертёж. Тогда воспроизведи его точно как SVG в поле "svg" (самодостаточный <svg ...>...</svg>, ~300x200, без внешних ссылок). ЗАПРЕЩЕНО: рисовать декоративные картинки (портреты, животные, фон), выдумывать изображения, которых нет в задании. Если рисунок не нужен для решения или его нет — поле "svg" НЕ добавляй.',
+    '8. Обработай ВЕСЬ материал целиком — извлеки ВСЕ вопросы, которые есть в файле, не останавливайся на первом.',
     'Верни ТОЛЬКО валидный JSON без markdown, без пояснений вокруг. Формат:',
     '{"questions":[{"q":"текст вопроса","options":["A","B","C","D"],"correct":1,"explanation":"...","ai_solved":false,"svg":"<svg...>...</svg>"}]}',
     '"correct" — номер правильного варианта, СЧИТАЯ С ЕДИНИЦЫ (1 = первый).',
@@ -350,7 +351,7 @@ async function callGemini(env, prompt, filePart) {
   if (filePart) parts.push({ inline_data: { mime_type: filePart.mime, data: filePart.b64 } });
   const body = JSON.stringify({
     contents: [{ parts }],
-    generationConfig: { temperature: 0.3, maxOutputTokens: 8192, responseMimeType: 'application/json' }
+    generationConfig: { temperature: 0.2, maxOutputTokens: 32768, responseMimeType: 'application/json' }
   });
   let last = '';
   for (let attempt = 0; attempt < 4; attempt++) {
@@ -366,6 +367,35 @@ async function callGemini(env, prompt, filePart) {
     }
     last = `gemini ${r.status}: ${t}`;
     if (r.status !== 503 && r.status !== 429) break;   // повторяем только перегрузку
+  }
+  throw new Error(last);
+}
+
+// несколько файлов (страниц) в ОДНОМ запросе — ИИ видит весь материал сразу
+async function callGeminiMulti(env, prompt, fileParts) {
+  const key = env.GEMINI_API_KEY;
+  if (!key) throw new Error('no_gemini_key');
+  const model = 'gemini-3.5-flash';
+  const parts = [{ text: prompt }];
+  for (const fp of fileParts) parts.push({ inline_data: { mime_type: fp.mime, data: fp.b64 } });
+  const body = JSON.stringify({
+    contents: [{ parts }],
+    generationConfig: { temperature: 0.2, maxOutputTokens: 32768, responseMimeType: 'application/json' }
+  });
+  let last = '';
+  for (let attempt = 0; attempt < 4; attempt++) {
+    if (attempt) await new Promise(r => setTimeout(r, 1500 * attempt));
+    const r = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }
+    );
+    const t = await r.text();
+    if (r.ok) {
+      const j = JSON.parse(t);
+      return j?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
+    }
+    last = `gemini ${r.status}: ${t}`;
+    if (r.status !== 503 && r.status !== 429) break;
   }
   throw new Error(last);
 }
@@ -406,15 +436,19 @@ function parseModelJson(s) {
 // прочитать тело файла из multipart/form-data
 async function readUpload(req) {
   const form = await req.formData();
-  const file = form.get('file');
-  const lang = String(form.get('lang') || '').toLowerCase();     // '', 'ru', 'uz', 'en'
+  const files = form.getAll('file').filter(f => f && typeof f !== 'string');
+  const lang = String(form.get('lang') || '').toLowerCase();
   const teacherToken = String(form.get('token') || '');
   const packTitle = String(form.get('pack_title') || '').slice(0, 120);
-  if (!file || typeof file === 'string') return { error: 'no_file' };
-  const mime = file.type || 'application/octet-stream';
-  const buf = new Uint8Array(await file.arrayBuffer());
-  if (buf.length > 12 * 1024 * 1024) return { error: 'too_big' };  // 12 МБ
-  return { mime, buf, lang, teacherToken, packTitle, name: file.name || 'file' };
+  if (!files.length) return { error: 'no_file' };
+  const parts = [];
+  for (const file of files) {
+    const mime = file.type || 'application/octet-stream';
+    const buf = new Uint8Array(await file.arrayBuffer());
+    if (buf.length > 12 * 1024 * 1024) return { error: 'too_big' };
+    parts.push({ mime, buf, name: file.name || 'file' });
+  }
+  return { files: parts, lang, teacherToken, packTitle, name: parts[0].name };
 }
 
 const B64CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
@@ -445,32 +479,43 @@ async function ingest(req, env) {
 
   const prompt = ingestPrompt(up.lang);
 
-  // Вариант А: файл читает ИИ. PDF и картинки уходят в Gemini как inline_data.
-  let raw = '';
-  const supportsInline = up.mime.startsWith('image/') || up.mime === 'application/pdf';
+  // Все файлы идём ОДНИМ запросом к ИИ, чтобы вопросы, переходящие со страницы на страницу
+  // (или из файла в файл), собирались правильно, а не рвались.
+  let allQs = [];
+  let lastErr = '';
 
-  try {
-    if (supportsInline) {
-      raw = await callGemini(env, prompt, { mime: up.mime, b64: toB64(up.buf) });
-    } else if (isTextLike(up.mime)) {
-      const text = new TextDecoder().decode(up.buf).slice(0, 40000);
-      try {
-        raw = await callGemini(env, prompt + '\n\nМАТЕРИАЛ:\n' + text, null);
-      } catch (e) {
-        raw = await callGroqText(env, prompt, text);   // резерв для текста
-      }
-    } else {
-      // .docx и прочее Gemini напрямую не ест — просим учителя дать PDF/фото
-      return J({ error: 'unsupported', hint: 'PDF, rasm yoki matn yuklang (Word — PDF sifatida saqlang)' }, 415);
-    }
-  } catch (e) {
-    return J({ error: 'ai: ' + String(e.message || e).slice(0, 300), detail: String(e.message || e).slice(0, 400) }, 200);
+  const inlineFiles = up.files.filter(f => f.mime.startsWith('image/') || f.mime === 'application/pdf');
+  const textFiles   = up.files.filter(f => isTextLike(f.mime));
+
+  // картинки/PDF — вместе одним вызовом (ИИ видит все страницы сразу)
+  if (inlineFiles.length) {
+    try {
+      const fileParts = inlineFiles.map(f => ({ mime: f.mime, b64: toB64(f.buf) }));
+      const raw = await callGeminiMulti(env, prompt, fileParts);
+      const parsed = parseModelJson(raw);
+      if (parsed && Array.isArray(parsed.questions)) allQs = allQs.concat(parsed.questions);
+    } catch (e) { lastErr = String(e.message || e).slice(0, 300); }
   }
 
-  const parsed = parseModelJson(raw);
-  const qs = parsed && Array.isArray(parsed.questions) ? parsed.questions : null;
-  if (!qs) return J({ error: 'bad_ai_output' }, 502);
-  if (!qs.length) return J({ ok: true, inserted: 0, questions: [], pack_id: null });
+  // текстовые файлы — склеиваем в один текст
+  if (textFiles.length) {
+    try {
+      let text = '';
+      for (const f of textFiles) text += '\n\n' + new TextDecoder().decode(f.buf);
+      text = text.slice(0, 60000);
+      let raw = '';
+      try { raw = await callGemini(env, prompt + '\n\nМАТЕРИАЛ:\n' + text, null); }
+      catch (e) { raw = await callGroqText(env, prompt, text); }
+      const parsed = parseModelJson(raw);
+      if (parsed && Array.isArray(parsed.questions)) allQs = allQs.concat(parsed.questions);
+    } catch (e) { lastErr = String(e.message || e).slice(0, 300); }
+  }
+
+  if (!allQs.length) {
+    if (lastErr) return J({ error: 'ai: ' + lastErr, detail: lastErr }, 200);
+    return J({ ok: true, inserted: 0, questions: [], pack_id: null });
+  }
+  const qs = allQs;
 
   // складываем распознанные вопросы черновиками.
   // Платформа универсальная: grade/subject/topic_id не заполняем (в базе они теперь nullable).
