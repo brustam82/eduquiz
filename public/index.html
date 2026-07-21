@@ -520,33 +520,27 @@
     </div>
   </div>
   <div class="main">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:28px;">
-      <div>
-        <h1 class="page-title">O'qituvchi paneli</h1>
-        <p style="color:var(--muted);"><b id="me-name">—</b> · imtihonlaringiz natijalari</p>
-      </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <a href="/upload" class="btn btn-secondary">📤 Test yuklash</a>
-        <button class="btn btn-gold" onclick="openCreate()">+ Yangi imtihon</button>
-      </div>
+    <div style="margin-bottom:28px;">
+      <h1 class="page-title">O'qituvchi paneli</h1>
+      <p style="color:var(--muted);"><b id="me-name">—</b></p>
     </div>
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;">
-      <div class="card" style="cursor:pointer;text-align:center;padding:28px" onclick="openStats()">
-        <div style="font-size:2.2rem;margin-bottom:10px;">📊</div>
-        <h3 style="color:var(--lapis);font-size:1.1rem;margin-bottom:4px;">Statistika</h3>
-        <p style="color:var(--muted);font-size:0.88rem;">O'quvchilar natijalarini ko'rish</p>
-      </div>
-      <div class="card" style="cursor:pointer;text-align:center;padding:28px" onclick="openCreate()">
-        <div style="font-size:2.2rem;margin-bottom:10px;">➕</div>
-        <h3 style="color:var(--lapis);font-size:1.1rem;margin-bottom:4px;">Yangi imtihon</h3>
-        <p style="color:var(--muted);font-size:0.88rem;">Paketdan imtihon yaratish</p>
-      </div>
       <a href="/upload" class="card" style="cursor:pointer;text-align:center;padding:28px;text-decoration:none;">
         <div style="font-size:2.2rem;margin-bottom:10px;">📤</div>
-        <h3 style="color:var(--lapis);font-size:1.1rem;margin-bottom:4px;">Test yuklash</h3>
+        <h3 style="color:var(--lapis);font-size:1.1rem;margin-bottom:4px;">1. Test yuklash</h3>
         <p style="color:var(--muted);font-size:0.88rem;">Material yuklab, savol yaratish</p>
       </a>
+      <div class="card" style="cursor:pointer;text-align:center;padding:28px" onclick="openCreate()">
+        <div style="font-size:2.2rem;margin-bottom:10px;">➕</div>
+        <h3 style="color:var(--lapis);font-size:1.1rem;margin-bottom:4px;">2. Yangi imtihon</h3>
+        <p style="color:var(--muted);font-size:0.88rem;">Paketdan imtihon yaratish</p>
+      </div>
+      <div class="card" style="cursor:pointer;text-align:center;padding:28px" onclick="openStats()">
+        <div style="font-size:2.2rem;margin-bottom:10px;">📊</div>
+        <h3 style="color:var(--lapis);font-size:1.1rem;margin-bottom:4px;">3. Statistika</h3>
+        <p style="color:var(--muted);font-size:0.88rem;">O'quvchilar natijalarini ko'rish</p>
+      </div>
     </div>
   </div>
   <div class="ornament-footer"></div>
