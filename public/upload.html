@@ -31,15 +31,19 @@ input[type=text],select{width:100%;padding:11px 13px;border:1.5px solid #E6DFCF;
 </head>
 <body>
 <div class="wrap">
+  <div style="display:flex;gap:14px;margin-bottom:14px;font-size:14px">
+    <a href="/" style="color:#1B7A6B;text-decoration:none">🏠 Bosh sahifa</a>
+    <a href="/review" style="color:#1B7A6B;text-decoration:none">📋 Tekshirish</a>
+  </div>
   <h1>Test yuklash</h1>
   <p class="sub">Fayl yuklang — platforma savollarga aylantiradi</p>
 
   <div class="drop" id="drop" onclick="fi.click()">
     <div class="ic">☁️</div>
     <b>Faylni tanlang yoki tashlang</b>
-    <span>PDF · rasm (JPG/PNG) · matn</span>
+    <span>PDF · rasm · matn (bir nechta bo'lishi mumkin)</span>
   </div>
-  <input type="file" id="fi" accept=".pdf,.png,.jpg,.jpeg,.txt" style="display:none" onchange="pick()">
+  <input type="file" id="fi" accept=".pdf,.png,.jpg,.jpeg,.txt" multiple style="display:none" onchange="pick()">
 
   <div class="file" id="fbox"><span>📄</span><span id="fname" style="flex:1"></span><span>✓</span></div>
 
@@ -65,8 +69,8 @@ var TOKEN='';try{TOKEN=localStorage.getItem('eq_token')||''}catch(e){}
 var fi=document.getElementById('fi'),file=null;
 var drop=document.getElementById('drop');
 ['dragover','dragleave','drop'].forEach(function(ev){drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.toggle('on',ev==='dragover');if(ev==='drop'&&e.dataTransfer.files[0]){fi.files=e.dataTransfer.files;pick()}})});
-function pick(){file=fi.files[0];if(!file)return;
-  document.getElementById('fname').textContent=file.name;
+function pick(){if(!fi.files.length)return;file=fi.files;
+  document.getElementById('fname').textContent=fi.files.length>1?(fi.files.length+" ta fayl"):fi.files[0].name;
   document.getElementById('fbox').classList.add('on');
   document.getElementById('go').disabled=false}
 function msg(t,ok){var m=document.getElementById('msg');m.textContent=t;m.className='msg '+(ok?'ok':'err')}
@@ -75,7 +79,7 @@ async function upload(){
   if(!TOKEN){msg("Avval o'qituvchi sifatida kiring",false);return}
   var b=document.getElementById('go');b.disabled=true;b.innerHTML='<span class="spin"></span>Tanilmoqda...';
   var fd=new FormData();
-  fd.append('file',file);fd.append('token',TOKEN);
+  for(var i=0;i<file.length;i++)fd.append('file',file[i]);fd.append('token',TOKEN);
   fd.append('lang',document.getElementById('lang').value);
   fd.append('pack_title',document.getElementById('ptitle').value.trim());
   try{
