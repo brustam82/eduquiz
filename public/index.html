@@ -531,14 +531,19 @@
         <h3 style="color:var(--lapis);font-size:1.1rem;margin-bottom:4px;">1. Test yuklash</h3>
         <p style="color:var(--muted);font-size:0.88rem;">Material yuklab, savol yaratish</p>
       </a>
+      <a href="/review" class="card" style="cursor:pointer;text-align:center;padding:28px;text-decoration:none;">
+        <div style="font-size:2.2rem;margin-bottom:10px;">📋</div>
+        <h3 style="color:var(--lapis);font-size:1.1rem;margin-bottom:4px;">2. Tekshirish</h3>
+        <p style="color:var(--muted);font-size:0.88rem;">Savollarni tasdiqlash</p>
+      </a>
       <div class="card" style="cursor:pointer;text-align:center;padding:28px" onclick="openCreate()">
         <div style="font-size:2.2rem;margin-bottom:10px;">➕</div>
-        <h3 style="color:var(--lapis);font-size:1.1rem;margin-bottom:4px;">2. Yangi imtihon</h3>
+        <h3 style="color:var(--lapis);font-size:1.1rem;margin-bottom:4px;">3. Yangi imtihon</h3>
         <p style="color:var(--muted);font-size:0.88rem;">Paketdan imtihon yaratish</p>
       </div>
       <div class="card" style="cursor:pointer;text-align:center;padding:28px" onclick="openStats()">
         <div style="font-size:2.2rem;margin-bottom:10px;">📊</div>
-        <h3 style="color:var(--lapis);font-size:1.1rem;margin-bottom:4px;">3. Statistika</h3>
+        <h3 style="color:var(--lapis);font-size:1.1rem;margin-bottom:4px;">4. Statistika</h3>
         <p style="color:var(--muted);font-size:0.88rem;">O'quvchilar natijalarini ko'rish</p>
       </div>
     </div>
@@ -557,11 +562,20 @@
     </div>
   </div>
   <div class="main">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
-      <h1 class="page-title">Statistika</h1>
-      <button class="btn btn-secondary" onclick="loadResults()">↻ Yangilash</button>
+    <h1 class="page-title" style="margin-bottom:16px;">Statistika</h1>
+
+    <div class="form-group">
+      <label>Imtihonni tanlang</label>
+      <select id="st-exam" onchange="loadSummary()"><option value="">Yuklanmoqda…</option></select>
     </div>
-    <div class="card card-sm">
+
+    <div id="st-summary"></div>
+
+    <div class="card card-sm" style="margin-top:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <b style="color:var(--lapis);">Barcha urinishlar</b>
+        <button class="btn btn-secondary btn-sm" onclick="loadResults()">↻ Yangilash</button>
+      </div>
       <table id="live-results">
         <tr><th>O'quvchi</th><th>Imtihon</th><th>Ball</th><th>%</th><th>Baho</th><th>Vaqt</th><th>Sana</th></tr>
       </table>
@@ -778,8 +792,66 @@ function enterDashboard(){
 // открыть статистику + загрузить свежие результаты
 function openStats(){
   go('s-stats');
+  loadMyExams();
   loadResults();
 }
+
+async function loadMyExams(){
+  const sel = document.getElementById('st-exam');
+  sel.innerHTML = '<option value="">Yuklanmoqda…</option>';
+  try {
+    const out = await api('/api/my-exams', { token: TOKEN });
+    if (!out.ok || !out.exams.length) { sel.innerHTML = '<option value="">Imtihon yo\'q</option>'; return; }
+    sel.innerHTML = '<option value="">— Umumiy sarhisob uchun tanlang —</option>';
+    out.exams.forEach(e => {
+      const o = document.createElement('option');
+      o.value = e.code;
+      o.textContent = e.title + ' (' + e.attempts + ' urinish)';
+      sel.appendChild(o);
+    });
+  } catch(e) { sel.innerHTML = '<option value="">Yuklab bo\'lmadi</option>'; }
+}
+
+async function loadSummary(){
+  const code = document.getElementById('st-exam').value;
+  const box = document.getElementById('st-summary');
+  if (!code) { box.innerHTML = ''; return; }
+  box.innerHTML = '<div class="card card-sm" style="margin-bottom:16px;color:var(--muted);">Yuklanmoqda…</div>';
+  try {
+    const out = await api('/api/exam-summary', { token: TOKEN, code });
+    if (!out.ok) throw 0;
+    if (!out.summary) { box.innerHTML = '<div class="card card-sm" style="margin-bottom:16px;color:var(--muted);">Bu imtihonda hali natija yo\'q.</div>'; return; }
+    const s = out.summary;
+    const mm = Math.floor(s.avgTime/60), ss = s.avgTime%60;
+    let h = '<div class="card" style="margin-bottom:16px;">';
+    h += '<b style="color:var(--lapis);font-size:1.1rem;">'+esc(out.exam.title)+'</b>';
+    // цифры
+    h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin:16px 0;">';
+    h += statBox(s.count, 'Qatnashdi');
+    h += statBox(s.avg+'%', "O'rtacha");
+    h += statBox(mm+':'+String(ss).padStart(2,'0'), "O'rtacha vaqt");
+    h += '</div>';
+    // распределение оценок
+    h += '<div style="margin:8px 0 4px;font-weight:600;color:var(--lapis);">Baholar taqsimoti</div>';
+    h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">';
+    [['5','#ECFDF5','#065F46'],['4','#EFF6FF','#1D4ED8'],['3','#FFFBEB','#92400E'],['2','#FEF2F2','#991B1B']].forEach(function(g){
+      h += '<div style="flex:1;min-width:60px;background:'+g[1]+';color:'+g[2]+';border-radius:10px;padding:10px;text-align:center;"><div style="font-size:1.3rem;font-weight:800;">'+(s.grades[g[0]]||0)+'</div><div style="font-size:0.75rem;">Baho '+g[0]+'</div></div>';
+    });
+    h += '</div>';
+    // лучшие
+    h += '<div style="margin:12px 0 4px;font-weight:600;color:var(--lapis);">Eng yaxshi</div>';
+    s.best.forEach(function(r,i){ h += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:0.9rem;"><span>'+['🥇','🥈','🥉'][i]+' '+esc(r.student)+'</span><b>'+r.correct+'/'+r.total+' ('+r.percent+'%)</b></div>'; });
+    // сложные вопросы
+    if (s.hard && s.hard.length) {
+      h += '<div style="margin:14px 0 4px;font-weight:600;color:var(--danger);">Eng qiyin savollar</div>';
+      s.hard.forEach(function(x){ h += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:0.9rem;"><span>Savol '+x.q+'</span><b style="color:var(--danger);">'+x.wrongPct+'% xato</b></div>'; });
+    }
+    h += '</div>';
+    box.innerHTML = h;
+  } catch(e) { box.innerHTML = '<div class="card card-sm" style="margin-bottom:16px;color:var(--danger);">Yuklab bo\'lmadi.</div>'; }
+}
+function statBox(v,l){ return '<div style="background:var(--cream);border-radius:10px;padding:14px;text-align:center;"><div style="font-size:1.6rem;font-weight:800;color:var(--lapis);">'+v+'</div><div style="font-size:0.78rem;color:var(--muted);">'+l+'</div></div>'; }
+function esc(s){ return String(s==null?'':s).replace(/</g,'&lt;'); }
 
 function logout(){
   TOKEN = ""; ME = null;
