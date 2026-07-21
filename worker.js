@@ -333,8 +333,9 @@ function ingestPrompt(lang) {
     '4. У каждого вопроса ровно 4 варианта. Ровно один правильный.',
     '5. Дистракторы — правдоподобные, похожей длины, без "все верны" и абсурда.',
     '6. К каждому вопросу добавь короткое пояснение (1-2 предложения), почему ответ верный.',
+    '7. Если в задании есть рисунок, график, геометрическая фигура, схема или диаграмма — ВОСПРОИЗВЕДИ его как SVG-код и положи в поле "svg". SVG должен быть самодостаточным (<svg ...>...</svg>), без внешних ссылок, размером примерно 300x200. Если рисунка нет — поле "svg" пустое или отсутствует.',
     'Верни ТОЛЬКО валидный JSON без markdown, без пояснений вокруг. Формат:',
-    '{"questions":[{"q":"текст вопроса","options":["A","B","C","D"],"correct":1,"explanation":"...","ai_solved":false}]}',
+    '{"questions":[{"q":"текст вопроса","options":["A","B","C","D"],"correct":1,"explanation":"...","ai_solved":false,"svg":"<svg...>...</svg>"}]}',
     '"correct" — номер правильного варианта, СЧИТАЯ С ЕДИНИЦЫ (1 = первый).',
     'Если материал не годится для теста — верни {"questions":[]}.'
   ].join('\n');
@@ -496,6 +497,7 @@ async function ingest(req, env) {
     if (!(correct >= 1 && correct <= opts.length)) correct = 1;
     const qtext = String(q.q).slice(0, 2000);
     const expl = q.explanation ? String(q.explanation).slice(0, 1000) : null;
+    const svg = (q.svg && String(q.svg).trim().startsWith('<svg')) ? String(q.svg).slice(0, 20000) : null;
     // учитель выбрал один язык — кладём текст в обе колонки-пары одинаково
     rows.push({
       id: `up_${teacherId}_${stamp}_${i}`,
@@ -512,7 +514,8 @@ async function ingest(req, env) {
       source: 'ai',
       teacher_id: teacherId,
       ai_solved: !!q.ai_solved,
-      pack_id: packId
+      pack_id: packId,
+      svg: svg
     });
   });
 
@@ -569,7 +572,7 @@ async function draftQuestions(req, env) {
   if (!packId) return J({ error: 'pack' }, 400);
   const rows = await sb(env,
     `questions?pack_id=eq.${packId}&teacher_id=eq.${id}`
-    + '&select=id,question_uz,question_ru,options_uz,options_ru,correct,explanation_uz,ai_solved,status'
+    + '&select=id,question_uz,question_ru,options_uz,options_ru,correct,explanation_uz,ai_solved,status,svg'
     + '&order=id');
   return J({ ok: true, questions: rows || [] });
 }
