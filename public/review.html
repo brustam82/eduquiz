@@ -15,11 +15,12 @@ select{width:100%;padding:11px 13px;border:1.5px solid #E6DFCF;border-radius:10p
 .q.warn{border-color:#F0997B}
 .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:7px;background:#FFF4E6;color:#B87A12}
 .tag.w{background:#FAECE7;color:#993C1D}
-.qt{font-size:15px;font-weight:700;margin:8px 0 10px;width:100%;border:0;background:transparent;font-family:inherit;resize:vertical}
+.qt{font-size:15px;font-weight:700;margin:8px 0 10px;width:100%;border:1px solid #EEE6D5;border-radius:8px;padding:10px;background:#FFFDF8;font-family:inherit;resize:vertical;line-height:1.5;min-height:110px}
 .opt{display:flex;align-items:center;gap:9px;margin-bottom:7px}
 .opt input[type=radio]{width:18px;height:18px;accent-color:#1B7A6B}
 .opt input[type=text]{flex:1;padding:8px 10px;border:1.5px solid #E6DFCF;border-radius:9px;font-size:14px;font-family:inherit}
 .opt.ok input[type=text]{border-color:#2EA88F;background:#E8F3F0}
+.aitag{flex-shrink:0;font-size:11px;font-weight:700;color:#12564C;background:#CDEDE4;padding:3px 8px;border-radius:7px;white-space:nowrap}
 .row{display:flex;gap:8px;margin-top:10px}
 .b{flex:1;border:0;border-radius:10px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
 .b.ok{background:#1B7A6B;color:#fff}.b.del{background:#fff;border:1.5px solid #F0C0BB;color:#A32D2D;flex:0 0 46px}
@@ -60,10 +61,10 @@ function card(q){
   var opts=q.options_uz||[];
   var html='<div style="display:flex;justify-content:space-between;align-items:center">';
   html+='<span class="tag'+(q.ai_solved?' w':'')+'">'+(q.status==='approved'?'✓ tasdiqlangan':(q.ai_solved?'⚠ AI yechdi':'AI'))+'</span></div>';
-  html+='<textarea class="qt" rows="2">'+esc(q.question_uz||'')+'</textarea>';
+  html+='<textarea class="qt" rows="4">'+esc(q.question_uz||'')+'</textarea>';
   if(q.svg){html+='<div style="text-align:center;margin:8px 0;background:#fff;border:1px solid #EEE6D5;border-radius:10px;padding:8px">'+q.svg+'</div>'}
   opts.forEach(function(o,i){
-    html+='<div class="opt'+(q.correct===i+1?' ok':'')+'"><input type="radio" name="c_'+q.id+'" '+(q.correct===i+1?'checked':'')+' value="'+(i+1)+'"><input type="text" value="'+esc(o)+'"></div>';
+    html+='<div class="opt'+(q.correct===i+1?' ok':'')+'"><input type="radio" name="c_'+q.id+'" '+(q.correct===i+1?'checked':'')+' value="'+(i+1)+'"><input type="text" value="'+esc(o)+'">'+(q.correct===i+1?'<span class="aitag">✓ AI javobi</span>':'')+'</div>';
   });
   html+='<div class="row"><button class="b ok">✓ Tasdiqlash</button><button class="b del">🗑</button></div>';
   d.innerHTML=html;
