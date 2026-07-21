@@ -58,6 +58,7 @@ function card(q){
   var html='<div style="display:flex;justify-content:space-between;align-items:center">';
   html+='<span class="tag'+(q.ai_solved?' w':'')+'">'+(q.status==='approved'?'✓ tasdiqlangan':(q.ai_solved?'⚠ AI yechdi':'AI'))+'</span></div>';
   html+='<textarea class="qt" rows="2">'+esc(q.question_uz||'')+'</textarea>';
+  if(q.svg){html+='<div style="text-align:center;margin:8px 0;background:#fff;border:1px solid #EEE6D5;border-radius:10px;padding:8px">'+q.svg+'</div>'}
   opts.forEach(function(o,i){
     html+='<div class="opt'+(q.correct===i+1?' ok':'')+'"><input type="radio" name="c_'+q.id+'" '+(q.correct===i+1?'checked':'')+' value="'+(i+1)+'"><input type="text" value="'+esc(o)+'"></div>';
   });
