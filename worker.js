@@ -346,7 +346,7 @@ function ingestPrompt(lang) {
 async function callGemini(env, prompt, filePart) {
   const key = env.GEMINI_API_KEY;
   if (!key) throw new Error('no_gemini_key');
-  const model = 'gemini-3.5-flash';
+  const MODELS = ['gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
   const parts = [{ text: prompt }];
   if (filePart) parts.push({ inline_data: { mime_type: filePart.mime, data: filePart.b64 } });
   const body = JSON.stringify({
@@ -354,10 +354,10 @@ async function callGemini(env, prompt, filePart) {
     generationConfig: { temperature: 0.2, maxOutputTokens: 12288, responseMimeType: 'application/json' }
   });
   let last = '';
-  for (let attempt = 0; attempt < 2; attempt++) {
-    if (attempt) await new Promise(r => setTimeout(r, 1000 * attempt));  // пауза растёт
+  for (let attempt = 0; attempt < MODELS.length; attempt++) {
+    if (attempt) await new Promise(r => setTimeout(r, 800));
     const r = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${MODELS[attempt]}:generateContent?key=${key}`,
       { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }
     );
     const t = await r.text();
@@ -375,7 +375,7 @@ async function callGemini(env, prompt, filePart) {
 async function callGeminiMulti(env, prompt, fileParts) {
   const key = env.GEMINI_API_KEY;
   if (!key) throw new Error('no_gemini_key');
-  const model = 'gemini-3.5-flash';
+  const MODELS = ['gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
   const parts = [{ text: prompt }];
   for (const fp of fileParts) parts.push({ inline_data: { mime_type: fp.mime, data: fp.b64 } });
   const body = JSON.stringify({
@@ -383,10 +383,10 @@ async function callGeminiMulti(env, prompt, fileParts) {
     generationConfig: { temperature: 0.2, maxOutputTokens: 12288, responseMimeType: 'application/json' }
   });
   let last = '';
-  for (let attempt = 0; attempt < 2; attempt++) {
-    if (attempt) await new Promise(r => setTimeout(r, 1000 * attempt));
+  for (let attempt = 0; attempt < MODELS.length; attempt++) {
+    if (attempt) await new Promise(r => setTimeout(r, 800));
     const r = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${MODELS[attempt]}:generateContent?key=${key}`,
       { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }
     );
     const t = await r.text();
