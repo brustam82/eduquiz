@@ -351,11 +351,11 @@ async function callGemini(env, prompt, filePart) {
   if (filePart) parts.push({ inline_data: { mime_type: filePart.mime, data: filePart.b64 } });
   const body = JSON.stringify({
     contents: [{ parts }],
-    generationConfig: { temperature: 0.2, maxOutputTokens: 32768, responseMimeType: 'application/json' }
+    generationConfig: { temperature: 0.2, maxOutputTokens: 12288, responseMimeType: 'application/json' }
   });
   let last = '';
-  for (let attempt = 0; attempt < 4; attempt++) {
-    if (attempt) await new Promise(r => setTimeout(r, 1500 * attempt));  // пауза растёт
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (attempt) await new Promise(r => setTimeout(r, 1000 * attempt));  // пауза растёт
     const r = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
       { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }
@@ -380,11 +380,11 @@ async function callGeminiMulti(env, prompt, fileParts) {
   for (const fp of fileParts) parts.push({ inline_data: { mime_type: fp.mime, data: fp.b64 } });
   const body = JSON.stringify({
     contents: [{ parts }],
-    generationConfig: { temperature: 0.2, maxOutputTokens: 32768, responseMimeType: 'application/json' }
+    generationConfig: { temperature: 0.2, maxOutputTokens: 12288, responseMimeType: 'application/json' }
   });
   let last = '';
-  for (let attempt = 0; attempt < 4; attempt++) {
-    if (attempt) await new Promise(r => setTimeout(r, 1500 * attempt));
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (attempt) await new Promise(r => setTimeout(r, 1000 * attempt));
     const r = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
       { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }
@@ -484,7 +484,7 @@ async function ingest(req, env) {
   let allQs = [];
   let lastErr = '';
 
-  const inlineFiles = up.files.filter(f => f.mime.startsWith('image/') || f.mime === 'application/pdf');
+  const inlineFiles = up.files.filter(f => f.mime.startsWith('image/') || f.mime === 'application/pdf').slice(0, 2);
   const textFiles   = up.files.filter(f => isTextLike(f.mime));
 
   // картинки/PDF — вместе одним вызовом (ИИ видит все страницы сразу)
