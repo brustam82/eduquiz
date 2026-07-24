@@ -56,6 +56,7 @@ async function loadDrafts(){
   var j=await api('/api/drafts',{pack_id:pid});
   if(!j.ok||!j.questions.length){L.innerHTML='<div class="empty">Bu paketda tekshiriladigan savol yo\'q</div>';return}
   j.questions.forEach(function(q){L.appendChild(card(q))});
+  renderCrops(L);
 }
 function card(q){
   var d=document.createElement('div');d.className='q'+(q.ai_solved?' warn':'');
@@ -63,7 +64,8 @@ function card(q){
   var html='<div style="display:flex;justify-content:space-between;align-items:center">';
   html+='<span class="tag'+(q.ai_solved?' w':'')+'">'+(q.status==='approved'?'✓ tasdiqlangan':(q.ai_solved?'⚠ AI yechdi':'AI'))+'</span></div>';
   html+='<textarea class="qt" rows="4">'+esc(q.question_uz||'')+'</textarea>';
-  if(q.svg){html+='<div style="text-align:center;margin:8px 0;background:#fff;border:1px solid #EEE6D5;border-radius:10px;padding:8px">'+q.svg+'</div>'}
+  if(q.image_url&&q.image_box){html+=cropBox(q.image_url,q.image_box)}
+  else if(q.svg){html+='<div style="text-align:center;margin:8px 0;background:#fff;border:1px solid #EEE6D5;border-radius:10px;padding:8px">'+q.svg+'</div>'}
   opts.forEach(function(o,i){
     html+='<div class="opt'+(q.correct===i+1?' ok':'')+'"><input type="radio" name="c_'+q.id+'" '+(q.correct===i+1?'checked':'')+' value="'+(i+1)+'"><input type="text" value="'+esc(o)+'">'+(q.correct===i+1?'<span class="aitag">✓ AI javobi</span>':'')+'</div>';
   });
@@ -85,6 +87,28 @@ async function approve(d,id){
 async function del(d,id){
   var j=await api('/api/question',{id:id,action:'delete'});
   if(j.ok)d.remove();
+}
+function cropBox(url,box){
+  var id='c'+Math.random().toString(36).slice(2,8);
+  return '<div id="'+id+'" data-src="'+url+'" data-box="'+box+'" class="crop" style="margin:10px 0;border:1px solid #E3D8C2;border-radius:10px;overflow:hidden;background:#fff;min-height:60px"></div>';
+}
+function renderCrops(root){
+  (root||document).querySelectorAll('.crop:not([data-done])').forEach(function(el){
+    el.setAttribute('data-done','1');
+    var b=String(el.dataset.box).split(',').map(Number);
+    if(b.length!==4)return;
+    var img=new Image();
+    img.onload=function(){
+      var W=img.naturalWidth,H=img.naturalHeight;
+      var x1=b[1]/1000*W, y1=b[0]/1000*H, x2=b[3]/1000*W, y2=b[2]/1000*H;
+      var cw=Math.max(10,x2-x1), ch=Math.max(10,y2-y1);
+      el.innerHTML='<div style="position:relative;width:100%;padding-bottom:'+(ch/cw*100)+'%;overflow:hidden">'
+        +'<img src="'+el.dataset.src+'" style="position:absolute;width:'+(W/cw*100)+'%;height:auto;left:'+(-x1/cw*100)+'%;top:'+(-y1/cw*100)+'%">'
+        +'</div>';
+    };
+    img.onerror=function(){el.remove()};
+    img.src=el.dataset.src;
+  });
 }
 function esc(s){return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;')}
 loadPacks();
