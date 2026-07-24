@@ -563,25 +563,15 @@
     </div>
   </div>
   <div class="main">
-    <h1 class="page-title" style="margin-bottom:16px;">Statistika</h1>
+    <h1 class="page-title" style="margin-bottom:6px;">Natijalar tahlili</h1>
+    <p class="page-subtitle" style="margin-bottom:18px;">Imtihonni tanlang — batafsil hisobot shakllanadi</p>
 
     <div class="form-group">
-      <label>Imtihonni tanlang</label>
+      <label>Imtihon</label>
       <select id="st-exam" onchange="loadSummary()"><option value="">Yuklanmoqda…</option></select>
     </div>
 
     <div id="st-summary"></div>
-
-    <div class="card card-sm" style="margin-top:20px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <b style="color:var(--lapis);">Barcha urinishlar</b>
-        <button class="btn btn-secondary btn-sm" onclick="loadResults()">↻ Yangilash</button>
-      </div>
-      <table id="live-results">
-        <tr><th>O'quvchi</th><th>Imtihon</th><th>Ball</th><th>%</th><th>Baho</th><th>Vaqt</th><th>Sana</th></tr>
-      </table>
-      <p id="no-results" style="color:var(--muted);padding:14px 4px;display:none;">Hozircha natijalar yo'q.</p>
-    </div>
   </div>
   <div class="ornament-footer"></div>
 </div>
@@ -729,6 +719,8 @@
           <div><b>Sarflangan vaqt:</b> <span id="res-time">0:00</span></div>
         </div>
         <div style="text-align:left;border-left:4px solid var(--gold);background:#FFFDF7;border-radius:8px;padding:12px 14px;font-size:0.9rem;color:var(--ink);line-height:1.6;" id="rs-verdict"></div>
+        <button class="btn btn-primary btn-full mt-24" onclick="finishExam()">Yakunlash</button>
+        <p style="font-size:0.82rem;color:var(--muted);margin-top:10px;">Natijangiz o'qituvchiga yuborildi</p>
       </div>
     </div>
   </div>
@@ -794,7 +786,6 @@ function enterDashboard(){
 function openStats(){
   go('s-stats');
   loadMyExams();
-  loadResults();
 }
 
 async function loadMyExams(){
@@ -816,42 +807,126 @@ async function loadMyExams(){
 async function loadSummary(){
   const code = document.getElementById('st-exam').value;
   const box = document.getElementById('st-summary');
-  if (!code) { box.innerHTML = ''; return; }
-  box.innerHTML = '<div class="card card-sm" style="margin-bottom:16px;color:var(--muted);">Yuklanmoqda…</div>';
+  if (!code) { box.innerHTML = '<div class="card card-sm" style="color:var(--muted);">Hisobotni ko\'rish uchun imtihonni tanlang.</div>'; return; }
+  box.innerHTML = '<div class="card card-sm" style="color:var(--muted);">Hisobot shakllantirilmoqda…</div>';
   try {
     const out = await api('/api/exam-summary', { token: TOKEN, code });
     if (!out.ok) throw 0;
-    if (!out.summary) { box.innerHTML = '<div class="card card-sm" style="margin-bottom:16px;color:var(--muted);">Bu imtihonda hali natija yo\'q.</div>'; return; }
-    const s = out.summary;
-    const mm = Math.floor(s.avgTime/60), ss = s.avgTime%60;
-    let h = '<div class="card" style="margin-bottom:16px;">';
-    h += '<b style="color:var(--lapis);font-size:1.1rem;">'+esc(out.exam.title)+'</b>';
-    // цифры
-    h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin:16px 0;">';
-    h += statBox(s.count, 'Qatnashdi');
-    h += statBox(s.avg+'%', "O'rtacha");
-    h += statBox(mm+':'+String(ss).padStart(2,'0'), "O'rtacha vaqt");
-    h += '</div>';
-    // распределение оценок
-    h += '<div style="margin:8px 0 4px;font-weight:600;color:var(--lapis);">Baholar taqsimoti</div>';
-    h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">';
-    [['5','#ECFDF5','#065F46'],['4','#EFF6FF','#1D4ED8'],['3','#FFFBEB','#92400E'],['2','#FEF2F2','#991B1B']].forEach(function(g){
-      h += '<div style="flex:1;min-width:60px;background:'+g[1]+';color:'+g[2]+';border-radius:10px;padding:10px;text-align:center;"><div style="font-size:1.3rem;font-weight:800;">'+(s.grades[g[0]]||0)+'</div><div style="font-size:0.75rem;">Baho '+g[0]+'</div></div>';
+    if (!out.summary) { box.innerHTML = '<div class="card card-sm" style="color:var(--muted);">Bu imtihon bo\'yicha hali natijalar yo\'q.</div>'; return; }
+    box.innerHTML = renderReport(out.exam, out.summary, code);
+  } catch(e) { box.innerHTML = '<div class="card card-sm" style="color:var(--danger);">Hisobotni yuklab bo\'lmadi.</div>'; }
+}
+
+function kpi(v,l,c){
+  return '<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;">'
+    +'<div style="font-size:1.7rem;font-weight:800;color:'+(c||'var(--lapis)')+';line-height:1.1">'+v+'</div>'
+    +'<div style="font-size:0.76rem;color:var(--muted);margin-top:5px;line-height:1.35">'+l+'</div></div>';
+}
+
+function renderReport(exam, s, code){
+  const mm = Math.floor(s.avgTime/60), ss = s.avgTime%60;
+  const tot = s.count;
+  const passed = s.grades ? (tot - (s.grades[2]||0)) : 0;
+  const passPct = tot ? Math.round(passed/tot*100) : 0;
+  const dotc = s.avg>=80?'var(--success)':s.avg>=50?'#B8860B':'var(--danger)';
+
+  let h = '';
+
+  // шапка отчёта
+  h += '<div class="card" style="margin-bottom:16px;padding:20px 22px;">';
+  h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">';
+  h += '<div><div style="font-family:\'Playfair Display\',serif;font-size:1.25rem;color:var(--lapis);">'+esc(exam.title)+'</div>';
+  h += '<div style="font-size:0.8rem;color:var(--muted);margin-top:3px;">Imtihon kodi: <b style="letter-spacing:.5px">'+esc(code)+'</b></div></div>';
+  h += '<button class="btn btn-secondary btn-sm" onclick="exportCsv(\''+code+'\')">⤓ Excel (CSV)</button>';
+  h += '</div></div>';
+
+  // KPI
+  h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px;">';
+  h += kpi(tot, "Imtihon topshirgan<br>o'quvchilar");
+  h += kpi(s.avg+'%', "Guruhning<br>o'rtacha natijasi", dotc);
+  h += kpi(passPct+'%', "Ijobiy baho<br>olganlar ulushi");
+  h += kpi(mm+':'+String(ss).padStart(2,'0'), "O'rtacha sarflangan<br>vaqt");
+  h += '</div>';
+
+  // топ-3
+  h += '<div class="card" style="margin-bottom:16px;padding:20px 22px;">';
+  h += '<div style="font-weight:700;color:var(--lapis);margin-bottom:14px;">🏆 Eng yuqori natija ko\'rsatgan 3 nafar o\'quvchi</div>';
+  const med=['🥇','🥈','🥉'], mc=['#C9952A','#9AA5B1','#B08D57'];
+  (s.best||[]).forEach(function(r,i){
+    h += '<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;background:'+(i===0?'#FFFBF0':'var(--cream)')+';margin-bottom:8px;border:1px solid '+(i===0?'#F0DFB0':'var(--border)')+';">'
+      +'<span style="font-size:1.3rem">'+med[i]+'</span>'
+      +'<div style="flex:1"><div style="font-weight:700;color:var(--ink);font-size:0.95rem">'+esc(r.student)+'</div>'
+      +'<div style="font-size:0.78rem;color:var(--muted)">To\'g\'ri javoblar: '+r.correct+' / '+r.total+'</div></div>'
+      +'<div style="font-weight:800;font-size:1.1rem;color:'+mc[i]+'">'+r.percent+'%</div></div>';
+  });
+  h += '</div>';
+
+  // распределение оценок
+  h += '<div class="card" style="margin-bottom:16px;padding:20px 22px;">';
+  h += '<div style="font-weight:700;color:var(--lapis);margin-bottom:14px;">Baholar taqsimoti</div>';
+  const gl=[['5',"A'lo",'#059669'],['4','Yaxshi','#1D4ED8'],['3','Qoniqarli','#B8860B'],['2','Qoniqarsiz','#DC2626']];
+  gl.forEach(function(g){
+    const v=(s.grades&&s.grades[g[0]])||0, pc=tot?Math.round(v/tot*100):0;
+    h += '<div style="margin-bottom:11px;">'
+      +'<div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:5px;">'
+      +'<span style="color:var(--ink)"><b>'+g[0]+'</b> — '+g[1]+'</span>'
+      +'<span style="color:var(--muted)">'+v+' ta ('+pc+'%)</span></div>'
+      +'<div style="height:9px;background:var(--border);border-radius:6px;overflow:hidden"><div style="width:'+pc+'%;height:100%;background:'+g[2]+';border-radius:6px"></div></div></div>';
+  });
+  h += '</div>';
+
+  // сложные вопросы
+  if (s.hard && s.hard.length){
+    h += '<div class="card" style="margin-bottom:16px;padding:20px 22px;">';
+    h += '<div style="font-weight:700;color:var(--danger);margin-bottom:6px;">Eng ko\'p xato qilingan savollar</div>';
+    h += '<div style="font-size:0.8rem;color:var(--muted);margin-bottom:12px;">Ushbu savollar mavzusini qayta tushuntirish tavsiya etiladi</div>';
+    s.hard.forEach(function(x){
+      h += '<div style="margin-bottom:10px;">'
+        +'<div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:5px;">'
+        +'<span>Savol № '+x.q+'</span><span style="color:var(--danger);font-weight:700">'+x.wrongPct+'% xato</span></div>'
+        +'<div style="height:8px;background:var(--border);border-radius:6px;overflow:hidden"><div style="width:'+x.wrongPct+'%;height:100%;background:#DC2626;border-radius:6px"></div></div></div>';
     });
     h += '</div>';
-    // лучшие
-    h += '<div style="margin:12px 0 4px;font-weight:600;color:var(--lapis);">Eng yaxshi</div>';
-    s.best.forEach(function(r,i){ h += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:0.9rem;"><span>'+['🥇','🥈','🥉'][i]+' '+esc(r.student)+'</span><b>'+r.correct+'/'+r.total+' ('+r.percent+'%)</b></div>'; });
-    // сложные вопросы
-    if (s.hard && s.hard.length) {
-      h += '<div style="margin:14px 0 4px;font-weight:600;color:var(--danger);">Eng qiyin savollar</div>';
-      s.hard.forEach(function(x){ h += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:0.9rem;"><span>Savol '+x.q+'</span><b style="color:var(--danger);">'+x.wrongPct+'% xato</b></div>'; });
-    }
+  }
+
+  // требуют внимания
+  if (s.worst && s.worst.length){
+    h += '<div class="card" style="margin-bottom:16px;padding:20px 22px;">';
+    h += '<div style="font-weight:700;color:var(--lapis);margin-bottom:12px;">E\'tibor talab qiladigan o\'quvchilar</div>';
+    s.worst.forEach(function(r){
+      h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:0.9rem;">'
+        +'<span>'+esc(r.student)+'</span>'
+        +'<span style="color:'+(r.percent<50?'var(--danger)':'var(--muted)')+';font-weight:700">'+r.correct+'/'+r.total+' · '+r.percent+'%</span></div>';
+    });
     h += '</div>';
-    box.innerHTML = h;
-  } catch(e) { box.innerHTML = '<div class="card card-sm" style="margin-bottom:16px;color:var(--danger);">Yuklab bo\'lmadi.</div>'; }
+  }
+
+  // вывод
+  const verdict = s.avg>=80 ? "Guruh mavzuni yuqori darajada o'zlashtirgan. Natijalar barqaror, qo'shimcha mustahkamlash talab etilmaydi."
+    : s.avg>=65 ? "Guruhning umumiy tayyorgarligi qoniqarli. Ayrim o'quvchilar bilan individual ishlash tavsiya etiladi."
+    : s.avg>=50 ? "Guruh mavzuni qisman o'zlashtirgan. Xato ko'p uchragan savollar mavzusini takrorlash zarur."
+    : "Guruhning umumiy natijasi past. Mavzuni qaytadan tushuntirib, mustahkamlovchi mashg'ulot o'tkazish tavsiya etiladi.";
+  h += '<div class="card" style="padding:18px 22px;border-left:4px solid var(--gold);">';
+  h += '<div style="font-weight:700;color:var(--lapis);margin-bottom:6px;">Tahliliy xulosa</div>';
+  h += '<div style="font-size:0.92rem;line-height:1.65;color:var(--ink)">'+verdict+'</div></div>';
+
+  return h;
 }
-function statBox(v,l){ return '<div style="background:var(--cream);border-radius:10px;padding:14px;text-align:center;"><div style="font-size:1.6rem;font-weight:800;color:var(--lapis);">'+v+'</div><div style="font-size:0.78rem;color:var(--muted);">'+l+'</div></div>'; }
+
+async function exportCsv(code){
+  const out = await api('/api/stats', { token: TOKEN, limit: 500 });
+  if (!out.ok) return;
+  const rows = out.results.filter(r => r.exam_code === code);
+  let csv = "O'quvchi;Imtihon;Ball;Foiz;Baho;Vaqt (s);Sana\n";
+  rows.forEach(r => {
+    csv += [r.student, r.exam_title||'', r.correct+'/'+r.total, r.percent+'%', r.grade_mark, r.duration_s||0,
+      new Date(r.created_at).toLocaleString()].join(';') + "\n";
+  });
+  const blob = new Blob(["\ufeff"+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'MuallimTest_'+code+'.csv'; a.click();
+}
+
 function esc(s){ return String(s==null?'':s).replace(/</g,'&lt;'); }
 
 function logout(){
@@ -978,6 +1053,7 @@ const MARK_CLASS = {5:"badge-green",4:"badge-blue",3:"badge-yellow",2:""};
 async function loadResults(){
   const t = document.getElementById('live-results');
   const empty = document.getElementById('no-results');
+  if (!t || !empty) return;
   try {
     const out = await api("/api/stats", { token: TOKEN, limit: 100 });
     if (!out.ok) throw 0;
@@ -1197,6 +1273,11 @@ function nextQuestion() {
   } else {
     showResult();
   }
+}
+
+function finishExam(){
+  try { if (window.Telegram && Telegram.WebApp && Telegram.WebApp.initData) { Telegram.WebApp.close(); return; } } catch(e){}
+  location.href = '/';
 }
 
 function showResult() {
