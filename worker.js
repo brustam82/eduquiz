@@ -40,43 +40,103 @@ async function tg(env, chat, text) {
 // ── тексты для учителя — правьте здесь ──
 const mmss = t => `${Math.floor((t || 0) / 60)}:${String((t || 0) % 60).padStart(2, '0')}`;
 
+// время словами: 4 daqiqa 12 soniya
+function timeWords(sec) {
+  const s = Math.max(0, +sec || 0);
+  const m = Math.floor(s / 60), r = s % 60;
+  if (!m) return `${r} soniya`;
+  return `${m} daqiqa ${r} soniya`;
+}
+
+// строка таблицы: метка слева, значение справа
+const pad = (s, n) => String(s) + ' '.repeat(Math.max(0, n - String(s).length));
+
 // ctx: { title, rank, of }  — может быть пустым
 function fmtResult(r, c = {}) {
   const dot = r.percent >= 80 ? '🟢' : r.percent >= 50 ? '🟡' : '🔴';
-  const L = [`${dot} <b>${esc(r.student)}</b> — ${r.correct}/${r.total} · baho ${r.grade_mark}`];
+  const mark = { 5: "A'lo", 4: 'Yaxshi', 3: 'Qoniqarli', 2: 'Qoniqarsiz' }[r.grade_mark] || r.grade_mark;
+  const wrong = Array.isArray(r.answers)
+    ? r.answers.filter(a => !(a && a.ok)).length
+    : Math.max(0, (r.total || 0) - (r.correct || 0));
+  const n = Math.round((r.percent || 0) / 10);
+  const bar = '█'.repeat(n) + '░'.repeat(10 - n);
 
-  if (c.title) L.push(`📝 ${esc(c.title)} · <code>${esc(r.exam_code)}</code>`);
+  const tbl = [
+    `${pad('Jami savollar', 22)}${r.total}`,
+    `${pad("To'g'ri javoblar", 22)}${r.correct}`,
+    `${pad('Xato javoblar', 22)}${wrong}`,
+    `${pad('Natija', 22)}${r.percent}%`,
+    `${pad('Baho', 22)}${r.grade_mark} (${mark})`,
+    `${pad('Sarflangan vaqt', 22)}${timeWords(r.duration_s)}`
+  ].join('\n');
 
-  // подозрительно быстро = меньше 5 секунд на вопрос → скорее всего тыкал наугад
-  let t = `⏱ ${mmss(r.duration_s)}`;
-  if (r.duration_s && r.total && r.duration_s / r.total < 5) t += ' ⚡ juda tez — tekshiring';
-  L.push(t);
+  const L = [];
+  L.push('🏛 <b>MUALLIMTEST</b>');
+  L.push('<i>Imtihon natijasi to\'g\'risida ma\'lumot</i>');
+  L.push('');
+  L.push(`👤 <b>${esc(r.student)}</b>`);
+  if (c.title) L.push(`📘 ${esc(c.title)}`);
+  if (r.exam_code) L.push(`🔑 Imtihon kodi: <code>${esc(r.exam_code)}</code>`);
+  L.push('');
+  L.push(`<pre>${tbl}</pre>`);
+  L.push(`${dot} <code>${bar}</code> ${r.percent}%`);
 
-  // номера вопросов, где ошибся
+  const extra = [];
+  if (r.duration_s && r.total && r.duration_s / r.total < 5)
+    extra.push('⚠️ Javoblar juda tez berilgan — tekshirish tavsiya etiladi.');
   if (Array.isArray(r.answers)) {
     const bad = r.answers.map((a, i) => (a && a.ok ? null : i + 1)).filter(Boolean);
-    if (bad.length) L.push(`❌ Xato: ${bad.join(', ')}`);
+    if (bad.length) extra.push(`📌 Xato qilingan savollar: ${bad.join(', ')}`);
   }
+  if (c.rank) extra.push(`🏅 Guruhda egallagan o'rni: ${c.rank} / ${c.of}`);
+  if (extra.length) { L.push(''); L.push(`<blockquote>${extra.join('\n')}</blockquote>`); }
 
-  if (c.rank) L.push(`🏅 O'rin: ${c.rank} / ${c.of}`);
   return L.join('\n');
 }
 
 function fmtSummary(ex, rows) {
   const avg = Math.round(rows.reduce((s, r) => s + (r.percent || 0), 0) / rows.length);
+  const avgTime = Math.round(rows.reduce((s, r) => s + (r.duration_s || 0), 0) / rows.length);
   const medal = ['🥇', '🥈', '🥉'];
-  const top = rows.slice(0, 3)
-    .map((r, i) => `${medal[i]} ${esc(r.student)} — ${r.correct}/${r.total} (${r.percent}%)`)
-    .join('\n');
-  let t = `📊 <b>${esc(ex.title)}</b> · <code>${esc(ex.code)}</code>\nKunlik hisobot\n\n`
-    + `Qatnashdi: <b>${rows.length}</b> o'quvchi\n`
-    + `O'rtacha natija: <b>${avg}%</b>\n\n`
-    + `<b>Eng yaxshi 3 ta:</b>\n${top}`;
+  const g = { 5: 0, 4: 0, 3: 0, 2: 0 };
+  rows.forEach(r => { g[r.grade_mark] = (g[r.grade_mark] || 0) + 1; });
+  const tot = rows.length;
+  const barOf = v => { const n = tot ? Math.round(v / tot * 10) : 0; return '█'.repeat(n) + '░'.repeat(10 - n); };
+
+  const tbl = [
+    `${pad('Qatnashganlar', 22)}${tot} o'quvchi`,
+    `${pad("O'rtacha natija", 22)}${avg}%`,
+    `${pad("O'rtacha vaqt", 22)}${timeWords(avgTime)}`
+  ].join('\n');
+
+  const grades = [
+    `5  A'lo        ${barOf(g[5])}  ${g[5]}`,
+    `4  Yaxshi      ${barOf(g[4])}  ${g[4]}`,
+    `3  Qoniqarli   ${barOf(g[3])}  ${g[3]}`,
+    `2  Qoniqarsiz  ${barOf(g[2])}  ${g[2]}`
+  ].join('\n');
+
+  const L = [];
+  L.push('🏛 <b>MUALLIMTEST</b>');
+  L.push('<i>Kunlik umumiy hisobot</i>');
+  L.push('');
+  L.push(`📘 <b>${esc(ex.title)}</b>`);
+  L.push(`🔑 Imtihon kodi: <code>${esc(ex.code)}</code>`);
+  L.push('');
+  L.push(`<pre>${tbl}</pre>`);
+  L.push('<b>Baholar taqsimoti</b>');
+  L.push(`<pre>${grades}</pre>`);
+  L.push('<b>Eng yuqori natijalar</b>');
+  rows.slice(0, 3).forEach((r, i) => {
+    L.push(`${medal[i]} ${esc(r.student)} — ${r.correct}/${r.total} (${r.percent}%)`);
+  });
+
   if (ex.active_till) {
     const d = new Date(ex.active_till).toLocaleString('ru-RU', { timeZone: 'Asia/Tashkent' });
-    t += `\n\n⏳ Imtihon tugashi: ${d}`;
+    L.push('');
+    L.push(`<blockquote>⏳ Imtihon yakunlanadi: ${d}</blockquote>`);
   }
-  return t;
+  return L.join('\n');
 }
 
 const genCode = () => Array.from(
@@ -169,6 +229,18 @@ async function postResult(req, env, ctx) {
     duration_s: b.duration_s != null ? +b.duration_s : null,
     answers: b.answers ?? null
   };
+  // защита: экзамен просрочен или ученик уже сдавал
+  if (row.exam_code) {
+    try {
+      const ex0 = await sb(env, `exams?code=eq.${encodeURIComponent(row.exam_code)}&select=active_till&limit=1`);
+      if (ex0 && ex0[0] && ex0[0].active_till && new Date(ex0[0].active_till) < new Date())
+        return J({ error: 'expired' }, 410);
+      const dup = await sb(env,
+        `results?exam_code=eq.${encodeURIComponent(row.exam_code)}&student=eq.${encodeURIComponent(row.student)}&select=id&limit=1`);
+      if (dup && dup.length) return J({ error: 'already_taken' }, 409);
+    } catch (e) { /* проверка не удалась — пропускаем */ }
+  }
+
   const saved = await sb(env, 'results', {
     method: 'POST',
     headers: { Prefer: 'return=representation' },
@@ -776,6 +848,14 @@ async function deletePack(req, env) {
   return J({ ok: true });
 }
 
+// ── проверка: сдавал ли уже этот ученик ──
+async function checkAttempt(env, code, student) {
+  if (!code || !student) return J({ ok: true, taken: false });
+  const rows = await sb(env,
+    `results?exam_code=eq.${encodeURIComponent(code)}&student=eq.${encodeURIComponent(student)}&select=id&limit=1`);
+  return J({ ok: true, taken: !!(rows && rows.length) });
+}
+
 // ── ежедневная сводка (будильник) ──
 async function dailySummary(env) {
   const exams = await sb(env,
@@ -787,7 +867,7 @@ async function dailySummary(env) {
     if (!chat) continue;
     const rows = await sb(env,
       `results?exam_code=eq.${encodeURIComponent(ex.code)}`
-      + '&select=student,correct,total,percent&order=percent.desc&limit=500');
+      + '&select=student,correct,total,percent,grade_mark,duration_s&order=percent.desc&limit=500');
     if (!rows.length) continue;                                      // никто не проходил
     await tg(env, chat, fmtSummary(ex, rows));
   }
@@ -804,6 +884,8 @@ export default {
       if (m === 'POST' && p === '/api/me') return await me(req, env);
       if (m === 'POST' && p === '/api/exam') return await createExam(req, env);
       if (m === 'GET' && p === '/api/exam') return await getExam(env, url.searchParams.get('code'));
+      if (m === 'GET' && p === '/api/check-attempt')
+        return await checkAttempt(env, url.searchParams.get('code'), url.searchParams.get('student'));
       if (m === 'POST' && p === '/api/stats') return await stats(req, env);
       if (m === 'POST' && p === '/api/exam-summary') return await examSummary(req, env);
       if (m === 'POST' && p === '/api/my-exams') return await myExams(req, env);
