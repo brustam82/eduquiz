@@ -1063,7 +1063,7 @@ function renderCrops(root){
       var x1=b[1]/1000*W, y1=b[0]/1000*H, x2=b[3]/1000*W, y2=b[2]/1000*H;
       var cw=Math.max(10,x2-x1), ch=Math.max(10,y2-y1);
       el.innerHTML='<div style="position:relative;width:100%;padding-bottom:'+(ch/cw*100)+'%;overflow:hidden">'
-        +'<img src="'+el.dataset.src+'" style="position:absolute;width:'+(W/cw*100)+'%;height:auto;left:'+(-x1/cw*100)+'%;top:'+(-y1/cw*100)+'%">'
+        +'<img src="'+el.dataset.src+'" style="position:absolute;width:'+(W/cw*100)+'%;height:auto;left:'+(-x1/cw*100)+'%;top:'+(-y1/ch*100)+'%">'
         +'</div>';
     };
     img.onerror=function(){el.remove()};
