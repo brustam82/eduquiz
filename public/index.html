@@ -721,16 +721,14 @@
         <div class="grade-badge" id="grade-badge">—</div>
         <p style="color:var(--muted);margin-bottom:24px;" id="result-msg">—</p>
         <div class="divider"></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
-          <div style="background:var(--cream);border-radius:10px;padding:14px;">
-            <div style="font-weight:800;font-size:1.4rem;color:var(--lapis);" id="res-percent">0%</div>
-            <div style="font-size:0.8rem;color:var(--muted);">To'g'ri javoblar</div>
-          </div>
-          <div style="background:var(--cream);border-radius:10px;padding:14px;">
-            <div style="font-weight:800;font-size:1.4rem;color:var(--lapis);" id="res-time">0:00</div>
-            <div style="font-size:0.8rem;color:var(--muted);">Sarflangan vaqt</div>
-          </div>
+        <div style="text-align:left;background:var(--cream);border-radius:10px;padding:14px 16px;margin-bottom:14px;font-size:0.92rem;line-height:1.9;">
+          <div><b>Jami savollar:</b> <span id="rs-total">0</span> ta</div>
+          <div><b>To'g'ri javoblar:</b> <span id="rs-ok">0</span> ta</div>
+          <div><b>Xato javoblar:</b> <span id="rs-bad">0</span> ta</div>
+          <div><b>Umumiy natija:</b> <span id="res-percent">0%</span></div>
+          <div><b>Sarflangan vaqt:</b> <span id="res-time">0:00</span></div>
         </div>
+        <div style="text-align:left;border-left:4px solid var(--gold);background:#FFFDF7;border-radius:8px;padding:12px 14px;font-size:0.9rem;color:var(--ink);line-height:1.6;" id="rs-verdict"></div>
       </div>
     </div>
   </div>
@@ -1222,6 +1220,14 @@ function showResult() {
   document.getElementById('result-msg').textContent = msgs[grade];
   document.getElementById('res-percent').textContent = pct + '%';
   document.getElementById('res-time').textContent = `${mins}:${String(secs).padStart(2,'0')}`;
+  document.getElementById('rs-total').textContent = quizData.length;
+  document.getElementById('rs-ok').textContent = score;
+  document.getElementById('rs-bad').textContent = quizData.length - score;
+  document.getElementById('rs-verdict').textContent =
+    pct >= 90 ? "Mavzu to'liq o'zlashtirilgan. Ajoyib natija — shu ruhda davom eting!"
+    : pct >= 70 ? "Mavzu yaxshi o'zlashtirilgan. Ayrim savollarda kichik xatoliklar bor."
+    : pct >= 50 ? "Mavzu qisman o'zlashtirilgan. Xato qilingan mavzularni qayta ko'rib chiqing."
+    : "Mavzu yetarli o'zlashtirilmagan. Materialni takrorlab, yana urinib ko'ring.";
 
   const badge = document.getElementById('grade-badge');
   badge.textContent = `Baho: ${grade}`;
