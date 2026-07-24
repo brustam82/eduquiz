@@ -3,114 +3,225 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Savollarni tekshirish</title>
+<title>MuallimTest — Savollarni tekshirish</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;background:#FFF9F0;color:#1A2E2A;padding:16px}
-.wrap{max-width:480px;margin:0 auto}
-h1{font-size:1.25rem;color:#1B7A6B;margin-bottom:12px}
-select{width:100%;padding:11px 13px;border:1.5px solid #E6DFCF;border-radius:10px;font-size:15px;background:#fff;margin-bottom:14px;font-family:inherit}
-.q{background:#fff;border:1px solid #EEE6D5;border-radius:14px;padding:15px;margin-bottom:12px}
-.q.warn{border-color:#F0997B}
-.tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:7px;background:#FFF4E6;color:#B87A12}
-.tag.w{background:#FAECE7;color:#993C1D}
-.qt{font-size:15px;font-weight:700;margin:8px 0 10px;width:100%;border:1px solid #EEE6D5;border-radius:8px;padding:10px;background:#FFFDF8;font-family:inherit;resize:vertical;line-height:1.5;min-height:110px}
+:root{
+  --teal:#2E8B8B;--teal-d:#1F6B6B;--teal-bg:#E8F4F4;
+  --gold:#C2913F;--gold-bg:#FAF3E4;
+  --ink:#3D3428;--ink-2:#1F4E6B;--muted:#8A7B60;
+  --bg:#FBF6EC;--card:#fff;--bd:#E3D8C2;
+  --danger:#B3453A;--danger-bg:#FBEDEB;
+}
+body{font-family:'Inter',-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--ink)}
+.girih{height:26px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.wrap{max-width:560px;margin:0 auto;padding:18px 16px 40px}
+.brand{font-size:1.35rem;font-weight:700;color:var(--ink-2);letter-spacing:-.3px}
+.brand span{color:var(--gold)}
+.nav{display:flex;gap:7px;margin:12px 0 18px;flex-wrap:wrap}
+.nav a{font-size:12.5px;text-decoration:none;padding:7px 13px;border-radius:9px;background:var(--card);border:1px solid var(--bd);color:var(--ink-2)}
+.nav a.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+h1{font-size:1.15rem;color:var(--ink-2);margin-bottom:12px}
+select{width:100%;padding:11px 13px;border:1px solid var(--bd);border-radius:10px;font-size:14.5px;background:var(--card);margin-bottom:16px;font-family:inherit;color:var(--ink)}
+.q{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:15px;margin-bottom:12px}
+.q.warn{border-color:#E8B9A8}
+.tag{font-size:11px;font-weight:600;padding:3px 9px;border-radius:7px;background:var(--gold-bg);color:#8A6420}
+.tag.w{background:#FAEDE7;color:#9A4A22}
+.qt{font-size:14.5px;font-weight:600;margin:10px 0;width:100%;border:1px solid var(--bd);border-radius:9px;padding:10px;background:#FFFDF8;font-family:inherit;resize:vertical;line-height:1.55;min-height:100px;color:var(--ink)}
 .opt{display:flex;align-items:center;gap:9px;margin-bottom:7px}
-.opt input[type=radio]{width:18px;height:18px;accent-color:#1B7A6B}
-.opt input[type=text]{flex:1;padding:8px 10px;border:1.5px solid #E6DFCF;border-radius:9px;font-size:14px;font-family:inherit}
-.opt.ok input[type=text]{border-color:#2EA88F;background:#E8F3F0}
-.aitag{flex-shrink:0;font-size:11px;font-weight:700;color:#12564C;background:#CDEDE4;padding:3px 8px;border-radius:7px;white-space:nowrap}
-.row{display:flex;gap:8px;margin-top:10px}
-.b{flex:1;border:0;border-radius:10px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
-.b.ok{background:#1B7A6B;color:#fff}.b.del{background:#fff;border:1.5px solid #F0C0BB;color:#A32D2D;flex:0 0 46px}
-.empty{color:#7C8B86;text-align:center;padding:30px;font-size:14px}
+.opt input[type=radio]{width:17px;height:17px;accent-color:var(--teal);flex-shrink:0}
+.opt input[type=text]{flex:1;padding:8px 10px;border:1px solid var(--bd);border-radius:9px;font-size:13.5px;font-family:inherit;color:var(--ink);background:#fff}
+.opt.ok input[type=text]{border-color:var(--teal);background:var(--teal-bg)}
+.aitag{flex-shrink:0;font-size:10.5px;font-weight:600;color:var(--teal-d);background:var(--teal-bg);padding:3px 7px;border-radius:6px;white-space:nowrap}
+.row{display:flex;gap:8px;margin-top:11px}
+.b{border:0;border-radius:9px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.b.ok{flex:1;background:var(--teal);color:#fff}
+.b.img{background:#fff;border:1px solid var(--bd);color:var(--ink-2)}
+.b.del{background:#fff;border:1px solid #EDC9C4;color:var(--danger)}
 .done{opacity:.5}
+.empty{color:var(--muted);text-align:center;padding:26px;font-size:14px}
+.prev{margin:10px 0;border:1px solid var(--bd);border-radius:10px;overflow:hidden;background:#fff}
+.ed{position:fixed;inset:0;background:rgba(30,35,40,.6);display:flex;align-items:center;justify-content:center;padding:14px;z-index:50}
+.edin{background:var(--bg);border-radius:14px;padding:14px;max-width:560px;width:100%;max-height:92vh;overflow:auto}
+.stage{position:relative;width:100%;border:1px solid var(--bd);border-radius:8px;overflow:hidden;background:#fff;user-select:none;touch-action:none}
+.stage img{width:100%;display:block;pointer-events:none}
+.shade{position:absolute;inset:0;background:rgba(25,35,40,.45);pointer-events:none}
+.box{position:absolute;border:2px solid var(--teal);cursor:move}
+.hd{position:absolute;width:14px;height:14px;background:var(--teal);border-radius:3px}
 </style>
 </head>
 <body>
+<div class="girih">
+<svg width="440" height="16" viewBox="0 0 440 16" aria-hidden="true"><g stroke="#C2913F" stroke-width=".8" fill="none"><path d="M0 8 L8 0 L16 8 L8 16 Z M16 8 L24 0 L32 8 L24 16 Z M32 8 L40 0 L48 8 L40 16 Z M48 8 L56 0 L64 8 L56 16 Z M64 8 L72 0 L80 8 L72 16 Z M80 8 L88 0 L96 8 L88 16 Z M96 8 L104 0 L112 8 L104 16 Z M112 8 L120 0 L128 8 L120 16 Z M128 8 L136 0 L144 8 L136 16 Z M144 8 L152 0 L160 8 L152 16 Z M160 8 L168 0 L176 8 L168 16 Z M176 8 L184 0 L192 8 L184 16 Z M192 8 L200 0 L208 8 L200 16 Z M208 8 L216 0 L224 8 L216 16 Z M224 8 L232 0 L240 8 L232 16 Z M240 8 L248 0 L256 8 L248 16 Z M256 8 L264 0 L272 8 L264 16 Z M272 8 L280 0 L288 8 L280 16 Z M288 8 L296 0 L304 8 L296 16 Z M304 8 L312 0 L320 8 L312 16 Z M320 8 L328 0 L336 8 L328 16 Z M336 8 L344 0 L352 8 L344 16 Z M352 8 L360 0 L368 8 L360 16 Z M368 8 L376 0 L384 8 L376 16 Z M384 8 L392 0 L400 8 L392 16 Z M400 8 L408 0 L416 8 L408 16 Z M416 8 L424 0 L432 8 L424 16 Z"/></g></svg>
+</div>
+
 <div class="wrap">
-  <h1>Savollarni tekshirish</h1>
-  <div style="display:flex;gap:8px;margin-bottom:12px;font-size:13px;flex-wrap:wrap">
-    <a href="/" style="color:#1B7A6B;text-decoration:none;background:#E8F3F0;padding:6px 12px;border-radius:8px">🏠 Bosh sahifa</a>
-    <a href="/upload" style="color:#1B7A6B;text-decoration:none;background:#E8F3F0;padding:6px 12px;border-radius:8px">📤 Yuklash</a>
-    <a href="/review" style="color:#fff;text-decoration:none;background:#1B7A6B;padding:6px 12px;border-radius:8px">📋 Tekshirish</a>
+  <div class="brand">Muallim<span>Test</span></div>
+  <div class="nav">
+    <a href="/">Bosh sahifa</a>
+    <a href="/upload">Yuklash</a>
+    <a href="/review" class="on">Tekshirish</a>
   </div>
+  <h1>Savollarni tekshirish</h1>
   <select id="packs" onchange="loadDrafts()"><option value="">Paketni tanlang…</option></select>
   <div id="list"></div>
 </div>
+
 <script>
 var tg=window.Telegram&&window.Telegram.WebApp;if(tg&&tg.initData){tg.ready();tg.expand()}
 var TOKEN='';try{TOKEN=localStorage.getItem('eq_token')||''}catch(e){}
 async function api(p,b){var r=await fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({token:TOKEN},b))});return r.json()}
+function esc(s){return String(s==null?'':s).replace(/"/g,'&quot;').replace(/</g,'&lt;')}
 
 async function loadPacks(){
   var j=await api('/api/packs',{});
   if(!j.ok)return;
   var s=document.getElementById('packs');
-  j.packs.forEach(function(p){var o=document.createElement('option');o.value=p.id;o.textContent=p.title+' ('+p.approved+' tasdiqlangan)';s.appendChild(o)});
+  j.packs.forEach(function(p){var o=document.createElement('option');o.value=p.id;
+    o.textContent=p.title+' — '+p.draft+' qoralama, '+p.approved+' tasdiqlangan';s.appendChild(o)});
 }
+
 async function loadDrafts(){
-  var pid=document.getElementById('packs').value;var L=document.getElementById('list');L.innerHTML='';
+  var pid=document.getElementById('packs').value,L=document.getElementById('list');L.innerHTML='';
   if(!pid)return;
   var j=await api('/api/drafts',{pack_id:pid});
-  if(!j.ok||!j.questions.length){L.innerHTML='<div class="empty">Bu paketda tekshiriladigan savol yo\'q</div>';return}
+  if(!j.ok||!j.questions.length){L.innerHTML='<div class="empty">Bu paketda savol yo\'q</div>';return}
   j.questions.forEach(function(q){L.appendChild(card(q))});
   renderCrops(L);
 }
+
 function card(q){
   var d=document.createElement('div');d.className='q'+(q.ai_solved?' warn':'');
   var opts=q.options_uz||[];
-  var html='<div style="display:flex;justify-content:space-between;align-items:center">';
-  html+='<span class="tag'+(q.ai_solved?' w':'')+'">'+(q.status==='approved'?'✓ tasdiqlangan':(q.ai_solved?'⚠ AI yechdi':'AI'))+'</span></div>';
-  html+='<textarea class="qt" rows="4">'+esc(q.question_uz||'')+'</textarea>';
-  if(q.image_url&&q.image_box){html+=cropBox(q.image_url,q.image_box)}
-  else if(q.svg){html+='<div style="text-align:center;margin:8px 0;background:#fff;border:1px solid #EEE6D5;border-radius:10px;padding:8px">'+q.svg+'</div>'}
+  var h='<span class="tag'+(q.ai_solved?' w':'')+'">'+(q.status==='approved'?'✓ tasdiqlangan':(q.ai_solved?'AI yechdi — tekshiring':'AI'))+'</span>';
+  h+='<textarea class="qt" rows="4">'+esc(q.question_uz||'')+'</textarea>';
+  h+='<div class="imgslot"></div>';
   opts.forEach(function(o,i){
-    html+='<div class="opt'+(q.correct===i+1?' ok':'')+'"><input type="radio" name="c_'+q.id+'" '+(q.correct===i+1?'checked':'')+' value="'+(i+1)+'"><input type="text" value="'+esc(o)+'">'+(q.correct===i+1?'<span class="aitag">✓ AI javobi</span>':'')+'</div>';
+    h+='<div class="opt'+(q.correct===i+1?' ok':'')+'"><input type="radio" name="c_'+q.id+'" '+(q.correct===i+1?'checked':'')+' value="'+(i+1)+'"><input type="text" value="'+esc(o)+'">'+(q.correct===i+1?'<span class="aitag">AI javobi</span>':'')+'</div>';
   });
-  html+='<div class="row"><button class="b ok">✓ Tasdiqlash</button><button class="b del">🗑</button></div>';
-  d.innerHTML=html;
-  var radios=d.querySelectorAll('input[type=radio]');
-  radios.forEach(function(r){r.onchange=function(){d.querySelectorAll('.opt').forEach(function(op,i){op.classList.toggle('ok',r.checked&&+r.value===i+1)});d.querySelectorAll('.opt').forEach(function(op){var rd=op.querySelector('input[type=radio]');op.classList.toggle('ok',rd.checked)})}});
-  d.querySelector('.b.ok').onclick=function(){approve(d,q.id)};
+  h+='<div class="row"><button class="b ok">✓ Tasdiqlash</button>';
+  if(q.image_url)h+='<button class="b img">🖼 Rasmni belgilash</button>';
+  h+='<button class="b del">🗑</button></div>';
+  d.innerHTML=h;
+
+  var slot=d.querySelector('.imgslot');
+  if(q.image_url&&q.image_box)slot.innerHTML=cropHtml(q.image_url,q.image_box);
+
+  d.querySelectorAll('input[type=radio]').forEach(function(r){
+    r.onchange=function(){d.querySelectorAll('.opt').forEach(function(op){
+      op.classList.toggle('ok',op.querySelector('input[type=radio]').checked)})}});
+
+  d.querySelector('.b.ok').onclick=function(){approve(d,q)};
   d.querySelector('.b.del').onclick=function(){del(d,q.id)};
+  var ib=d.querySelector('.b.img');
+  if(ib)ib.onclick=function(){openEditor(q,d)};
   return d;
 }
-async function approve(d,id){
-  var q=d.querySelector('.qt').value.trim();
-  var opts=[].map.call(d.querySelectorAll('.opt input[type=text]'),function(i){return i.value.trim()});
-  var correct=+d.querySelector('input[type=radio]:checked').value;
-  var j=await api('/api/question',{id:id,action:'approve',question:q,options:opts,correct:correct});
-  if(j.ok){d.classList.add('done');d.querySelector('.b.ok').textContent='✓ Saqlandi'}
-}
-async function del(d,id){
-  var j=await api('/api/question',{id:id,action:'delete'});
-  if(j.ok)d.remove();
-}
-function cropBox(url,box){
-  var id='c'+Math.random().toString(36).slice(2,8);
-  return '<div id="'+id+'" data-src="'+url+'" data-box="'+box+'" class="crop" style="margin:10px 0;border:1px solid #E3D8C2;border-radius:10px;overflow:hidden;background:#fff;min-height:60px"></div>';
+
+function cropHtml(url,box){
+  return '<div class="crop prev" data-src="'+url+'" data-box="'+box+'" style="min-height:50px"></div>';
 }
 function renderCrops(root){
   (root||document).querySelectorAll('.crop:not([data-done])').forEach(function(el){
     el.setAttribute('data-done','1');
     var b=String(el.dataset.box).split(',').map(Number);
-    if(b.length!==4)return;
+    if(b.length!==4){el.remove();return}
     var img=new Image();
     img.onload=function(){
       var W=img.naturalWidth,H=img.naturalHeight;
-      var x1=b[1]/1000*W, y1=b[0]/1000*H, x2=b[3]/1000*W, y2=b[2]/1000*H;
-      var cw=Math.max(10,x2-x1), ch=Math.max(10,y2-y1);
+      var x1=b[1]/1000*W,y1=b[0]/1000*H,x2=b[3]/1000*W,y2=b[2]/1000*H;
+      var cw=Math.max(10,x2-x1),ch=Math.max(10,y2-y1);
+      el.style.minHeight='0';
       el.innerHTML='<div style="position:relative;width:100%;padding-bottom:'+(ch/cw*100)+'%;overflow:hidden">'
-        +'<img src="'+el.dataset.src+'" style="position:absolute;width:'+(W/cw*100)+'%;height:auto;left:'+(-x1/cw*100)+'%;top:'+(-y1/cw*100)+'%">'
+        +'<img src="'+el.dataset.src+'" style="position:absolute;width:'+(W/cw*100)+'%;left:'+(-x1/cw*100)+'%;top:'+(-y1/ch*100)+'%">'
         +'</div>';
     };
     img.onerror=function(){el.remove()};
     img.src=el.dataset.src;
   });
 }
-function esc(s){return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;')}
+
+/* ---- редактор рамки ---- */
+function openEditor(q,card){
+  var box=(q.image_box||'200,100,600,900').split(',').map(Number);
+  var ov=document.createElement('div');ov.className='ed';
+  ov.innerHTML='<div class="edin">'
+    +'<div style="font-size:13px;font-weight:600;color:var(--ink-2);margin-bottom:8px">Rasm joyini belgilang</div>'
+    +'<div class="stage" id="stg"><img src="'+q.image_url+'"><div class="shade" id="shd"></div>'
+    +'<div class="box" id="bx"><i class="hd" data-h="nw" style="left:-7px;top:-7px"></i><i class="hd" data-h="ne" style="right:-7px;top:-7px"></i>'
+    +'<i class="hd" data-h="sw" style="left:-7px;bottom:-7px"></i><i class="hd" data-h="se" style="right:-7px;bottom:-7px"></i></div></div>'
+    +'<div style="font-size:11.5px;color:var(--muted);margin:10px 0 4px">O\'quvchi shunday ko\'radi:</div>'
+    +'<div id="pv" class="prev"></div>'
+    +'<div style="display:flex;gap:8px;margin-top:12px">'
+    +'<button class="b ok" id="sv" style="flex:1">Saqlash</button>'
+    +'<button class="b del" id="nr">Rasmsiz</button>'
+    +'<button class="b img" id="cn">Bekor</button></div></div>';
+  document.body.appendChild(ov);
+
+  var stg=ov.querySelector('#stg'),bx=ov.querySelector('#bx'),shd=ov.querySelector('#shd'),pv=ov.querySelector('#pv');
+  var img=stg.querySelector('img');
+  bx.style.left=(box[1]/10)+'%';bx.style.top=(box[0]/10)+'%';
+  bx.style.width=Math.max(5,(box[3]-box[1])/10)+'%';bx.style.height=Math.max(5,(box[2]-box[0])/10)+'%';
+
+  function rel(){var s=stg.getBoundingClientRect(),b=bx.getBoundingClientRect();
+    return {x:(b.left-s.left)/s.width,y:(b.top-s.top)/s.height,w:b.width/s.width,h:b.height/s.height};}
+  function draw(){var r=rel();
+    shd.style.clipPath='polygon(0 0,100% 0,100% 100%,0 100%,0 0,'+(r.x*100)+'% '+(r.y*100)+'%,'+(r.x*100)+'% '+((r.y+r.h)*100)+'%,'+((r.x+r.w)*100)+'% '+((r.y+r.h)*100)+'%,'+((r.x+r.w)*100)+'% '+(r.y*100)+'%,'+(r.x*100)+'% '+(r.y*100)+'%)';
+    var W=img.naturalWidth||1000,H=img.naturalHeight||1000;
+    var x1=r.x*W,y1=r.y*H,cw=Math.max(10,r.w*W),ch=Math.max(10,r.h*H);
+    pv.innerHTML='<div style="position:relative;width:100%;padding-bottom:'+(ch/cw*100)+'%;overflow:hidden">'
+      +'<img src="'+q.image_url+'" style="position:absolute;width:'+(W/cw*100)+'%;left:'+(-x1/cw*100)+'%;top:'+(-y1/ch*100)+'%">'
+      +'</div>';
+  }
+  var drag=null;
+  function pt(e){var s=stg.getBoundingClientRect(),c=e.touches?e.touches[0]:e;
+    return {x:(c.clientX-s.left)/s.width,y:(c.clientY-s.top)/s.height};}
+  function down(e){var p=pt(e);drag={h:e.target.dataset?e.target.dataset.h:null,sx:p.x,sy:p.y,r:rel()};e.preventDefault()}
+  function move(e){if(!drag)return;var p=pt(e),dx=p.x-drag.sx,dy=p.y-drag.sy,r=drag.r;
+    var x=r.x,y=r.y,w=r.w,h=r.h;
+    if(!drag.h){x=r.x+dx;y=r.y+dy}
+    else{if(drag.h.indexOf('n')>=0){y=r.y+dy;h=r.h-dy}
+      if(drag.h.indexOf('s')>=0)h=r.h+dy;
+      if(drag.h.indexOf('w')>=0){x=r.x+dx;w=r.w-dx}
+      if(drag.h.indexOf('e')>=0)w=r.w+dx}
+    w=Math.max(.04,w);h=Math.max(.03,h);x=Math.max(0,Math.min(1-w,x));y=Math.max(0,Math.min(1-h,y));
+    bx.style.left=(x*100)+'%';bx.style.top=(y*100)+'%';bx.style.width=(w*100)+'%';bx.style.height=(h*100)+'%';
+    draw();e.preventDefault()}
+  function up(){drag=null}
+  bx.addEventListener('mousedown',down);bx.addEventListener('touchstart',down,{passive:false});
+  window.addEventListener('mousemove',move);window.addEventListener('touchmove',move,{passive:false});
+  window.addEventListener('mouseup',up);window.addEventListener('touchend',up);
+  if(img.complete)setTimeout(draw,40);else img.onload=function(){draw()};
+
+  ov.querySelector('#cn').onclick=function(){ov.remove()};
+  ov.querySelector('#nr').onclick=async function(){
+    await api('/api/question',{id:q.id,image_box:''});
+    q.image_box=null;card.querySelector('.imgslot').innerHTML='';ov.remove();
+  };
+  ov.querySelector('#sv').onclick=async function(){
+    var r=rel();
+    var nb=[Math.round(r.y*1000),Math.round(r.x*1000),Math.round((r.y+r.h)*1000),Math.round((r.x+r.w)*1000)].join(',');
+    await api('/api/question',{id:q.id,image_box:nb});
+    q.image_box=nb;
+    var slot=card.querySelector('.imgslot');
+    slot.innerHTML=cropHtml(q.image_url,nb);renderCrops(slot);
+    ov.remove();
+  };
+}
+
+async function approve(d,q){
+  var txt=d.querySelector('.qt').value.trim();
+  var opts=[].map.call(d.querySelectorAll('.opt input[type=text]'),function(i){return i.value.trim()});
+  var correct=+d.querySelector('input[type=radio]:checked').value;
+  var j=await api('/api/question',{id:q.id,action:'approve',question:txt,options:opts,correct:correct});
+  if(j.ok){d.classList.add('done');d.querySelector('.b.ok').textContent='✓ Saqlandi'}
+}
+async function del(d,id){
+  var j=await api('/api/question',{id:id,action:'delete'});
+  if(j.ok)d.remove();
+}
 loadPacks();
 </script>
 </body>
