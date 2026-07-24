@@ -333,10 +333,10 @@ function ingestPrompt(lang) {
     '4. У каждого вопроса ровно 4 варианта. Ровно один правильный.',
     '5. Дистракторы — правдоподобные, похожей длины, без "все верны" и абсурда.',
     '6. К каждому вопросу добавь короткое пояснение (1-2 предложения), почему ответ верный.',
-    '7. SVG рисуй ТОЛЬКО если для решения задачи НЕОБХОДИМ рисунок: геометрическая фигура, график, схема, диаграмма, чертёж. Тогда воспроизведи его точно как SVG в поле "svg" (самодостаточный <svg ...>...</svg>, ~300x200, без внешних ссылок). ЗАПРЕЩЕНО: рисовать декоративные картинки (портреты, животные, фон), выдумывать изображения, которых нет в задании. Если рисунок не нужен для решения или его нет — поле "svg" НЕ добавляй.',
+    '7. Если для решения задачи НУЖЕН рисунок из материала (фото, схема, чертёж, фигура, график) — укажи его положение на странице в поле "box": [ymin, xmin, ymax, xmax] в координатах 0-1000 относительно всего изображения. Захвати рисунок целиком с небольшим запасом. Также укажи "page": номер файла (1 = первый файл, 2 = второй). Если рисунок не нужен — поля "box" и "page" НЕ добавляй. НЕ описывай картинку словами вместо box — просто дай координаты.',
     '8. Обработай ВЕСЬ материал целиком — извлеки ВСЕ вопросы, которые есть в файле, не останавливайся на первом.',
     'Верни ТОЛЬКО валидный JSON без markdown, без пояснений вокруг. Формат:',
-    '{"questions":[{"q":"текст вопроса","options":["A","B","C","D"],"correct":1,"explanation":"...","ai_solved":false,"svg":"<svg...>...</svg>"}]}',
+    '{"questions":[{"q":"текст вопроса","options":["A","B","C","D"],"correct":1,"explanation":"...","ai_solved":false,"page":1,"box":[120,340,480,760]}]}',
     '"correct" — номер правильного варианта, СЧИТАЯ С ЕДИНИЦЫ (1 = первый).',
     'Если материал не годится для теста — верни {"questions":[]}.'
   ].join('\n');
@@ -452,6 +452,23 @@ async function readUpload(req) {
   return { files: parts, lang, teacherToken, packTitle, packId, name: parts[0].name };
 }
 
+// загрузка файла в Supabase Storage (bucket materials), возвращает публичную ссылку
+async function uploadToStorage(env, teacherId, buf, mime, idx) {
+  const ext = mime.includes('png') ? 'png' : mime.includes('pdf') ? 'pdf' : 'jpg';
+  const path = `t${teacherId}/${Date.now().toString(36)}_${idx}.${ext}`;
+  const r = await fetch(`${env.SUPABASE_URL}/storage/v1/object/materials/${path}`, {
+    method: 'POST',
+    headers: {
+      apikey: env.SUPABASE_SERVICE_KEY,
+      Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+      'Content-Type': mime
+    },
+    body: buf
+  });
+  if (!r.ok) return null;
+  return `${env.SUPABASE_URL}/storage/v1/object/public/materials/${path}`;
+}
+
 const B64CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 function toB64(bytes) {
   let out = '';
@@ -487,6 +504,13 @@ async function ingest(req, env) {
 
   const inlineFiles = up.files.filter(f => f.mime.startsWith('image/') || f.mime === 'application/pdf').slice(0, 2);
   const textFiles   = up.files.filter(f => isTextLike(f.mime));
+
+  // сохраняем исходники в Storage — чтобы прикреплять к вопросам реальные картинки
+  const pageUrls = [];
+  for (let i = 0; i < inlineFiles.length; i++) {
+    const u = await uploadToStorage(env, teacherId, inlineFiles[i].buf, inlineFiles[i].mime, i);
+    pageUrls.push(u);
+  }
 
   // картинки/PDF — вместе одним вызовом (ИИ видит все страницы сразу)
   if (inlineFiles.length) {
@@ -550,8 +574,15 @@ async function ingest(req, env) {
     if (!(correct >= 1 && correct <= opts.length)) correct = 1;
     const qtext = String(q.q).slice(0, 2000);
     const expl = q.explanation ? String(q.explanation).slice(0, 1000) : null;
-    const svg = (q.svg && String(q.svg).trim().startsWith('<svg')) ? String(q.svg).slice(0, 20000) : null;
-    // учитель выбрал один язык — кладём текст в обе колонки-пары одинаково
+    // реальная картинка из исходника: ссылка на страницу + область
+    let imgUrl = null, imgBox = null;
+    if (Array.isArray(q.box) && q.box.length === 4) {
+      const pageIdx = Math.max(0, (parseInt(q.page, 10) || 1) - 1);
+      if (pageUrls[pageIdx]) {
+        imgUrl = pageUrls[pageIdx];
+        imgBox = q.box.map(function (v) { return Math.max(0, Math.min(1000, +v || 0)); }).join(',');
+      }
+    }
     rows.push({
       id: `up_${teacherId}_${stamp}_${i}`,
       format: 'single_choice',
@@ -568,7 +599,8 @@ async function ingest(req, env) {
       teacher_id: teacherId,
       ai_solved: !!q.ai_solved,
       pack_id: packId,
-      svg: svg
+      image_url: imgUrl,
+      image_box: imgBox
     });
   });
 
@@ -609,7 +641,7 @@ async function packQuestions(env, packId, n) {
   if (!packId) return J({ error: 'pack' }, 400);
   const rows = await sb(env,
     `questions?pack_id=eq.${encodeURIComponent(packId)}&status=eq.approved`
-    + '&select=question_ru,question_uz,options_ru,options_uz,correct,explanation_ru,explanation_uz,svg&limit=200');
+    + '&select=question_ru,question_uz,options_ru,options_uz,correct,explanation_ru,explanation_uz,svg,image_url,image_box&limit=200');
   if (!rows || !rows.length) return J({ ok: true, questions: [] });
   // перемешиваем и берём N
   for (let i = rows.length - 1; i > 0; i--) {
@@ -629,7 +661,7 @@ async function draftQuestions(req, env) {
   if (!packId) return J({ error: 'pack' }, 400);
   const rows = await sb(env,
     `questions?pack_id=eq.${packId}&teacher_id=eq.${id}`
-    + '&select=id,question_uz,question_ru,options_uz,options_ru,correct,explanation_uz,ai_solved,status,svg'
+    + '&select=id,question_uz,question_ru,options_uz,options_ru,correct,explanation_uz,ai_solved,status,svg,image_url,image_box'
     + '&order=id');
   return J({ ok: true, questions: rows || [] });
 }
