@@ -1011,7 +1011,9 @@ async function loadBank(){
     opts: LANG==='ru' ? (r.options_ru||r.options_uz) : (r.options_uz||r.options_ru),
     correct: r.correct - 1,
     expl: LANG==='ru' ? (r.explanation_ru||r.explanation_uz) : (r.explanation_uz||r.explanation_ru),
-    svg:  r.svg || null
+    svg:  r.svg || null,
+    img:  r.image_url || null,
+    box:  r.image_box || null
   }));
 }
 
@@ -1046,6 +1048,29 @@ async function startQuiz() {
   showQuestion();
 }
 
+function cropBox(url,box){
+  var id='c'+Math.random().toString(36).slice(2,8);
+  return '<div id="'+id+'" data-src="'+url+'" data-box="'+box+'" class="crop" style="margin:10px auto;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff;max-width:420px"></div>';
+}
+function renderCrops(root){
+  (root||document).querySelectorAll('.crop:not([data-done])').forEach(function(el){
+    el.setAttribute('data-done','1');
+    var b=String(el.dataset.box).split(',').map(Number);
+    if(b.length!==4)return;
+    var img=new Image();
+    img.onload=function(){
+      var W=img.naturalWidth,H=img.naturalHeight;
+      var x1=b[1]/1000*W, y1=b[0]/1000*H, x2=b[3]/1000*W, y2=b[2]/1000*H;
+      var cw=Math.max(10,x2-x1), ch=Math.max(10,y2-y1);
+      el.innerHTML='<div style="position:relative;width:100%;padding-bottom:'+(ch/cw*100)+'%;overflow:hidden">'
+        +'<img src="'+el.dataset.src+'" style="position:absolute;width:'+(W/cw*100)+'%;height:auto;left:'+(-x1/cw*100)+'%;top:'+(-y1/cw*100)+'%">'
+        +'</div>';
+    };
+    img.onerror=function(){el.remove()};
+    img.src=el.dataset.src;
+  });
+}
+
 function showQuestion() {
   answered = false;
   const data = quizData[currentQ];
@@ -1059,7 +1084,8 @@ function showQuestion() {
   document.getElementById('pick-label').textContent = UI[LANG].pick;
   document.getElementById('next-label').textContent = UI[LANG].next;
   const imgBox = document.getElementById('q-image');
-  imgBox.innerHTML = data.svg ? data.svg : '';
+  if (data.img && data.box) { imgBox.innerHTML = cropBox(data.img, data.box); renderCrops(imgBox); }
+  else imgBox.innerHTML = data.svg ? data.svg : '';
   document.getElementById('next-btn-wrap').style.display = 'none';
 
   const exBox = document.getElementById('explanation-box');
