@@ -686,6 +686,7 @@ async function editQuestion(req, env) {
   if (b.question != null) { patch.question_uz = String(b.question).slice(0, 2000); patch.question_ru = patch.question_uz; }
   if (Array.isArray(b.options)) { const o = b.options.map(String).slice(0, 6); patch.options_uz = o; patch.options_ru = o; }
   if (b.correct != null) patch.correct = Math.max(1, +b.correct);
+  if (b.image_box !== undefined) patch.image_box = b.image_box ? String(b.image_box).slice(0, 40) : null;
   if (!Object.keys(patch).length) return J({ error: 'nothing' }, 400);
   await sb(env, `questions?id=eq.${encodeURIComponent(qid)}`, {
     method: 'PATCH', body: JSON.stringify(patch)
