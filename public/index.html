@@ -704,8 +704,9 @@
     <div style="width:100%;text-align:center;">
       <div class="card">
         <h2 class="page-title" style="margin-bottom:24px;" id="result-title">Test yakunlandi!</h2>
-        <div class="result-circle">
-          <div class="result-score" id="result-score">0</div>
+        <div class="result-circle" id="result-circle">
+          <div style="font-size:1.9rem;line-height:1;margin-bottom:2px" id="result-emoji">🎯</div>
+          <div class="result-score" id="result-score" style="font-size:2rem">0</div>
           <div class="result-total" id="result-total">10 dan</div>
         </div>
         <div class="grade-badge" id="grade-badge">—</div>
@@ -1304,6 +1305,11 @@ function showResult() {
   document.getElementById('rs-total').textContent = quizData.length;
   document.getElementById('rs-ok').textContent = score;
   document.getElementById('rs-bad').textContent = quizData.length - score;
+  var ce=document.getElementById('result-emoji'), cc=document.getElementById('result-circle');
+  if(pct>=90){ce.textContent='🏆';cc.style.background='linear-gradient(135deg,#0E7A5F,#12A87E)'}
+  else if(pct>=70){ce.textContent='👏';cc.style.background='linear-gradient(135deg,#1B3A6B,#2A5298)'}
+  else if(pct>=50){ce.textContent='💪';cc.style.background='linear-gradient(135deg,#B8860B,#D6A431)'}
+  else {ce.textContent='📚';cc.style.background='linear-gradient(135deg,#9B3B34,#C4534A)'}
   document.getElementById('rs-verdict').textContent =
     pct >= 90 ? "Mavzu to'liq o'zlashtirilgan. Ajoyib natija — shu ruhda davom eting!"
     : pct >= 70 ? "Mavzu yaxshi o'zlashtirilgan. Ayrim savollarda kichik xatoliklar bor."
