@@ -440,6 +440,7 @@ async function readUpload(req) {
   const lang = String(form.get('lang') || '').toLowerCase();
   const teacherToken = String(form.get('token') || '');
   const packTitle = String(form.get('pack_title') || '').slice(0, 120);
+  const packId = form.get('pack_id') ? +form.get('pack_id') : null;
   if (!files.length) return { error: 'no_file' };
   const parts = [];
   for (const file of files) {
@@ -448,7 +449,7 @@ async function readUpload(req) {
     if (buf.length > 12 * 1024 * 1024) return { error: 'too_big' };
     parts.push({ mime, buf, name: file.name || 'file' });
   }
-  return { files: parts, lang, teacherToken, packTitle, name: parts[0].name };
+  return { files: parts, lang, teacherToken, packTitle, packId, name: parts[0].name };
 }
 
 const B64CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
@@ -521,17 +522,24 @@ async function ingest(req, env) {
   // Платформа универсальная: grade/subject/topic_id не заполняем (в базе они теперь nullable).
   const lang = (up.lang === 'ru' || up.lang === 'uz' || up.lang === 'en') ? up.lang : 'uz';
 
-  // создаём пакет (одна загрузка = один пакет)
-  const pack = await sb(env, 'packs', {
-    method: 'POST',
-    headers: { Prefer: 'return=representation' },
-    body: JSON.stringify({
-      teacher_id: teacherId,
-      title: (up.packTitle || up.name || 'Yuklangan test').slice(0, 120),
-      lang
-    })
-  });
-  const packId = pack?.[0]?.id ?? null;
+  // пакет: либо дописываем в выбранный, либо создаём новый
+  let packId = null;
+  if (up.packId) {
+    const own = await sb(env, `packs?id=eq.${up.packId}&teacher_id=eq.${teacherId}&select=id&limit=1`);
+    if (own.length) packId = own[0].id;
+  }
+  if (!packId) {
+    const pack = await sb(env, 'packs', {
+      method: 'POST',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify({
+        teacher_id: teacherId,
+        title: (up.packTitle || up.name || 'Yuklangan test').slice(0, 120),
+        lang
+      })
+    });
+    packId = pack?.[0]?.id ?? null;
+  }
 
   const stamp = Date.now().toString(36);
   const rows = [];
@@ -585,9 +593,13 @@ async function packs(req, env) {
   // сколько approved-вопросов в каждом пакете
   const out = [];
   for (const p of rows) {
-    const cnt = await sb(env,
-      `questions?pack_id=eq.${p.id}&status=eq.approved&select=id`);
-    out.push({ ...p, approved: Array.isArray(cnt) ? cnt.length : 0 });
+    const all = await sb(env, `questions?pack_id=eq.${p.id}&select=id,status`);
+    const list = Array.isArray(all) ? all : [];
+    out.push({
+      ...p,
+      approved: list.filter(q => q.status === 'approved').length,
+      draft: list.filter(q => q.status === 'draft').length
+    });
   }
   return J({ ok: true, packs: out });
 }
@@ -717,6 +729,20 @@ async function myExams(req, env) {
   return J({ ok: true, exams: out });
 }
 
+// ── удалить пакет вместе с вопросами ──
+async function deletePack(req, env) {
+  const b = await req.json();
+  const id = await auth(env, b);
+  if (!id) return J({ error: 'auth' }, 401);
+  const packId = +b.pack_id;
+  if (!packId) return J({ error: 'pack' }, 400);
+  const own = await sb(env, `packs?id=eq.${packId}&teacher_id=eq.${id}&select=id&limit=1`);
+  if (!own.length) return J({ error: 'not_found' }, 404);
+  await sb(env, `questions?pack_id=eq.${packId}`, { method: 'DELETE' });
+  await sb(env, `packs?id=eq.${packId}`, { method: 'DELETE' });
+  return J({ ok: true });
+}
+
 // ── ежедневная сводка (будильник) ──
 async function dailySummary(env) {
   const exams = await sb(env,
@@ -750,6 +776,7 @@ export default {
       if (m === 'POST' && p === '/api/my-exams') return await myExams(req, env);
       if (m === 'POST' && p === '/api/ingest') return await ingest(req, env);
       if (m === 'POST' && p === '/api/packs') return await packs(req, env);
+      if (m === 'POST' && p === '/api/pack-delete') return await deletePack(req, env);
       if (m === 'POST' && p === '/api/drafts') return await draftQuestions(req, env);
       if (m === 'POST' && p === '/api/question') return await editQuestion(req, env);
       if (m === 'GET'  && p === '/api/pack-questions')
