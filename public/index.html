@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EduQuiz — Ta'lim platformasi</title>
+<title>MuallimTest — Ta'lim platformasi</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
@@ -303,6 +303,7 @@
 
   /* TIMER */
   .timer-badge {
+    position: sticky; top: 8px; z-index: 20;
     display: inline-flex; align-items: center; gap: 6px;
     background: var(--lapis);
     color: var(--white);
@@ -472,7 +473,7 @@
 <div class="screen active" id="s-teacher-login">
   <div class="header">
     <div class="header-inner">
-      <div class="logo">Edu<span>Quiz</span></div>
+      <div class="logo">Muallim<span>Test</span></div>
     </div>
   </div>
   <div class="main-narrow" style="display:flex;align-items:center;flex:1;">
@@ -515,7 +516,7 @@
 <div class="screen" id="s-teacher-dashboard">
   <div class="header">
     <div class="header-inner">
-      <div class="logo">Edu<span>Quiz</span></div>
+      <div class="logo">Muallim<span>Test</span></div>
       <button class="header-back" onclick="logout()">Chiqish</button>
     </div>
   </div>
@@ -557,7 +558,7 @@
 <div class="screen" id="s-stats">
   <div class="header">
     <div class="header-inner">
-      <div class="logo">Edu<span>Quiz</span></div>
+      <div class="logo">Muallim<span>Test</span></div>
       <button class="header-back" onclick="go('s-teacher-dashboard')">← Orqaga</button>
     </div>
   </div>
@@ -591,7 +592,7 @@
 <div class="screen" id="s-create-quiz">
   <div class="header">
     <div class="header-inner">
-      <div class="logo">Edu<span>Quiz</span></div>
+      <div class="logo">Muallim<span>Test</span></div>
       <button class="header-back" onclick="go('s-teacher-dashboard')">← Orqaga</button>
     </div>
   </div>
@@ -610,8 +611,9 @@
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div class="form-group">
-          <label>Savollar soni</label>
-          <input type="number" id="ex-count" value="8" min="1" max="80">
+          <label>Savollar soni <span id="ex-max" style="color:var(--muted);font-weight:400;font-size:.8rem"></span></label>
+          <input type="number" id="ex-count" value="0" min="0" max="200">
+          <div style="font-size:.75rem;color:var(--muted);margin-top:4px">0 = paketdagi barcha savollar</div>
         </div>
         <div class="form-group">
           <label>Savolga soniya (0 = taymersiz)</label>
@@ -620,11 +622,12 @@
       </div>
       <div class="form-group">
         <label>Amal qilish muddati (bo'sh = cheksiz)</label>
-        <input type="text" id="ex-till" placeholder="2026-07-20 20:00">
+        <input type="datetime-local" id="ex-till">
       </div>
       <div class="form-group">
         <label class="correct-radio" style="font-size:0.95rem;"><input type="checkbox" id="ex-expl" checked> Javobdan keyin izohni ko'rsatish</label>
       </div>
+      <div class="error-msg" id="ex-err"></div>
       <button class="btn btn-primary btn-full btn-lg" onclick="createExam()">Yaratish va havola olish →</button>
       <div id="ex-link-box" style="display:none;margin-top:20px;padding:16px;background:var(--cream);border-radius:10px;border:1.5px solid var(--gold);">
         <p style="font-weight:700;color:var(--lapis);margin-bottom:8px;">✅ Imtihon yaratildi!</p>
@@ -640,7 +643,7 @@
 <div class="screen" id="s-student-name">
   <div class="header">
     <div class="header-inner">
-      <div class="logo">Edu<span>Quiz</span></div>
+      <div class="logo">Muallim<span>Test</span></div>
     </div>
   </div>
   <div class="main-narrow" style="display:flex;align-items:center;flex:1;">
@@ -668,7 +671,7 @@
 <div class="screen" id="s-question">
   <div class="header">
     <div class="header-inner">
-      <div class="logo">Edu<span>Quiz</span></div>
+      <div class="logo">Muallim<span>Test</span></div>
       <div style="display:flex;gap:8px;align-items:center;">
 <div class="timer-badge" id="timer-badge">⏱ <span id="timer-display">45</span></div>
       </div>
@@ -704,7 +707,7 @@
 <div class="screen" id="s-student-result">
   <div class="header">
     <div class="header-inner">
-      <div class="logo">Edu<span>Quiz</span></div>
+      <div class="logo">Muallim<span>Test</span></div>
     </div>
   </div>
   <div class="main-narrow" style="display:flex;align-items:center;flex:1;">
@@ -921,30 +924,40 @@ async function loadPacks(){
       const o = document.createElement('option');
       o.value = p.id;
       o.textContent = p.title + ' (' + p.approved + ' savol)';
+      o.dataset.n = p.approved;
       sel.appendChild(o);
     });
+    sel.onchange = showMax; showMax();
   } catch(e) {
     sel.innerHTML = '<option value="">Yuklab bo\'lmadi</option>';
   }
 }
+function showMax(){
+  var sel=document.getElementById('ex-pack');
+  var o=sel.options[sel.selectedIndex];
+  var n=o&&o.dataset?o.dataset.n:'';
+  document.getElementById('ex-max').textContent = n ? '(mavjud: '+n+')' : '';
+}
 
 async function createExam(){
   const titleEl=document.getElementById('ex-title');
+  var errEl=document.getElementById('ex-err');
   if(!titleEl.value.trim()){
-    titleEl.focus(); titleEl.style.borderColor='var(--danger)';
-    alert("Imtihon nomini kiriting"); return;
+    titleEl.style.borderColor='var(--danger)';
+    errEl.textContent="Imtihon nomini kiriting"; errEl.classList.add('show');
+    titleEl.focus(); return;
   }
-  titleEl.style.borderColor='';
+  titleEl.style.borderColor=''; errEl.classList.remove('show');
   const packId = document.getElementById('ex-pack').value;
-  if(!packId){ alert("Savollar to'plamini (paket) tanlang"); return; }
+  if(!packId){ errEl.textContent="Savollar to'plamini (paket) tanlang"; errEl.classList.add('show'); return; }
   const till=document.getElementById('ex-till').value.trim();
   const body={ token:TOKEN, title:titleEl.value.trim(),
     subjects:['math'],
     pack_id: +packId,
-    q_count:+document.getElementById('ex-count').value||8,
+    q_count:+document.getElementById('ex-count').value||0,
     time_per_q:+document.getElementById('ex-time').value||0,
     show_expl:document.getElementById('ex-expl').checked,
-    active_till: till? new Date(till.replace(' ','T')).toISOString() : null };
+    active_till: till ? new Date(till).toISOString() : null };
   try{
     const res=await fetch("/api/exam",{method:"POST",
       headers:{"Content-Type":"application/json"},
@@ -1036,6 +1049,14 @@ async function startQuiz() {
     document.getElementById('student-name-input').style.borderColor = 'var(--danger)';
     return;
   }
+  // один ученик — одна попытка
+  if (window.EXAM_CODE) {
+    try {
+      const c = await fetch('/api/check-attempt?code='+encodeURIComponent(window.EXAM_CODE)+'&student='+encodeURIComponent(nameInput));
+      const cj = await c.json();
+      if (cj.taken) { alert("Siz bu imtihonni allaqachon topshirgansiz."); return; }
+    } catch(e) {}
+  }
   try { await loadBank(); }
   catch(e){ alert(UI[LANG].loadErr); return; }
   answerLog = [];
@@ -1062,6 +1083,8 @@ function renderCrops(root){
       var W=img.naturalWidth,H=img.naturalHeight;
       var x1=b[1]/1000*W, y1=b[0]/1000*H, x2=b[3]/1000*W, y2=b[2]/1000*H;
       var cw=Math.max(10,x2-x1), ch=Math.max(10,y2-y1);
+      el.style.maxWidth=Math.round(cw)+'px';
+      el.style.margin='10px auto';
       el.innerHTML='<div style="position:relative;width:100%;padding-bottom:'+(ch/cw*100)+'%;overflow:hidden">'
         +'<img src="'+el.dataset.src+'" style="position:absolute;width:'+(W/cw*100)+'%;height:auto;left:'+(-x1/cw*100)+'%;top:'+(-y1/ch*100)+'%">'
         +'</div>';
@@ -1103,7 +1126,7 @@ function showQuestion() {
   });
 
   clearInterval(timerInterval);
-  const TPQ = EXAM ? EXAM.time_per_q : 45;
+  const TPQ = EXAM ? (+EXAM.time_per_q||0) : 45;
   document.getElementById('timer-badge').style.display = TPQ>0 ? '' : 'none';
   if (TPQ === 0) return;
   timeLeft = TPQ;
@@ -1210,7 +1233,7 @@ function showResult() {
 
 async function saveResult(elapsed, pct, grade){
   try {
-    await fetch("/api/result", {
+    const rr = await fetch("/api/result", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -1221,6 +1244,9 @@ async function saveResult(elapsed, pct, grade){
         grade_mark: grade, duration_s: elapsed, answers: answerLog
       })
     });
+    const rj = await rr.json();
+    if (rj && rj.error === 'expired') alert("Imtihon muddati tugagan — natija saqlanmadi.");
+    if (rj && rj.error === 'already_taken') alert("Siz allaqachon topshirgansiz — natija saqlanmadi.");
   } catch(e) { /* нет сети — результат просто не запишется */ }
 }
 
