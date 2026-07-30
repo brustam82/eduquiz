@@ -134,7 +134,7 @@ footer{padding:34px 0;text-align:center;color:var(--muted);font-size:13px}
       <button data-l="uz" class="on" onclick="setL('uz')">UZ</button>
       <button data-l="ru" onclick="setL('ru')">RU</button>
     </div>
-    <a href="/" class="btn btn-p" style="padding:10px 20px;font-size:14px" data-t="nav.cta">Bepul boshlash</a>
+    <a href="/?lang=uz" data-golink class="btn btn-p" style="padding:10px 20px;font-size:14px" data-t="nav.cta">Bepul boshlash</a>
   </div>
 </div></nav>
 
@@ -145,7 +145,7 @@ footer{padding:34px 0;text-align:center;color:var(--muted);font-size:13px}
     <h1 data-t="hero.h1">Qog'ozdagi testni <em>1 daqiqada</em> elektron imtihonga aylantiring</h1>
     <p data-t="hero.p">Materialni yuklang — sun'iy intellekt uni savollarga aylantiradi. Havolani sinfingizga yuboring, har bir o'quvchining natijasi Telegramingizga keladi.</p>
     <div class="hero-cta">
-      <a href="/" class="btn btn-p btn-lg" data-t="hero.cta1">Bepul sinab ko'rish</a>
+      <a href="/?lang=uz" data-golink class="btn btn-p btn-lg" data-t="hero.cta1">Bepul sinab ko'rish</a>
       <a href="#how" class="btn btn-w btn-lg" data-t="hero.cta2">Qanday ishlaydi?</a>
     </div>
     <div class="hero-note" data-t="hero.note">Karta kerak emas · Telegram orqali kirish · 2 daqiqada tayyor</div>
@@ -252,7 +252,7 @@ footer{padding:34px 0;text-align:center;color:var(--muted);font-size:13px}
         <li data-t="p1.3">Telegramga natijalar</li>
         <li data-t="p1.4">To'liq tahlil va Excel</li>
       </ul>
-      <a href="/" class="btn btn-p" style="width:100%;justify-content:center" data-t="p1.cta">Boshlash</a>
+      <a href="/?lang=uz" data-golink class="btn btn-p" style="width:100%;justify-content:center" data-t="p1.cta">Boshlash</a>
     </div>
     <div class="pcard">
       <div class="pname" data-t="p2.n">O'quv markazlari uchun</div>
@@ -285,7 +285,7 @@ footer{padding:34px 0;text-align:center;color:var(--muted);font-size:13px}
 <div class="cta">
   <h2 data-t="cta.h">Birinchi imtihoningizni bugun o'tkazing</h2>
   <p data-t="cta.p">Ro'yxatdan o'tish 30 soniya — Telegram hisobingiz yetarli</p>
-  <a href="/" class="btn btn-p btn-lg" style="position:relative" data-t="cta.b">Bepul boshlash</a>
+  <a href="/?lang=uz" data-golink class="btn btn-p btn-lg" style="position:relative" data-t="cta.b">Bepul boshlash</a>
 </div>
 
 <footer>
@@ -345,7 +345,10 @@ var T={ru:{
 }};
 var UZ={};
 document.querySelectorAll('[data-t]').forEach(function(e){UZ[e.getAttribute('data-t')]=e.innerHTML});
+
+function updateLinks(l){document.querySelectorAll('[data-golink]').forEach(function(a){a.href='/?lang='+l})}
 function setL(l){
+  updateLinks(l);
   document.querySelectorAll('[data-t]').forEach(function(e){
     var k=e.getAttribute('data-t');
     e.innerHTML = l==='ru' ? (T.ru[k]||UZ[k]) : UZ[k];
@@ -354,7 +357,7 @@ function setL(l){
   document.documentElement.lang=l;
   try{localStorage.setItem('mt_lang',l)}catch(e){}
 }
-try{var sv=localStorage.getItem('mt_lang'); if(sv==='ru')setL('ru');}catch(e){}
+updateLinks('uz');try{var sv=localStorage.getItem('mt_lang'); if(sv==='ru')setL('ru');}catch(e){}
 </script>
 </body>
 </html>
