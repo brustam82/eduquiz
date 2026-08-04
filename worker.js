@@ -1,120 +1,27 @@
-// MuallimTest — API-шлюз.
-// Браузер не ходит в базу за результатами и экзаменами — только сюда.
-// Ключ базы, пароль учителя и токен бота живут в секретах Cloudflare.
+const n = Math.round((r.percent || 0) / 10);
+const bar = '█'.repeat(n) + '░'.repeat(10 - n);
 
-const J = (o, s = 200) => new Response(JSON.stringify(o), {
-  status: s,
-  headers: { 'content-type': 'application/json; charset=utf-8' }
-});
-
-const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-
-// запрос в Supabase от имени service_role (RLS не применяется)
-async function sb(env, path, init = {}) {
-  const r = await fetch(`${env.SUPABASE_URL}/rest/v1/${path}`, {
-    ...init,
-    headers: {
-      apikey: env.SUPABASE_SERVICE_KEY,
-      Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-      'Content-Type': 'application/json',
-      ...(init.headers || {})
-    }
-  });
-  const t = await r.text();
-  if (!r.ok) throw new Error(`SB ${r.status}: ${t}`);
-  return t ? JSON.parse(t) : null;
-}
-
-// ============================================================
-//  АНАЛИТИКА — журнал событий (analytics_events)
-//  Не должна ломать основной функционал, если упадёт.
-// ============================================================
-function detectDevice(userAgent) {
-  const ua = (userAgent || '').toLowerCase();
-  if (/tablet|ipad/.test(ua)) return 'tablet';
-  if (/mobile|android|iphone/.test(ua)) return 'mobile';
-  return 'desktop';
-}
-
-async function logEvent(env, request, data) {
-  try {
-    const cf = (request && request.cf) || {};
-    const userAgent = request ? (request.headers.get('user-agent') || '') : '';
-    const payload = {
-      event_type: data.event_type,
-      role: data.role,
-      teacher_id: data.teacher_id ?? null,
-      student_name: data.student_name ?? null,
-      pack_id: data.pack_id ? String(data.pack_id) : null,
-      exam_code: data.exam_code ?? null,
-      country: cf.country ?? null,
-      city: cf.city ?? null,
-      device: detectDevice(userAgent),
-      lang: data.lang ?? null,
-      user_agent: userAgent,
-    };
-    const res = await fetch(`${env.SUPABASE_URL}/rest/v1/analytics_events`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: env.SUPABASE_SERVICE_KEY,
-        Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-        Prefer: 'return=minimal',
-      },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) console.error('analytics_events insert failed:', res.status, await res.text());
-  } catch (err) {
-    console.error('logEvent error:', err);
-  }
-}
-
-// отправка в конкретный чат
-async function tg(env, chat, text) {
-  if (!env.TG_BOT_TOKEN || !chat) return;
-  try {
-    await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: String(chat), text, parse_mode: 'HTML' })
-    });
-  } catch (e) { /* телеграм недоступен — результат всё равно сохранён */ }
-}
-
-// ── тексты для учителя — правьте здесь ──
-const mmss = t => `${Math.floor((t || 0) / 60)}:${String((t || 0) % 60).padStart(2, '0')}`;
-
-// время словами: 4 daqiqa 12 soniya
-function timeWords(sec) {
-  const s = Math.max(0, +sec || 0);
-  const m = Math.floor(s / 60), r = s % 60;
-  if (!m) return `${r} soniya`;
-  return `${m} daqiqa ${r} soniya`;
-}
-
-// строка таблицы: метка слева, значение справа
-const pad = (s, n) => String(s) + ' '.repeat(Math.max(0, n - String(s).length));
-
-// ctx: { title, rank, of }  — может быть пустым
-function fmtResult(r, c = {}) {
-  const dot = r.percent >= 80 ? '🟢' : r.percent >= 50 ? '🟡' : '🔴';
-  const mark = { 5: "A'lo", 4: 'Yaxshi', 3: 'Qoniqarli', 2: 'Qoniqarsiz' }[r.grade_mark] || r.grade_mark;
-  const wrong = Array.isArray(r.answers)
-    ? r.answers.filter(a => !(a && a.ok)).length
-    : Math.max(0, (r.total || 0) - (r.correct || 0));
-  const n = Math.round((r.percent || 0) / 10);
-  const bar = '█'.repeat(n) + '░'.repeat(10 - n);
-
+  const tbl = [
+    `${pad('Jami savollar', 22)}${r.total}`,
+    `${pad("To'g'ri javoblar", 22)}${r.correct}`,
+    `${pad('Xato javoblar', 22)}${wrong}`,
+    `${pad('Natija', 22)}${r.percent}%`,
+    `${pad('Baho', 22)}${r.grade_mark} (${mark})`,
+    `${pad('Sarflangan vaqt', 22)}${timeWords(r.duration_s)}`
+  ].join('\n');
   // аналитический вывод по результату
   const verdict = r.percent >= 90 ? "Mavzu to'liq o'zlashtirilgan. O'quvchi materialni mustahkam biladi."
     : r.percent >= 70 ? "Mavzu yaxshi o'zlashtirilgan. Ayrim savollarda kichik xatoliklar kuzatildi."
     : r.percent >= 50 ? "Mavzu qisman o'zlashtirilgan. Xato qilingan mavzularni qayta ko'rib chiqish tavsiya etiladi."
     : "Mavzu yetarli darajada o'zlashtirilmagan. O'quvchi bilan qo'shimcha mashg'ulot o'tkazish tavsiya etiladi.";
 
-  const L = [];
-  L.push('🏛 <b>MUALLIMTEST</b>');
-  L.push('<i>Imtihon natijasi to\'g\'risida ma\'lumot</i>');
-  L.push('');
+const L = [];
+L.push('🏛 <b>MUALLIMTEST</b>');
+L.push('<i>Imtihon natijasi to\'g\'risida ma\'lumot</i>');
+L.push('');
+  L.push(`👤 <b>${esc(r.student)}</b>`);
+  if (c.title) L.push(`📘 ${esc(c.title)}`);
+  if (r.exam_code) L.push(`🔑 Imtihon kodi: <code>${esc(r.exam_code)}</code>`);
   L.push(`👤 <b>FIO:</b> ${esc(r.student)}`);
   if (c.title) L.push(`📘 <b>Imtihon nomi:</b> ${esc(c.title)}`);
   if (r.exam_code) L.push(`🔑 <b>Imtihon kodi:</b> <code>${esc(r.exam_code)}</code>`);
@@ -128,31 +35,47 @@ function fmtResult(r, c = {}) {
   L.push('');
   L.push(`${dot} <b>Umumiy natija:</b> ${r.percent}%`);
   L.push(`<code>${bar}</code>`);
-  L.push('');
+L.push('');
+  L.push(`<pre>${tbl}</pre>`);
+  L.push(`${dot} <code>${bar}</code> ${r.percent}%`);
   L.push(`<blockquote>📊 <b>Xulosa.</b> ${verdict}</blockquote>`);
 
-  if (Array.isArray(r.answers)) {
-    const bad = r.answers.map((a, i) => (a && a.ok ? null : i + 1)).filter(Boolean);
+  const extra = [];
+  if (r.duration_s && r.total && r.duration_s / r.total < 5)
+    extra.push('⚠️ Javoblar juda tez berilgan — tekshirish tavsiya etiladi.');
+if (Array.isArray(r.answers)) {
+const bad = r.answers.map((a, i) => (a && a.ok ? null : i + 1)).filter(Boolean);
+    if (bad.length) extra.push(`📌 Xato qilingan savollar: ${bad.join(', ')}`);
     if (bad.length) L.push(`📌 <b>Xato qilingan savol raqamlari:</b> ${bad.join(', ')}`);
-  }
+}
+  if (c.rank) extra.push(`🏅 Guruhda egallagan o'rni: ${c.rank} / ${c.of}`);
+  if (extra.length) { L.push(''); L.push(`<blockquote>${extra.join('\n')}</blockquote>`); }
   if (r.duration_s && r.total && r.duration_s / r.total < 5)
     L.push(`\n⚠️ <i>Eslatma: har bir savolga o'rtacha ${Math.round(r.duration_s / r.total)} soniya sarflangan. Javoblar tez berilgani sababli natijani qo'shimcha tekshirish tavsiya etiladi.</i>`);
 
-  return L.join('\n');
+return L.join('\n');
 }
-
-function fmtSummary(ex, rows) {
-  const avg = Math.round(rows.reduce((s, r) => s + (r.percent || 0), 0) / rows.length);
-  const avgTime = Math.round(rows.reduce((s, r) => s + (r.duration_s || 0), 0) / rows.length);
-  const medal = ['🥇', '🥈', '🥉'];
-  const g = { 5: 0, 4: 0, 3: 0, 2: 0 };
-  rows.forEach(r => { g[r.grade_mark] = (g[r.grade_mark] || 0) + 1; });
-  const tot = rows.length;
+@@ -101,40 +104,47 @@ function fmtSummary(ex, rows) {
+const g = { 5: 0, 4: 0, 3: 0, 2: 0 };
+rows.forEach(r => { g[r.grade_mark] = (g[r.grade_mark] || 0) + 1; });
+const tot = rows.length;
   const passed = rows.filter(r => (r.percent || 0) >= 50).length;
   const passPct = Math.round(passed / tot * 100);
-  const barOf = v => { const n = tot ? Math.round(v / tot * 10) : 0; return '█'.repeat(n) + '░'.repeat(10 - n); };
+const barOf = v => { const n = tot ? Math.round(v / tot * 10) : 0; return '█'.repeat(n) + '░'.repeat(10 - n); };
   const dot = avg >= 80 ? '🟢' : avg >= 50 ? '🟡' : '🔴';
 
+  const tbl = [
+    `${pad('Qatnashganlar', 22)}${tot} o'quvchi`,
+    `${pad("O'rtacha natija", 22)}${avg}%`,
+    `${pad("O'rtacha vaqt", 22)}${timeWords(avgTime)}`
+  ].join('\n');
+
+  const grades = [
+    `5  A'lo        ${barOf(g[5])}  ${g[5]}`,
+    `4  Yaxshi      ${barOf(g[4])}  ${g[4]}`,
+    `3  Qoniqarli   ${barOf(g[3])}  ${g[3]}`,
+    `2  Qoniqarsiz  ${barOf(g[2])}  ${g[2]}`
+  ].join('\n');
   const verdict = avg >= 80
     ? "Guruh mavzuni yuqori darajada o'zlashtirgan. Natijalar barqaror."
     : avg >= 65
@@ -161,10 +84,12 @@ function fmtSummary(ex, rows) {
     ? "Guruh mavzuni qisman o'zlashtirgan. Xato ko'p uchragan mavzularni takrorlash zarur."
     : "Guruhning natijasi past. Mavzuni qaytadan tushuntirish va mustahkamlash tavsiya etiladi.";
 
-  const L = [];
-  L.push('🏛 <b>MUALLIMTEST</b>');
-  L.push('<i>Kunlik umumiy hisobot</i>');
-  L.push('');
+const L = [];
+L.push('🏛 <b>MUALLIMTEST</b>');
+L.push('<i>Kunlik umumiy hisobot</i>');
+L.push('');
+  L.push(`📘 <b>${esc(ex.title)}</b>`);
+  L.push(`🔑 Imtihon kodi: <code>${esc(ex.code)}</code>`);
   L.push(`📘 <b>Imtihon nomi:</b> ${esc(ex.title)}`);
   L.push(`🔑 <b>Imtihon kodi:</b> <code>${esc(ex.code)}</code>`);
   L.push('');
@@ -172,883 +97,27 @@ function fmtSummary(ex, rows) {
   L.push(`${dot} <b>Guruhning o'rtacha natijasi:</b> ${avg}%`);
   L.push(`✅ <b>50% dan yuqori natija ko'rsatganlar:</b> ${passed} ta (${passPct}%)`);
   L.push(`⏱ <b>O'rtacha sarflangan vaqt:</b> ${timeWords(avgTime)}`);
-  L.push('');
-  L.push('<b>Baholar taqsimoti</b>');
+L.push('');
+  L.push(`<pre>${tbl}</pre>`);
+L.push('<b>Baholar taqsimoti</b>');
+  L.push(`<pre>${grades}</pre>`);
   L.push(`<code>5  A'lo        ${barOf(g[5])}  ${g[5]} ta</code>`);
   L.push(`<code>4  Yaxshi      ${barOf(g[4])}  ${g[4]} ta</code>`);
   L.push(`<code>3  Qoniqarli   ${barOf(g[3])}  ${g[3]} ta</code>`);
   L.push(`<code>2  Qoniqarsiz  ${barOf(g[2])}  ${g[2]} ta</code>`);
   L.push('');
-  L.push('<b>Eng yuqori natijalar</b>');
-  rows.slice(0, 3).forEach((r, i) => {
-    L.push(`${medal[i]} ${esc(r.student)} — ${r.correct}/${r.total} (${r.percent}%)`);
-  });
+L.push('<b>Eng yuqori natijalar</b>');
+rows.slice(0, 3).forEach((r, i) => {
+L.push(`${medal[i]} ${esc(r.student)} — ${r.correct}/${r.total} (${r.percent}%)`);
+});
   L.push('');
   L.push(`<blockquote>📊 <b>Tahliliy xulosa.</b> ${verdict}</blockquote>`);
 
-  if (ex.active_till) {
-    const d = new Date(ex.active_till).toLocaleString('ru-RU', { timeZone: 'Asia/Tashkent' });
+if (ex.active_till) {
+const d = new Date(ex.active_till).toLocaleString('ru-RU', { timeZone: 'Asia/Tashkent' });
+    L.push('');
+    L.push(`<blockquote>⏳ Imtihon yakunlanadi: ${d}</blockquote>`);
     L.push(`⏳ <b>Imtihon yakunlanadi:</b> ${d}`);
-  }
-  return L.join('\n');
 }
-
-const genCode = () => Array.from(
-  crypto.getRandomValues(new Uint8Array(5)),
-  b => 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[b % 30]
-).join('');
-
-// ══════════ безопасность ══════════
-const ENC = new TextEncoder();
-const b64  = b => btoa(String.fromCharCode(...new Uint8Array(b)));
-const hex  = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
-
-async function hmac(keyRaw, msg) {
-  const k = await crypto.subtle.importKey('raw', keyRaw, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  return crypto.subtle.sign('HMAC', k, ENC.encode(msg));
+return L.join('\n');
 }
-
-// сравнение без утечки времени
-function same(a, b) {
-  if (a.length !== b.length) return false;
-  let d = 0;
-  for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return d === 0;
-}
-
-// ── пропуск учителя: id.срок.подпись ──
-const sessKey = env => ENC.encode('eduquiz-session:' + env.SUPABASE_SERVICE_KEY);
-
-async function mkToken(env, id) {
-  const body = `${id}.${Date.now() + 30 * 864e5}`;          // 30 дней
-  return `${body}.${b64(await hmac(sessKey(env), body))}`;
-}
-
-async function readToken(env, t) {
-  if (!t || typeof t !== 'string') return null;
-  const i = t.lastIndexOf('.');
-  if (i < 0) return null;
-  const body = t.slice(0, i), sig = t.slice(i + 1);
-  const [id, exp] = body.split('.');
-  if (!id || !exp || +exp < Date.now()) return null;
-  if (!same(sig, b64(await hmac(sessKey(env), body)))) return null;
-  return +id;
-}
-
-// ── подпись Telegram: доказывает, что человек реально из бота ──
-async function checkInitData(env, initData) {
-  if (!initData || !env.TG_BOT_TOKEN) return null;
-  const p = new URLSearchParams(initData);
-  const got = p.get('hash');
-  if (!got) return null;
-  p.delete('hash');
-  const dcs = [...p.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1))
-    .map(([k, v]) => `${k}=${v}`).join('\n');
-  const secret = await hmac(ENC.encode('WebAppData'), env.TG_BOT_TOKEN);
-  if (!same(hex(await hmac(new Uint8Array(secret), dcs)), got)) return null;
-  if (Date.now() / 1000 - (+p.get('auth_date') || 0) > 86400) return null;   // старше суток
-  try { return JSON.parse(p.get('user')); } catch (e) { return null; }
-}
-
-// ── подпись кнопки Telegram на сайте (в браузере) ──
-async function checkWidget(env, d) {
-  if (!d || !d.hash || !env.TG_BOT_TOKEN) return null;
-  const rest = { ...d };
-  delete rest.hash;
-  const dcs = Object.keys(rest).sort().map(k => `${k}=${rest[k]}`).join('\n');
-  const secret = await crypto.subtle.digest('SHA-256', ENC.encode(env.TG_BOT_TOKEN));
-  if (!same(hex(await hmac(new Uint8Array(secret), dcs)), d.hash)) return null;
-  if (Date.now() / 1000 - (+rest.auth_date || 0) > 86400) return null;
-  return rest;
-}
-
-const auth = async (env, b) => readToken(env, b && b.token);
-
-// ── результат ученика ──
-async function postResult(req, env, ctx) {
-  const b = await req.json();
-  const total = Math.max(0, Math.min(200, +b.total || 0));
-  const correct = Math.max(0, Math.min(total, +b.correct || 0));
-  const percent = total ? Math.round(correct / total * 100) : 0;
-  const row = {
-    exam_code: b.exam_code ? String(b.exam_code).slice(0, 16) : null,
-    student: String(b.student || '').trim().slice(0, 80) || '—',
-    subject: String(b.subject || 'math').slice(0, 40),
-    lang: 'uz',
-    total,
-    correct,
-    percent,
-    // та же шкала, что показывается ученику на экране результата
-    grade_mark: percent >= 90 ? 5 : percent >= 70 ? 4 : percent >= 50 ? 3 : 2,
-    duration_s: b.duration_s != null ? +b.duration_s : null,
-    answers: b.answers ?? null
-  };
-  // защита: экзамен просрочен или ученик уже сдавал
-  let teacherIdForLog = null;
-  if (row.exam_code) {
-    try {
-      const ex0 = await sb(env, `exams?code=eq.${encodeURIComponent(row.exam_code)}&select=active_till,teacher_id&limit=1`);
-      if (ex0 && ex0[0] && ex0[0].active_till && new Date(ex0[0].active_till) < new Date())
-        return J({ error: 'expired' }, 410);
-      if (ex0 && ex0[0]) teacherIdForLog = ex0[0].teacher_id ?? null;
-      const dup = await sb(env,
-        `results?exam_code=eq.${encodeURIComponent(row.exam_code)}&student=eq.${encodeURIComponent(row.student)}&select=id&limit=1`);
-      if (dup && dup.length) return J({ error: 'already_taken' }, 409);
-    } catch (e) { /* проверка не удалась — пропускаем */ }
-  }
-
-  const saved = await sb(env, 'results', {
-    method: 'POST',
-    headers: { Prefer: 'return=representation' },
-    body: JSON.stringify(row)
-  });
-
-  const id = saved?.[0]?.id ?? null;
-
-  // куда слать и что показать: название экзамена, телеграм учителя, место в классе
-  let chat = env.TG_CHAT_ID;
-  const c = {};
-  if (row.exam_code) {
-    try {
-      const ex = await sb(env,
-        `exams?code=eq.${encodeURIComponent(row.exam_code)}&select=title,teacher_chat_id&limit=1`);
-      if (ex && ex[0]) {
-        c.title = ex[0].title;
-        if (ex[0].teacher_chat_id) chat = ex[0].teacher_chat_id;
-      }
-      // место среди всех, кто прошёл этот экзамен: выше % → выше; при равенстве быстрее → выше
-      const all = await sb(env,
-        `results?exam_code=eq.${encodeURIComponent(row.exam_code)}`
-        + '&select=id,percent,duration_s&limit=500');
-      all.sort((a, b) => (b.percent - a.percent) || ((a.duration_s || 9e9) - (b.duration_s || 9e9)));
-      const i = all.findIndex(x => x.id === id);
-      if (i >= 0 && all.length > 1) { c.rank = i + 1; c.of = all.length; }
-    } catch (e) { /* не нашли — уйдёт без названия и места */ }
-  }
-  ctx.waitUntil(tg(env, chat, fmtResult(row, c)));   // не заставляем ученика ждать телеграм
-
-  // === АНАЛИТИКА: ученик завершил тест ===
-  ctx.waitUntil(logEvent(env, req, {
-    event_type: 'exam_finished',
-    role: 'student',
-    teacher_id: teacherIdForLog,
-    student_name: row.student,
-    exam_code: row.exam_code,
-    lang: row.lang,
-  }));
-
-  return J({ ok: true, id });
-}
-
-// ── вход через Telegram: и из бота, и из браузера ──
-// аккаунта нет — создаём молча; есть — просто впускаем
-async function tgAuth(req, env, ctx) {
-  const b = await req.json();
-  const u = b.initData ? await checkInitData(env, b.initData)
-          : b.widget   ? await checkWidget(env, b.widget)
-          : null;
-  if (!u || !u.id) return J({ error: 'bad_auth' }, 401);
-
-  const tgid = String(u.id);
-  const name = [u.first_name, u.last_name].filter(Boolean).join(' ').slice(0, 80) || 'id ' + tgid;
-  const info = { name, username: u.username || null, photo_url: u.photo_url || null };
-
-  let rows = await sb(env, `teachers?tg_chat_id=eq.${tgid}&select=id,name,username,photo_url&limit=1`);
-  let t;
-  if (rows.length) {
-    t = rows[0];
-    // имя в Telegram могли поменять — подтягиваем свежее
-    if (t.name !== info.name || t.username !== info.username) {
-      const up = await sb(env, `teachers?id=eq.${t.id}`, {
-        method: 'PATCH',
-        headers: { Prefer: 'return=representation' },
-        body: JSON.stringify(info)
-      });
-      t = up[0];
-    }
-  } else {
-    const saved = await sb(env, 'teachers', {
-      method: 'POST',
-      headers: { Prefer: 'return=representation' },
-      body: JSON.stringify({ tg_chat_id: tgid, ...info })
-    });
-    t = saved[0];
-  }
-
-  // === АНАЛИТИКА: учитель вошёл ===
-  ctx.waitUntil(logEvent(env, req, {
-    event_type: 'teacher_login',
-    role: 'teacher',
-    teacher_id: t.id,
-  }));
-
-  return J({ ok: true, token: await mkToken(env, t.id), me: pub(t) });
-}
-
-const pub = t => ({ name: t.name, username: t.username, photo_url: t.photo_url });
-
-// ── проверка пропуска при возврате на сайт ──
-async function me(req, env) {
-  const id = await auth(env, await req.json());
-  if (!id) return J({ error: 'auth' }, 401);
-  const rows = await sb(env, `teachers?id=eq.${id}&select=name,username,photo_url&limit=1`);
-  if (!rows.length) return J({ error: 'auth' }, 401);
-  return J({ ok: true, me: pub(rows[0]) });
-}
-
-// ── учитель создаёт экзамен ──
-async function createExam(req, env, ctx) {
-  const b = await req.json();
-  const id = await auth(env, b);
-  if (!id) return J({ error: 'auth' }, 401);
-  const t = await sb(env, `teachers?id=eq.${id}&select=tg_chat_id&limit=1`);
-  if (!t.length) return J({ error: 'auth' }, 401);
-  const code = genCode();
-  const saved = await sb(env, 'exams', {
-    method: 'POST',
-    headers: { Prefer: 'return=representation' },
-    body: JSON.stringify({
-      code,
-      title: String(b.title || '').trim().slice(0, 120) || 'Imtihon',
-      subjects: Array.isArray(b.subjects) && b.subjects.length ? b.subjects : ['math'],
-      q_count: +b.q_count || 8,
-      time_per_q: +b.time_per_q || 0,
-      show_expl: !!b.show_expl,
-      active_till: b.active_till || null,
-      pack_id: b.pack_id ? +b.pack_id : null,   // из какого пакета брать вопросы
-      teacher_id: id,
-      teacher_chat_id: t[0].tg_chat_id     // берём из аккаунта, руками вводить не надо
-    })
-  });
-
-  // === АНАЛИТИКА: учитель создал тест ===
-  ctx.waitUntil(logEvent(env, req, {
-    event_type: 'exam_created',
-    role: 'teacher',
-    teacher_id: id,
-    pack_id: b.pack_id ?? null,
-    exam_code: code,
-  }));
-
-  return J({ ok: true, code, exam: saved?.[0] ?? null });
-}
-
-// ── ученик открывает ссылку ?exam=CODE ──
-async function getExam(env, code, req, ctx) {
-  if (!code) return J({ error: 'code' }, 400);
-  const rows = await sb(env,
-    `exams?code=eq.${encodeURIComponent(code)}`
-    + '&select=code,title,subjects,q_count,time_per_q,show_expl,active_till,pack_id,teacher_id&limit=1');
-  if (!rows.length) return J({ error: 'not_found' }, 404);
-  if (rows[0].active_till && new Date(rows[0].active_till) < new Date())
-    return J({ error: 'expired' }, 410);
-
-  // === АНАЛИТИКА: ученик открыл ссылку на тест ===
-  ctx.waitUntil(logEvent(env, req, {
-    event_type: 'exam_opened',
-    role: 'student',
-    teacher_id: rows[0].teacher_id ?? null,
-    pack_id: rows[0].pack_id ?? null,
-    exam_code: rows[0].code,
-  }));
-
-  return J({ ok: true, exam: rows[0] });
-}
-
-// ── статистика у учителя (она же проверка пароля при входе) ──
-async function stats(req, env) {
-  const b = await req.json();
-  const id = await auth(env, b);
-  if (!id) return J({ error: 'auth' }, 401);
-  const n = Math.min(+b.limit || 100, 500);
-
-  // только свои экзамены — чужие результаты учителю не видны
-  const exams = await sb(env, `exams?teacher_id=eq.${id}&select=code,title&limit=200`);
-  if (!exams.length) return J({ ok: true, results: [] });
-  const byCode = {};
-  for (const e of exams) byCode[e.code] = e.title;
-  const list = '(' + exams.map(e => `"${e.code}"`).join(',') + ')';
-
-  const results = await sb(env,
-    `results?exam_code=in.${encodeURIComponent(list)}`
-    + '&select=student,exam_code,total,correct,percent,grade_mark,duration_s,created_at'
-    + `&order=created_at.desc&limit=${n}`);
-  for (const r of results) r.exam_title = byCode[r.exam_code] || null;
-  return J({ ok: true, results });
-}
-
-// ══════════ ЗАГРУЗКА МАТЕРИАЛА → ТЕСТЫ (Gemini + резерв) ══════════
-// Учитель грузит файл (PDF/картинка) → ИИ читает → вопросы в questions (draft).
-
-// строгая инструкция для модели: что вернуть и в каком виде
-function ingestPrompt(lang) {
-  const langNote = lang === 'ru'
-    ? 'Сформулируй ВСЕ вопросы, варианты и пояснения на РУССКОМ языке.'
-    : lang === 'uz'
-    ? 'Barcha savollar, variantlar va izohlarni faqat OʻZBEK (lotin) tilida yoz.'
-    : lang === 'en'
-    ? 'Write ALL questions, options and explanations in ENGLISH.'
-    : 'Сохрани язык оригинала материала.';
-  return [
-    'Ты — генератор тестов для учителя. Тебе дан учебный материал (текст или изображение).',
-    'Задача: превратить его в тестовые вопросы с одним правильным ответом.',
-    langNote,
-    'Правила:',
-    '1. Если в материале уже есть готовые вопросы с вариантами — извлеки их как есть.',
-    '2. Если есть вопрос, но нет вариантов — придумай 4 правдоподобных варианта.',
-    '3. Если правильный ответ указан в материале — используй его. Если нет — реши сам и поставь "ai_solved": true.',
-    '4. У каждого вопроса ровно 4 варианта. Ровно один правильный.',
-    '5. Дистракторы — правдоподобные, похожей длины, без "все верны" и абсурда.',
-    '6. К каждому вопросу добавь короткое пояснение (1-2 предложения), почему ответ верный.',
-    '7. Если для решения задачи НУЖЕН рисунок из материала (фото, схема, чертёж, фигура, график) — укажи его положение на странице в поле "box": [ymin, xmin, ymax, xmax] в координатах 0-1000 относительно всего изображения. Захвати рисунок целиком с небольшим запасом. Также укажи "page": номер файла (1 = первый файл, 2 = второй). Если рисунок не нужен — поля "box" и "page" НЕ добавляй. НЕ описывай картинку словами вместо box — просто дай координаты.',
-    '8. Обработай ВЕСЬ материал целиком — извлеки ВСЕ вопросы, которые есть в файле, не останавливайся на первом.',
-    'Верни ТОЛЬКО валидный JSON без markdown, без пояснений вокруг. Формат:',
-    '{"questions":[{"q":"текст вопроса","options":["A","B","C","D"],"correct":1,"explanation":"...","ai_solved":false,"page":1,"box":[120,340,480,760]}]}',
-    '"correct" — номер правильного варианта, СЧИТАЯ С ЕДИНИЦЫ (1 = первый).',
-    'Если материал не годится для теста — верни {"questions":[]}.'
-  ].join('\n');
-}
-
-// вызов Gemini (принимает и текст, и файл inline_data). Повтор при перегрузке.
-async function callGemini(env, prompt, filePart) {
-  const key = env.GEMINI_API_KEY;
-  if (!key) throw new Error('no_gemini_key');
-  const MODELS = ['gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
-  const parts = [{ text: prompt }];
-  if (filePart) parts.push({ inline_data: { mime_type: filePart.mime, data: filePart.b64 } });
-  const body = JSON.stringify({
-    contents: [{ parts }],
-    generationConfig: { temperature: 0.2, maxOutputTokens: 12288, responseMimeType: 'application/json' }
-  });
-  let last = '';
-  for (let attempt = 0; attempt < MODELS.length; attempt++) {
-    if (attempt) await new Promise(r => setTimeout(r, 800));
-    const r = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${MODELS[attempt]}:generateContent?key=${key}`,
-      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }
-    );
-    const t = await r.text();
-    if (r.ok) {
-      const j = JSON.parse(t);
-      return j?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
-    }
-    last = `gemini ${r.status}: ${t}`;
-    if (r.status !== 503 && r.status !== 429) break;   // повторяем только перегрузку
-  }
-  throw new Error(last);
-}
-
-// несколько файлов (страниц) в ОДНОМ запросе — ИИ видит весь материал сразу
-async function callGeminiMulti(env, prompt, fileParts) {
-  const key = env.GEMINI_API_KEY;
-  if (!key) throw new Error('no_gemini_key');
-  const MODELS = ['gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
-  const parts = [{ text: prompt }];
-  for (const fp of fileParts) parts.push({ inline_data: { mime_type: fp.mime, data: fp.b64 } });
-  const body = JSON.stringify({
-    contents: [{ parts }],
-    generationConfig: { temperature: 0.2, maxOutputTokens: 12288, responseMimeType: 'application/json' }
-  });
-  let last = '';
-  for (let attempt = 0; attempt < MODELS.length; attempt++) {
-    if (attempt) await new Promise(r => setTimeout(r, 800));
-    const r = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${MODELS[attempt]}:generateContent?key=${key}`,
-      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }
-    );
-    const t = await r.text();
-    if (r.ok) {
-      const j = JSON.parse(t);
-      return j?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
-    }
-    last = `gemini ${r.status}: ${t}`;
-    if (r.status !== 503 && r.status !== 429) break;
-  }
-  throw new Error(last);
-}
-
-// резерв: Groq (только текст). Используется, если Gemini недоступен и файл — текстовый.
-async function callGroqText(env, prompt, text) {
-  const key = env.GROQ_API_KEY;
-  if (!key) throw new Error('no_groq_key');
-  const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-    body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
-      temperature: 0.3,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: prompt },
-        { role: 'user', content: text }
-      ]
-    })
-  });
-  const t = await r.text();
-  if (!r.ok) throw new Error(`groq ${r.status}: ${t}`);
-  const j = JSON.parse(t);
-  return j?.choices?.[0]?.message?.content || '';
-}
-
-// вытащить JSON из ответа модели (на случай мусора вокруг)
-function parseModelJson(s) {
-  if (!s) return null;
-  let str = s.trim().replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```\s*$/, '');
-  try { return JSON.parse(str); } catch (e) {}
-  const a = str.indexOf('{'), b = str.lastIndexOf('}');
-  if (a >= 0 && b > a) { try { return JSON.parse(str.slice(a, b + 1)); } catch (e) {} }
-  return null;
-}
-
-// прочитать тело файла из multipart/form-data
-async function readUpload(req) {
-  const form = await req.formData();
-  const files = form.getAll('file').filter(f => f && typeof f !== 'string');
-  const lang = String(form.get('lang') || '').toLowerCase();
-  const teacherToken = String(form.get('token') || '');
-  const packTitle = String(form.get('pack_title') || '').slice(0, 120);
-  const packId = form.get('pack_id') ? +form.get('pack_id') : null;
-  if (!files.length) return { error: 'no_file' };
-  const parts = [];
-  for (const file of files) {
-    const mime = file.type || 'application/octet-stream';
-    const buf = new Uint8Array(await file.arrayBuffer());
-    if (buf.length > 12 * 1024 * 1024) return { error: 'too_big' };
-    parts.push({ mime, buf, name: file.name || 'file' });
-  }
-  return { files: parts, lang, teacherToken, packTitle, packId, name: parts[0].name };
-}
-
-// загрузка файла в Supabase Storage (bucket materials), возвращает публичную ссылку
-async function uploadToStorage(env, teacherId, buf, mime, idx) {
-  const ext = mime.includes('png') ? 'png' : mime.includes('pdf') ? 'pdf' : 'jpg';
-  const path = `t${teacherId}/${Date.now().toString(36)}_${idx}.${ext}`;
-  const r = await fetch(`${env.SUPABASE_URL}/storage/v1/object/materials/${path}`, {
-    method: 'POST',
-    headers: {
-      apikey: env.SUPABASE_SERVICE_KEY,
-      Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-      'Content-Type': mime
-    },
-    body: buf
-  });
-  if (!r.ok) return null;
-  return `${env.SUPABASE_URL}/storage/v1/object/public/materials/${path}`;
-}
-
-const B64CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-function toB64(bytes) {
-  let out = '';
-  const len = bytes.length;
-  for (let i = 0; i < len; i += 3) {
-    const a = bytes[i];
-    const b = i + 1 < len ? bytes[i + 1] : undefined;
-    const c = i + 2 < len ? bytes[i + 2] : undefined;
-    out += B64CHARS[a >> 2];
-    out += B64CHARS[((a & 3) << 4) | (b === undefined ? 0 : b >> 4)];
-    out += (b === undefined) ? '=' : B64CHARS[((b & 15) << 2) | (c === undefined ? 0 : c >> 6)];
-    out += (c === undefined) ? '=' : B64CHARS[c & 63];
-  }
-  return out;
-}
-
-const isTextLike = mime =>
-  mime.startsWith('text/') || mime.includes('json') || mime.includes('csv');
-
-async function ingest(req, env) {
-  const up = await readUpload(req);
-  if (up.error) return J({ error: up.error }, 400);
-
-  const teacherId = await readToken(env, up.teacherToken);
-  if (!teacherId) return J({ error: 'auth' }, 401);
-
-  const prompt = ingestPrompt(up.lang);
-
-  // Все файлы идём ОДНИМ запросом к ИИ, чтобы вопросы, переходящие со страницы на страницу
-  // (или из файла в файл), собирались правильно, а не рвались.
-  let allQs = [];
-  let lastErr = '';
-
-  const inlineFiles = up.files.filter(f => f.mime.startsWith('image/') || f.mime === 'application/pdf').slice(0, 2);
-  const textFiles   = up.files.filter(f => isTextLike(f.mime));
-
-  // сохраняем исходники в Storage — чтобы прикреплять к вопросам реальные картинки
-  const pageUrls = [];
-  for (let i = 0; i < inlineFiles.length; i++) {
-    const u = await uploadToStorage(env, teacherId, inlineFiles[i].buf, inlineFiles[i].mime, i);
-    pageUrls.push(u);
-  }
-
-  // картинки/PDF — вместе одним вызовом (ИИ видит все страницы сразу)
-  if (inlineFiles.length) {
-    try {
-      const fileParts = inlineFiles.map(f => ({ mime: f.mime, b64: toB64(f.buf) }));
-      const raw = await callGeminiMulti(env, prompt, fileParts);
-      const parsed = parseModelJson(raw);
-      if (parsed && Array.isArray(parsed.questions)) allQs = allQs.concat(parsed.questions);
-    } catch (e) { lastErr = String(e.message || e).slice(0, 300); }
-  }
-
-  // текстовые файлы — склеиваем в один текст
-  if (textFiles.length) {
-    try {
-      let text = '';
-      for (const f of textFiles) text += '\n\n' + new TextDecoder().decode(f.buf);
-      text = text.slice(0, 60000);
-      let raw = '';
-      try { raw = await callGemini(env, prompt + '\n\nМАТЕРИАЛ:\n' + text, null); }
-      catch (e) { raw = await callGroqText(env, prompt, text); }
-      const parsed = parseModelJson(raw);
-      if (parsed && Array.isArray(parsed.questions)) allQs = allQs.concat(parsed.questions);
-    } catch (e) { lastErr = String(e.message || e).slice(0, 300); }
-  }
-
-  if (!allQs.length) {
-    if (lastErr) return J({ error: 'ai: ' + lastErr, detail: lastErr }, 200);
-    return J({ ok: true, inserted: 0, questions: [], pack_id: null });
-  }
-  const qs = allQs;
-
-  // складываем распознанные вопросы черновиками.
-  // Платформа универсальная: grade/subject/topic_id не заполняем (в базе они теперь nullable).
-  const lang = (up.lang === 'ru' || up.lang === 'uz' || up.lang === 'en') ? up.lang : 'uz';
-
-  // пакет: либо дописываем в выбранный, либо создаём новый
-  let packId = null;
-  if (up.packId) {
-    const own = await sb(env, `packs?id=eq.${up.packId}&teacher_id=eq.${teacherId}&select=id&limit=1`);
-    if (own.length) packId = own[0].id;
-  }
-  if (!packId) {
-    const pack = await sb(env, 'packs', {
-      method: 'POST',
-      headers: { Prefer: 'return=representation' },
-      body: JSON.stringify({
-        teacher_id: teacherId,
-        title: (up.packTitle || up.name || 'Yuklangan test').slice(0, 120),
-        lang
-      })
-    });
-    packId = pack?.[0]?.id ?? null;
-  }
-
-  const stamp = Date.now().toString(36);
-  const rows = [];
-  qs.slice(0, 60).forEach((q, i) => {
-    const opts = Array.isArray(q.options) ? q.options.map(String).slice(0, 6) : [];
-    if (!q.q || opts.length < 2) return;
-    let correct = parseInt(q.correct, 10);
-    if (!(correct >= 1 && correct <= opts.length)) correct = 1;
-    const qtext = String(q.q).slice(0, 2000);
-    const expl = q.explanation ? String(q.explanation).slice(0, 1000) : null;
-    // реальная картинка из исходника: ссылка на страницу + область
-    let imgUrl = null, imgBox = null;
-    if (Array.isArray(q.box) && q.box.length === 4) {
-      const pageIdx = Math.max(0, (parseInt(q.page, 10) || 1) - 1);
-      if (pageUrls[pageIdx]) {
-        imgUrl = pageUrls[pageIdx];
-        imgBox = q.box.map(function (v) { return Math.max(0, Math.min(1000, +v || 0)); }).join(',');
-      }
-    }
-    rows.push({
-      id: `up_${teacherId}_${stamp}_${i}`,
-      format: 'single_choice',
-      difficulty: 'medium',
-      question_ru: qtext,
-      question_uz: qtext,
-      options_ru: opts,
-      options_uz: opts,
-      correct,
-      explanation_ru: expl,
-      explanation_uz: expl,
-      status: 'draft',
-      source: 'ai',
-      teacher_id: teacherId,
-      ai_solved: !!q.ai_solved,
-      pack_id: packId,
-      image_url: imgUrl,
-      image_box: imgBox
-    });
-  });
-
-  if (!rows.length) return J({ ok: true, inserted: 0, questions: [], pack_id: packId });
-
-  const saved = await sb(env, 'questions', {
-    method: 'POST',
-    headers: { Prefer: 'return=representation' },
-    body: JSON.stringify(rows)
-  });
-
-  return J({ ok: true, inserted: saved?.length || 0, pack_id: packId, questions: saved || [] });
-}
-
-// ── список пакетов учителя (для выбора при создании экзамена) ──
-async function packs(req, env) {
-  const b = await req.json();
-  const id = await auth(env, b);
-  if (!id) return J({ error: 'auth' }, 401);
-  const rows = await sb(env,
-    `packs?teacher_id=eq.${id}&select=id,title,lang,created_at&order=created_at.desc&limit=200`);
-  // сколько approved-вопросов в каждом пакете
-  const out = [];
-  for (const p of rows) {
-    const all = await sb(env, `questions?pack_id=eq.${p.id}&select=id,status`);
-    const list = Array.isArray(all) ? all : [];
-    out.push({
-      ...p,
-      approved: list.filter(q => q.status === 'approved').length,
-      draft: list.filter(q => q.status === 'draft').length
-    });
-  }
-  return J({ ok: true, packs: out });
-}
-
-// ── вопросы пакета для ученика: случайные N из approved ──
-async function packQuestions(env, packId, n) {
-  if (!packId) return J({ error: 'pack' }, 400);
-  const rows = await sb(env,
-    `questions?pack_id=eq.${encodeURIComponent(packId)}&status=eq.approved`
-    + '&select=question_ru,question_uz,options_ru,options_uz,correct,explanation_ru,explanation_uz,svg,image_url,image_box&limit=200');
-  if (!rows || !rows.length) return J({ ok: true, questions: [] });
-  // перемешиваем и берём N
-  for (let i = rows.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [rows[i], rows[j]] = [rows[j], rows[i]];
-  }
-  const take = n > 0 ? Math.min(n, rows.length) : rows.length;
-  return J({ ok: true, questions: rows.slice(0, take) });
-}
-
-// ── черновики пакета (для проверки учителем) ──
-async function draftQuestions(req, env) {
-  const b = await req.json();
-  const id = await auth(env, b);
-  if (!id) return J({ error: 'auth' }, 401);
-  const packId = +b.pack_id;
-  if (!packId) return J({ error: 'pack' }, 400);
-  const rows = await sb(env,
-    `questions?pack_id=eq.${packId}&teacher_id=eq.${id}`
-    + '&select=id,question_uz,question_ru,options_uz,options_ru,correct,explanation_uz,ai_solved,status,svg,image_url,image_box'
-    + '&order=id');
-  return J({ ok: true, questions: rows || [] });
-}
-
-// ── одобрить / изменить / удалить вопрос ──
-async function editQuestion(req, env) {
-  const b = await req.json();
-  const id = await auth(env, b);
-  if (!id) return J({ error: 'auth' }, 401);
-  const qid = String(b.id || '');
-  if (!qid) return J({ error: 'id' }, 400);
-  // проверяем, что вопрос принадлежит этому учителю
-  const own = await sb(env, `questions?id=eq.${encodeURIComponent(qid)}&teacher_id=eq.${id}&select=id&limit=1`);
-  if (!own.length) return J({ error: 'not_found' }, 404);
-
-  if (b.action === 'delete') {
-    await sb(env, `questions?id=eq.${encodeURIComponent(qid)}`, { method: 'DELETE' });
-    return J({ ok: true });
-  }
-  const patch = {};
-  if (b.action === 'approve') patch.status = 'approved';
-  if (b.question != null) { patch.question_uz = String(b.question).slice(0, 2000); patch.question_ru = patch.question_uz; }
-  if (Array.isArray(b.options)) { const o = b.options.map(String).slice(0, 6); patch.options_uz = o; patch.options_ru = o; }
-  if (b.correct != null) patch.correct = Math.max(1, +b.correct);
-  if (b.image_box !== undefined) patch.image_box = b.image_box ? String(b.image_box).slice(0, 40) : null;
-  if (!Object.keys(patch).length) return J({ error: 'nothing' }, 400);
-  await sb(env, `questions?id=eq.${encodeURIComponent(qid)}`, {
-    method: 'PATCH', body: JSON.stringify(patch)
-  });
-  return J({ ok: true });
-}
-
-// ── сводка по одному экзамену (аналитика класса) ──
-async function examSummary(req, env) {
-  const b = await req.json();
-  const id = await auth(env, b);
-  if (!id) return J({ error: 'auth' }, 401);
-  const code = String(b.code || '').slice(0, 16);
-  if (!code) return J({ error: 'code' }, 400);
-
-  // экзамен должен принадлежать этому учителю
-  const ex = await sb(env, `exams?code=eq.${encodeURIComponent(code)}&teacher_id=eq.${id}&select=code,title&limit=1`);
-  if (!ex.length) return J({ error: 'not_found' }, 404);
-
-  const rows = await sb(env,
-    `results?exam_code=eq.${encodeURIComponent(code)}`
-    + '&select=student,correct,total,percent,grade_mark,duration_s,answers,created_at&order=percent.desc&limit=1000');
-  if (!rows.length) return J({ ok: true, exam: ex[0], summary: null });
-
-  const n = rows.length;
-  const avg = Math.round(rows.reduce((s, r) => s + (r.percent || 0), 0) / n);
-  const avgTime = Math.round(rows.reduce((s, r) => s + (r.duration_s || 0), 0) / n);
-  const grades = { 5: 0, 4: 0, 3: 0, 2: 0 };
-  rows.forEach(r => { grades[r.grade_mark] = (grades[r.grade_mark] || 0) + 1; });
-
-  // сложные вопросы: по answers считаем долю ошибок на каждый номер
-  const qStat = {};   // idx -> {wrong, total}
-  rows.forEach(r => {
-    if (Array.isArray(r.answers)) {
-      r.answers.forEach((a, i) => {
-        if (!qStat[i]) qStat[i] = { wrong: 0, total: 0 };
-        qStat[i].total++;
-        if (!(a && a.ok)) qStat[i].wrong++;
-      });
-    }
-  });
-  const hard = Object.entries(qStat)
-    .map(([i, v]) => ({ q: +i + 1, wrongPct: Math.round(v.wrong / v.total * 100), total: v.total }))
-    .filter(x => x.wrongPct >= 50)
-    .sort((a, b) => b.wrongPct - a.wrongPct)
-    .slice(0, 5);
-
-  return J({
-    ok: true,
-    exam: ex[0],
-    summary: {
-      count: n, avg, avgTime, grades,
-      best: rows.slice(0, 3).map(r => ({ student: r.student, correct: r.correct, total: r.total, percent: r.percent })),
-      worst: rows.slice(-3).reverse().map(r => ({ student: r.student, correct: r.correct, total: r.total, percent: r.percent })),
-      hard
-    }
-  });
-}
-
-// ── список экзаменов учителя (для выбора в статистике) ──
-async function myExams(req, env) {
-  const b = await req.json();
-  const id = await auth(env, b);
-  if (!id) return J({ error: 'auth' }, 401);
-  const rows = await sb(env,
-    `exams?teacher_id=eq.${id}&select=code,title,created_at&order=created_at.desc&limit=200`);
-  // число попыток по каждому
-  const out = [];
-  for (const e of rows) {
-    const r = await sb(env, `results?exam_code=eq.${encodeURIComponent(e.code)}&select=student`);
-    out.push({ ...e, attempts: Array.isArray(r) ? r.length : 0 });
-  }
-  return J({ ok: true, exams: out });
-}
-
-// ── удалить пакет вместе с вопросами ──
-async function deletePack(req, env) {
-  const b = await req.json();
-  const id = await auth(env, b);
-  if (!id) return J({ error: 'auth' }, 401);
-  const packId = +b.pack_id;
-  if (!packId) return J({ error: 'pack' }, 400);
-  const own = await sb(env, `packs?id=eq.${packId}&teacher_id=eq.${id}&select=id&limit=1`);
-  if (!own.length) return J({ error: 'not_found' }, 404);
-  await sb(env, `questions?pack_id=eq.${packId}`, { method: 'DELETE' });
-  await sb(env, `packs?id=eq.${packId}`, { method: 'DELETE' });
-  return J({ ok: true });
-}
-
-// ── проверка: сдавал ли уже этот ученик ──
-async function checkAttempt(env, code, student, req, ctx) {
-  if (!code || !student) return J({ ok: true, taken: false });
-  const rows = await sb(env,
-    `results?exam_code=eq.${encodeURIComponent(code)}&student=eq.${encodeURIComponent(student)}&select=id&limit=1`);
-  const taken = !!(rows && rows.length);
-
-  // === АНАЛИТИКА: ученик начал тест (первая проверка попытки = момент старта) ===
-  if (!taken && ctx) {
-    let teacherIdForLog = null;
-    try {
-      const ex0 = await sb(env, `exams?code=eq.${encodeURIComponent(code)}&select=teacher_id,pack_id&limit=1`);
-      if (ex0 && ex0[0]) teacherIdForLog = ex0[0].teacher_id ?? null;
-    } catch (e) {}
-    ctx.waitUntil(logEvent(env, req, {
-      event_type: 'exam_started',
-      role: 'student',
-      teacher_id: teacherIdForLog,
-      student_name: student,
-      exam_code: code,
-    }));
-  }
-
-  return J({ ok: true, taken });
-}
-
-// ── ежедневная сводка (будильник) ──
-async function dailySummary(env) {
-  const exams = await sb(env,
-    'exams?select=code,title,active_till,teacher_chat_id&order=created_at.desc&limit=50');
-  const now = new Date();
-  for (const ex of exams) {
-    if (ex.active_till && new Date(ex.active_till) < now) continue;  // экзамен закончился
-    const chat = ex.teacher_chat_id || env.TG_CHAT_ID;
-    if (!chat) continue;
-    const rows = await sb(env,
-      `results?exam_code=eq.${encodeURIComponent(ex.code)}`
-      + '&select=student,correct,total,percent,grade_mark,duration_s&order=percent.desc&limit=500');
-    if (!rows.length) continue;                                      // никто не проходил
-    await tg(env, chat, fmtSummary(ex, rows));
-  }
-}
-
-// ══════════ ДАШБОРД АНАЛИТИКИ ══════════
-async function analyticsDashboard(req, env) {
-  const url = new URL(req.url);
-  const key = url.searchParams.get('key');
-  if (!key || key !== env.ANALYTICS_DASHBOARD_KEY) {
-    return J({ error: 'unauthorized' }, 401);
-  }
-  try {
-    const [teachers, results, events] = await Promise.all([
-      sb(env, 'teachers?select=id,name,username,created_at'),
-      sb(env, 'results?select=student,subject,lang,percent,created_at,exam_code'),
-      sb(env, 'analytics_events?select=*&order=created_at.desc&limit=2000'),
-    ]);
-    return new Response(JSON.stringify({ teachers, results, events }), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
-  } catch (e) {
-    return J({ error: String(e && e.message || e) }, 500);
-  }
-}
-
-export default {
-  async fetch(req, env, ctx) {
-    const url = new URL(req.url);
-    if (!url.pathname.startsWith('/api/')) return env.ASSETS.fetch(req);
-    try {
-      const p = url.pathname, m = req.method;
-      if (m === 'POST' && p === '/api/result') return await postResult(req, env, ctx);
-      if (m === 'POST' && p === '/api/tg-auth') return await tgAuth(req, env, ctx);
-      if (m === 'POST' && p === '/api/me') return await me(req, env);
-      if (m === 'POST' && p === '/api/exam') return await createExam(req, env, ctx);
-      if (m === 'GET' && p === '/api/exam') return await getExam(env, url.searchParams.get('code'), req, ctx);
-      if (m === 'GET' && p === '/api/check-attempt')
-        return await checkAttempt(env, url.searchParams.get('code'), url.searchParams.get('student'), req, ctx);
-      if (m === 'POST' && p === '/api/stats') return await stats(req, env);
-      if (m === 'POST' && p === '/api/exam-summary') return await examSummary(req, env);
-      if (m === 'POST' && p === '/api/my-exams') return await myExams(req, env);
-      if (m === 'POST' && p === '/api/ingest') return await ingest(req, env);
-      if (m === 'POST' && p === '/api/packs') return await packs(req, env);
-      if (m === 'POST' && p === '/api/pack-delete') return await deletePack(req, env);
-      if (m === 'POST' && p === '/api/drafts') return await draftQuestions(req, env);
-      if (m === 'POST' && p === '/api/question') return await editQuestion(req, env);
-      if (m === 'GET'  && p === '/api/pack-questions')
-        return await packQuestions(env, url.searchParams.get('pack'), +url.searchParams.get('n') || 0);
-      if (m === 'GET' && p === '/api/analytics') return await analyticsDashboard(req, env);
-      if (m === 'GET' && p === '/api/ai-test') {
-        try {
-          const out = await callGemini(env, 'Ответь одним словом: работает', null);
-          return J({ ok: true, out });
-        } catch (e) { return J({ ok: false, detail: String(e.message || e).slice(0, 500) }); }
-      }
-      return J({ error: 'not_found' }, 404);
-    } catch (e) {
-      return J({ error: String(e && e.message || e) }, 500);
-    }
-  },
-
-  // срабатывает по расписанию из wrangler.jsonc
-  async scheduled(event, env, ctx) {
-    ctx.waitUntil(dailySummary(env));
-  }
-};
