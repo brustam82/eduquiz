@@ -1,1431 +1,1054 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MuallimTest — Ta'lim platformasi</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<style>
-  :root {
-    --lapis: #1B3A6B;
-    --lapis-light: #2A5298;
-    --gold: #C9952A;
-    --gold-light: #F0B429;
-    --cream: #FAF7F2;
-    --ink: #1A1A2E;
-    --muted: #6B7280;
-    --success: #059669;
-    --danger: #DC2626;
-    --white: #FFFFFF;
-    --border: #E5E0D8;
-    --shadow: 0 4px 24px rgba(27,58,107,0.10);
-    --radius: 14px;
-  }
+// MuallimTest — API-шлюз.
+// Браузер не ходит в базу за результатами и экзаменами — только сюда.
+// Ключ базы, пароль учителя и токен бота живут в секретах Cloudflare.
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+const J = (o, s = 200) => new Response(JSON.stringify(o), {
+  status: s,
+  headers: { 'content-type': 'application/json; charset=utf-8' }
+});
 
-  body {
-    font-family: 'Inter', sans-serif;
-    background: var(--cream);
-    color: var(--ink);
-    min-height: 100vh;
-  }
+const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 
-  /* SCREENS */
-  .screen { display: none; min-height: 100vh; }
-  .screen.active { display: flex; flex-direction: column; }
-
-  /* HEADER */
-  .header {
-    background: var(--lapis);
-    padding: 0;
-    position: relative;
-    overflow: hidden;
-  }
-  .header::before {
-    content: '';
-    position: absolute; top: 0; left: 0; right: 0;
-    height: 4px;
-    background: repeating-linear-gradient(90deg, var(--gold) 0, var(--gold) 18px, transparent 18px, transparent 24px);
-  }
-  .header::after {
-    content: '';
-    position: absolute; bottom: 0; left: 0; right: 0;
-    height: 4px;
-    background: repeating-linear-gradient(90deg, var(--gold) 0, var(--gold) 18px, transparent 18px, transparent 24px);
-  }
-  .header-inner {
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 22px 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .logo {
-    font-family: 'Playfair Display', serif;
-    color: var(--white);
-    font-size: 1.7rem;
-    letter-spacing: 0.5px;
-  }
-  .logo span { color: var(--gold); }
-  .header-back {
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.25);
-    color: var(--white);
-    padding: 8px 18px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: 500;
-    transition: background 0.2s;
-  }
-  .header-back:hover { background: rgba(255,255,255,0.22); }
-
-  /* HERO */
-  .hero {
-    background: linear-gradient(135deg, var(--lapis) 0%, var(--lapis-light) 100%);
-    padding: 72px 24px 80px;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-  }
-  .hero::before {
-    content: '';
-    position: absolute; top: 0; left: 0; right: 0;
-    height: 5px;
-    background: repeating-linear-gradient(90deg, var(--gold) 0, var(--gold) 18px, transparent 18px, transparent 24px);
-  }
-  .hero-pattern {
-    position: absolute; inset: 0;
-    background-image: radial-gradient(circle, rgba(201,149,42,0.12) 1.5px, transparent 1.5px);
-    background-size: 32px 32px;
-    pointer-events: none;
-  }
-  .hero h1 {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(2rem, 5vw, 3.2rem);
-    color: var(--white);
-    line-height: 1.2;
-    margin-bottom: 16px;
-    position: relative;
-  }
-  .hero h1 span { color: var(--gold-light); }
-  .hero p {
-    color: rgba(255,255,255,0.78);
-    font-size: 1.1rem;
-    max-width: 520px;
-    margin: 0 auto 40px;
-    position: relative;
-  }
-  .hero-btns {
-    display: flex;
-    gap: 16px;
-    justify-content: center;
-    flex-wrap: wrap;
-    position: relative;
-  }
-
-  /* BUTTONS */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 14px 28px;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 1rem;
-    cursor: pointer;
-    border: none;
-    transition: all 0.2s;
-    text-decoration: none;
-  }
-  .btn-gold {
-    background: var(--gold);
-    color: var(--white);
-  }
-  .btn-gold:hover { background: #b07e1e; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(201,149,42,0.35); }
-  .btn-outline {
-    background: rgba(255,255,255,0.1);
-    color: var(--white);
-    border: 1.5px solid rgba(255,255,255,0.35);
-  }
-  .btn-outline:hover { background: rgba(255,255,255,0.2); }
-  .btn-primary {
-    background: var(--lapis);
-    color: var(--white);
-  }
-  .btn-primary:hover { background: var(--lapis-light); transform: translateY(-1px); box-shadow: var(--shadow); }
-  .btn-secondary {
-    background: var(--white);
-    color: var(--lapis);
-    border: 1.5px solid var(--border);
-  }
-  .btn-secondary:hover { background: var(--cream); }
-  .btn-danger {
-    background: var(--danger);
-    color: var(--white);
-  }
-  .btn-success {
-    background: var(--success);
-    color: var(--white);
-  }
-  .btn-lg { padding: 16px 36px; font-size: 1.05rem; }
-  .btn-sm { padding: 9px 18px; font-size: 0.88rem; }
-  .btn-full { width: 100%; justify-content: center; }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
-
-  /* MAIN CONTENT */
-  .main { max-width: 960px; margin: 0 auto; padding: 40px 24px 60px; flex: 1; }
-  .main-narrow { max-width: 520px; margin: 0 auto; padding: 40px 24px 60px; flex: 1; }
-  .main-wide { max-width: 1100px; margin: 0 auto; padding: 40px 24px 60px; flex: 1; }
-
-  /* CARDS */
-  .card {
-    background: var(--white);
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
-    padding: 32px;
-  }
-  .card-sm { padding: 20px 24px; }
-
-  /* FEATURES GRID */
-  .features {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 20px;
-    margin-top: 48px;
-  }
-  .feature-card {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 28px 24px;
-    text-align: center;
-    box-shadow: var(--shadow);
-    transition: transform 0.2s;
-  }
-  .feature-card:hover { transform: translateY(-3px); }
-  .feature-icon {
-    width: 56px; height: 56px;
-    background: linear-gradient(135deg, var(--lapis), var(--lapis-light));
-    border-radius: 14px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.6rem;
-    margin: 0 auto 16px;
-  }
-  .feature-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; color: var(--lapis); }
-  .feature-card p { font-size: 0.88rem; color: var(--muted); line-height: 1.5; }
-
-  /* FORMS */
-  .form-group { margin-bottom: 20px; }
-  label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 7px; color: var(--lapis); }
-  input[type="text"], input[type="password"], input[type="number"], select, textarea {
-    width: 100%;
-    padding: 12px 16px;
-    border: 1.5px solid var(--border);
-    border-radius: 9px;
-    font-size: 1rem;
-    font-family: inherit;
-    color: var(--ink);
-    background: var(--cream);
-    transition: border-color 0.2s, box-shadow 0.2s;
-    outline: none;
-  }
-  input:focus, select:focus, textarea:focus {
-    border-color: var(--lapis);
-    box-shadow: 0 0 0 3px rgba(27,58,107,0.10);
-    background: var(--white);
-  }
-  textarea { resize: vertical; min-height: 90px; }
-  .error-msg { color: var(--danger); font-size: 0.85rem; margin-top: 8px; display: none; }
-  .error-msg.show { display: block; }
-
-  /* PAGE TITLES */
-  .page-title { font-family: 'Playfair Display', serif; font-size: 1.9rem; color: var(--lapis); margin-bottom: 8px; }
-  .page-subtitle { color: var(--muted); font-size: 1rem; margin-bottom: 32px; }
-
-  /* TABS */
-  .tabs { display: flex; gap: 0; margin-bottom: 28px; border-bottom: 2px solid var(--border); }
-  .tab {
-    padding: 12px 24px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: var(--muted);
-    border-bottom: 3px solid transparent;
-    margin-bottom: -2px;
-    transition: all 0.2s;
-  }
-  .tab.active { color: var(--lapis); border-bottom-color: var(--gold); }
-  .tab:hover:not(.active) { color: var(--lapis); }
-
-  /* QUIZ OPTIONS */
-  .options-grid { display: grid; gap: 12px; margin: 24px 0; }
-  .option-btn {
-    width: 100%;
-    text-align: left;
-    padding: 16px 20px;
-    background: var(--white);
-    border: 2px solid var(--border);
-    border-radius: 10px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: all 0.18s;
-    font-family: inherit;
-    color: var(--ink);
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-  .option-btn:hover:not(:disabled) { border-color: var(--lapis); background: #EEF2FA; }
-  .option-btn.correct { border-color: var(--success); background: #ECFDF5; color: #065F46; }
-  .option-btn.wrong { border-color: var(--danger); background: #FEF2F2; color: #991B1B; }
-  .option-letter {
-    width: 32px; height: 32px; min-width: 32px;
-    background: var(--cream);
-    border: 1.5px solid var(--border);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 0.88rem;
-    color: var(--lapis);
-  }
-  .option-btn.correct .option-letter { background: var(--success); color: white; border-color: var(--success); }
-  .option-btn.wrong .option-letter { background: var(--danger); color: white; border-color: var(--danger); }
-
-  /* PROGRESS BAR */
-  .progress-wrap { margin-bottom: 24px; }
-  .progress-label { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
-  .progress-bar { height: 8px; background: var(--border); border-radius: 99px; overflow: hidden; }
-  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--lapis), var(--gold)); border-radius: 99px; transition: width 0.5s ease; }
-
-  /* TIMER */
-  .timer-badge {
-    position: sticky; top: 8px; z-index: 20;
-    display: inline-flex; align-items: center; gap: 6px;
-    background: var(--lapis);
-    color: var(--white);
-    padding: 6px 14px;
-    border-radius: 99px;
-    font-weight: 700;
-    font-size: 0.95rem;
-  }
-  .timer-badge.warning { background: var(--danger); animation: pulse 0.6s infinite alternate; }
-  @keyframes pulse { to { opacity: 0.75; } }
-
-  /* RESULT */
-  .result-circle {
-    width: 140px; height: 140px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--lapis), var(--lapis-light));
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    margin: 0 auto 24px;
-    box-shadow: 0 8px 32px rgba(27,58,107,0.25);
-  }
-  .result-score { font-size: 2.8rem; font-weight: 800; color: var(--white); line-height: 1; }
-  .result-total { font-size: 0.9rem; color: rgba(255,255,255,0.7); }
-  .grade-badge {
-    display: inline-block;
-    padding: 6px 20px;
-    border-radius: 99px;
-    font-weight: 700;
-    font-size: 1.1rem;
-    margin-bottom: 12px;
-  }
-  .grade-5 { background: #ECFDF5; color: #065F46; border: 2px solid #6EE7B7; }
-  .grade-4 { background: #EFF6FF; color: #1D4ED8; border: 2px solid #93C5FD; }
-  .grade-3 { background: #FFFBEB; color: #92400E; border: 2px solid #FCD34D; }
-  .grade-2 { background: #FEF2F2; color: #991B1B; border: 2px solid #FCA5A5; }
-
-  /* TEACHER DASHBOARD */
-  .stats-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 16px;
-    margin-bottom: 32px;
-  }
-  .stat-card {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    text-align: center;
-  }
-  .stat-num { font-size: 2rem; font-weight: 800; color: var(--lapis); }
-  .stat-label { font-size: 0.82rem; color: var(--muted); margin-top: 4px; }
-
-  /* QR */
-  .qr-box {
-    width: 180px; height: 180px;
-    background: var(--white);
-    border: 3px solid var(--lapis);
-    border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 20px;
-    position: relative;
-    overflow: hidden;
-  }
-  .qr-inner { display: grid; grid-template-columns: repeat(10,1fr); gap: 2px; width: 140px; }
-  .qr-cell { aspect-ratio: 1; border-radius: 1px; }
-
-  /* QUIZ LIST */
-  .quiz-row {
-    display: flex; align-items: center; gap: 16px;
-    padding: 16px 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .quiz-row:last-child { border-bottom: none; }
-  .quiz-icon { width: 44px; height: 44px; background: linear-gradient(135deg, var(--lapis), var(--lapis-light)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
-  .quiz-info { flex: 1; }
-  .quiz-name { font-weight: 600; font-size: 0.95rem; }
-  .quiz-meta { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
-  .quiz-actions { display: flex; gap: 8px; }
-
-  /* BUILDER */
-  .question-block {
-    background: var(--white);
-    border: 1.5px solid var(--border);
-    border-radius: 12px;
-    padding: 20px 22px;
-    margin-bottom: 14px;
-  }
-  .q-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-  .q-num { font-weight: 700; font-size: 0.85rem; color: var(--gold); }
-  .answer-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
-  .answer-row input[type="text"] { flex: 1; }
-  .correct-radio { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--muted); cursor: pointer; }
-
-  /* RESULTS TABLE */
-  table { width: 100%; border-collapse: collapse; }
-  th { background: var(--lapis); color: white; padding: 12px 16px; text-align: left; font-size: 0.88rem; }
-  th:first-child { border-radius: 8px 0 0 8px; }
-  th:last-child { border-radius: 0 8px 8px 0; }
-  td { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
-  tr:hover td { background: var(--cream); }
-
-  /* UTILITY */
-  .text-center { text-align: center; }
-  .mt-8 { margin-top: 8px; }
-  .mt-16 { margin-top: 16px; }
-  .mt-24 { margin-top: 24px; }
-  .mt-32 { margin-top: 32px; }
-  .gap-12 { display: flex; gap: 12px; flex-wrap: wrap; }
-  .divider { height: 1px; background: var(--border); margin: 24px 0; }
-  .badge {
-    display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 0.78rem; font-weight: 600;
-  }
-  .badge-green { background: #ECFDF5; color: #065F46; }
-  .badge-blue { background: #EFF6FF; color: #1D4ED8; }
-  .badge-yellow { background: #FFFBEB; color: #92400E; }
-
-  /* EXPLANATION BOX */
-  .explanation-box {
-    display: none;
-    margin-top: 16px;
-    padding: 14px 16px;
-    background: var(--cream);
-    border-left: 4px solid var(--gold);
-    border-radius: 8px;
-    font-size: 0.92rem;
-    color: var(--ink);
-    line-height: 1.55;
-  }
-
-  /* QUESTION IMAGE */
-  #q-image { margin: 14px 0 4px; text-align: center; }
-  #q-image:empty { display: none; }
-  #q-image svg { max-width: 100%; height: auto; }
-
-  /* ORNAMENT FOOTER */
-  .ornament-footer {
-    height: 8px;
-    background: repeating-linear-gradient(90deg, var(--lapis) 0, var(--lapis) 18px, var(--gold) 18px, var(--gold) 24px);
-    margin-top: auto;
-  }
-
-  /* TRANSITION */
-  .screen.fade-in { animation: fadeIn 0.3s ease; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-
-  /* STEP INDICATOR */
-  .steps { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 32px; }
-  .step { display: flex; flex-direction: column; align-items: center; }
-  .step-circle { width: 32px; height: 32px; border-radius: 50%; background: var(--border); color: var(--muted); font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; }
-  .step.done .step-circle { background: var(--success); color: white; }
-  .step.active .step-circle { background: var(--lapis); color: white; }
-  .step-label { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
-  .step.active .step-label { color: var(--lapis); font-weight: 600; }
-  .step-line { width: 48px; height: 2px; background: var(--border); margin-bottom: 20px; }
-  .step-line.done { background: var(--success); }
-
-  @media (max-width: 600px) {
-    .hero { padding: 48px 16px 56px; }
-    .card { padding: 20px; }
-    .main, .main-narrow { padding: 24px 16px 48px; }
-  }
-</style>
-</head>
-<body>
-
-<!-- ══════════════════════════════════════ -->
-<div class="screen active" id="s-teacher-login">
-  <div class="header">
-    <div class="header-inner">
-      <div class="logo">Muallim<span>Test</span></div>
-    </div>
-  </div>
-  <div class="main-narrow" style="display:flex;align-items:center;flex:1;">
-    <div style="width:100%">
-      <div class="card">
-        <div class="text-center" style="margin-bottom:28px;">
-          <div style="width:60px;height:60px;background:linear-gradient(135deg,var(--lapis),var(--lapis-light));border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 16px;">🎓</div>
-          <h2 class="page-title" style="margin-bottom:4px;">O'qituvchi kirishi</h2>
-          <p style="color:var(--muted);font-size:0.93rem;">Imtihonlarni boshqarish uchun kiring</p>
-        </div>
-        <!-- вход из Telegram-бота: кнопка -->
-        <div id="lg-mini" style="display:none;">
-          <button class="btn btn-full btn-lg" onclick="loginMiniApp()"
-                  style="background:#2AABEE;color:#fff;border:none;">
-            Kirish →
-          </button>
-          <p class="text-center" style="margin-top:12px;font-size:0.9rem;color:var(--muted);">
-            <b id="lg-who">—</b> sifatida
-          </p>
-        </div>
-
-        <!-- вход из браузера: кнопка Telegram -->
-        <div id="lg-web" style="display:none;">
-          <div id="tg-widget" style="display:flex;justify-content:center;min-height:48px;"></div>
-          <p class="text-center" style="margin-top:14px;font-size:0.85rem;color:var(--muted);line-height:1.6;">
-            Telegram hisobingiz bilan kiring.<br>Parol kerak emas.
-          </p>
-        </div>
-
-        <div class="error-msg" id="login-error" style="margin-top:12px;">Kirib bo'lmadi</div>
-      </div>
-    </div>
-  </div>
-  <div class="ornament-footer"></div>
-</div>
-
-<!-- ══════════════════════════════════════ -->
-<!-- ПАНЕЛЬ УЧИТЕЛЯ              -->
-<!-- ══════════════════════════════════════ -->
-<div class="screen" id="s-teacher-dashboard">
-  <div class="header">
-    <div class="header-inner">
-      <div class="logo">Muallim<span>Test</span></div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <div class="lang-sw" style="display:flex;background:rgba(255,255,255,.14);border-radius:8px;padding:3px">
-          <button data-l="uz" onclick="setLang('uz')" style="border:0;background:transparent;color:#fff;font-size:12px;font-weight:600;padding:5px 9px;border-radius:6px;cursor:pointer;font-family:inherit">UZ</button>
-          <button data-l="ru" onclick="setLang('ru')" style="border:0;background:transparent;color:#fff;font-size:12px;font-weight:600;padding:5px 9px;border-radius:6px;cursor:pointer;font-family:inherit">RU</button>
-        </div>
-        <button class="header-back" onclick="logout()" data-t="nav.exit">Chiqish</button>
-      </div>
-    </div>
-  </div>
-  <div class="main">
-    <div style="margin-bottom:28px;">
-      <h1 class="page-title" data-t="d.title">O'qituvchi paneli</h1>
-      <p style="color:var(--muted);"><b id="me-name">—</b></p>
-    </div>
-
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;">
-      <a href="/upload" class="card" style="cursor:pointer;text-align:center;padding:28px;text-decoration:none;">
-        <div style="font-size:2.2rem;margin-bottom:10px;">📤</div>
-        <h3 style="color:var(--lapis);font-size:1.1rem;margin-bottom:4px;" data-t="d.upload">1. Test yuklash</h3>
-        <p style="color:var(--muted);font-size:0.88rem;" data-t="d.uploadD">Material yuklab, savol yaratish</p>
-      </a>
-      <a href="/review" class="card" style="cursor:pointer;text-align:center;padding:28px;text-decoration:none;">
-        <div style="font-size:2.2rem;margin-bottom:10px;">📋</div>
-        <h3 style="color:var(--lapis);font-size:1.1rem;margin-bottom:4px;" data-t="d.review">2. Tekshirish</h3>
-        <p style="color:var(--muted);font-size:0.88rem;" data-t="d.reviewD">Savollarni tasdiqlash</p>
-      </a>
-      <div class="card" style="cursor:pointer;text-align:center;padding:28px" onclick="openCreate()">
-        <div style="font-size:2.2rem;margin-bottom:10px;">➕</div>
-        <h3 style="color:var(--lapis);font-size:1.1rem;margin-bottom:4px;" data-t="d.exam">3. Yangi imtihon</h3>
-        <p style="color:var(--muted);font-size:0.88rem;" data-t="d.examD">Paketdan imtihon yaratish</p>
-      </div>
-      <div class="card" style="cursor:pointer;text-align:center;padding:28px" onclick="openStats()">
-        <div style="font-size:2.2rem;margin-bottom:10px;">📊</div>
-        <h3 style="color:var(--lapis);font-size:1.1rem;margin-bottom:4px;" data-t="d.stats">4. Statistika</h3>
-        <p style="color:var(--muted);font-size:0.88rem;" data-t="d.statsD">O'quvchilar natijalarini ko'rish</p>
-      </div>
-    </div>
-  </div>
-  <div class="ornament-footer"></div>
-</div>
-
-<!-- ══════════════════════════════════════ -->
-<!-- СТАТИСТИКА (отдельный экран)          -->
-<!-- ══════════════════════════════════════ -->
-<div class="screen" id="s-stats">
-  <div class="header">
-    <div class="header-inner">
-      <div class="logo">Muallim<span>Test</span></div>
-      <button class="header-back" onclick="go('s-teacher-dashboard')">← Orqaga</button>
-    </div>
-  </div>
-  <div class="main">
-    <h1 class="page-title" style="margin-bottom:6px;" data-t="st.title">Natijalar tahlili</h1>
-    <p class="page-subtitle" style="margin-bottom:18px;">Imtihonni tanlang — batafsil hisobot shakllanadi</p>
-
-    <div class="form-group">
-      <label>Imtihon</label>
-      <select id="st-exam" onchange="loadSummary()"><option value="">Yuklanmoqda…</option></select>
-    </div>
-
-    <div id="st-summary"></div>
-  </div>
-  <div class="ornament-footer"></div>
-</div>
-
-<!-- ══════════════════════════════════════ -->
-<!-- СОЗДАНИЕ ТЕСТА              -->
-<!-- ══════════════════════════════════════ -->
-<div class="screen" id="s-create-quiz">
-  <div class="header">
-    <div class="header-inner">
-      <div class="logo">Muallim<span>Test</span></div>
-      <button class="header-back" onclick="go('s-teacher-dashboard')">← Orqaga</button>
-    </div>
-  </div>
-  <div class="main-narrow">
-    <h1 class="page-title" data-t="c.title">Imtihon yaratish</h1>
-    <p class="page-subtitle" data-t="c.sub">Sozlang va sinf guruhi uchun havola oling</p>
-
-    <div class="card">
-      <div class="form-group">
-        <label data-t="c.name">Imtihon nomi</label>
-        <input type="text" id="ex-title" placeholder="Matematika — olimpiada" value="">
-      </div>
-      <div class="form-group">
-        <label>Savollar to'plami (paket)</label>
-        <select id="ex-pack"><option value="">Yuklanmoqda…</option></select>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-        <div class="form-group">
-          <label>Savollar soni <span id="ex-max" style="color:var(--muted);font-weight:400;font-size:.8rem"></span></label>
-          <input type="number" id="ex-count" value="0" min="0" max="200">
-          <div style="font-size:.75rem;color:var(--muted);margin-top:4px">0 = paketdagi barcha savollar</div>
-        </div>
-        <div class="form-group">
-          <label data-t="c.time">Savolga soniya (0 = taymersiz)</label>
-          <input type="number" id="ex-time" value="60" min="0" max="300">
-        </div>
-      </div>
-      <div class="form-group">
-        <label data-t="c.till">Amal qilish muddati (bo'sh = cheksiz)</label>
-        <input type="datetime-local" id="ex-till">
-      </div>
-      <div class="form-group">
-        <label class="correct-radio" style="font-size:0.95rem;"><input type="checkbox" id="ex-expl" checked data-t="c.expl"> Javobdan keyin izohni ko'rsatish</label>
-      </div>
-      <div class="error-msg" id="ex-err"></div>
-      <button class="btn btn-primary btn-full btn-lg" onclick="createExam()" data-t="c.create">Yaratish va havola olish →</button>
-      <div id="ex-link-box" style="display:none;margin-top:20px;padding:16px;background:var(--cream);border-radius:10px;border:1.5px solid var(--gold);">
-        <p style="font-weight:700;color:var(--lapis);margin-bottom:8px;">✅ Imtihon yaratildi!</p>
-        <p style="font-size:0.85rem;word-break:break-all;margin-bottom:12px;" id="ex-link-text"></p>
-        <button class="btn btn-gold btn-full" onclick="copyExamLink()">📋 Guruh uchun havolani nusxalash</button>
-      </div>
-    </div>
-  </div>
-  <div class="ornament-footer"></div>
-</div>
-
-<!-- ══════════════════════════════════════ -->
-<div class="screen" id="s-student-name">
-  <div class="header">
-    <div class="header-inner">
-      <div class="logo">Muallim<span>Test</span></div>
-    </div>
-  </div>
-  <div class="main-narrow" style="display:flex;align-items:center;flex:1;">
-    <div style="width:100%">
-      <div class="card">
-        <div class="text-center" style="margin-bottom:28px;">
-          <div style="font-size:3rem;margin-bottom:12px;">✏️</div>
-          <h2 class="page-title" style="margin-bottom:4px;" data-t="q.welcome">Xush kelibsiz!</h2>
-          <p style="color:var(--muted);">Testni boshlash uchun ismingizni kiriting</p>
-        </div>
-        <div class="form-group">
-          <label>Ismingiz</label>
-          <input type="text" id="student-name-input" placeholder="Masalan: Kamila Rashidova">
-        </div>
-        <button class="btn btn-gold btn-full btn-lg mt-8" onclick="startQuiz()" data-t="q.start">Testni boshlash →</button>
-      </div>
-    </div>
-  </div>
-  <div class="ornament-footer"></div>
-</div>
-
-<!-- ══════════════════════════════════════ -->
-<!-- ВОПРОС                      -->
-<!-- ══════════════════════════════════════ -->
-<div class="screen" id="s-question">
-  <div class="header">
-    <div class="header-inner">
-      <div class="logo">Muallim<span>Test</span></div>
-      <div style="display:flex;gap:8px;align-items:center;">
-<div class="timer-badge" id="timer-badge">⏱ <span id="timer-display">45</span></div>
-      </div>
-    </div>
-  </div>
-  <div class="main-narrow">
-    <div class="progress-wrap">
-      <div class="progress-label">
-        <span>Savol <span id="q-current">1</span> / <span id="q-total">10</span></span>
-        <span id="q-score-label">0 / 0 to'g'ri</span>
-      </div>
-      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:10%"></div></div>
-    </div>
-
-    <div class="card">
-      <p style="font-size:0.82rem;color:var(--gold);font-weight:700;margin-bottom:10px;">SAVOL <span id="q-num-label">1</span></p>
-      <h2 style="font-size:1.25rem;font-weight:700;color:var(--lapis);line-height:1.4;margin-bottom:4px;" id="q-text">Yuklanmoqda...</h2>
-      <div id="q-image"></div>
-      <p style="color:var(--muted);font-size:0.85rem;margin-bottom:20px;" id="pick-label">Bitta to'g'ri javobni tanlang</p>
-      <div class="options-grid" id="options-container"></div>
-      <div class="explanation-box" id="explanation-box"></div>
-      <div id="next-btn-wrap" style="display:none;margin-top:20px;">
-        <button class="btn btn-primary btn-full" onclick="nextQuestion()" id="next-label">Keyingi savol →</button>
-      </div>
-    </div>
-  </div>
-  <div class="ornament-footer"></div>
-</div>
-
-<!-- ══════════════════════════════════════ -->
-<!-- РЕЗУЛЬТАТ УЧЕНИКА           -->
-<!-- ══════════════════════════════════════ -->
-<div class="screen" id="s-student-result">
-  <div class="header">
-    <div class="header-inner">
-      <div class="logo">Muallim<span>Test</span></div>
-    </div>
-  </div>
-  <div class="main-narrow" style="display:flex;align-items:center;flex:1;">
-    <div style="width:100%;text-align:center;">
-      <div class="card">
-        <h2 class="page-title" style="margin-bottom:24px;" id="result-title" data-t="r.done">Test yakunlandi!</h2>
-        <div class="result-circle" id="result-circle">
-          <div style="font-size:1.9rem;line-height:1;margin-bottom:2px" id="result-emoji">🎯</div>
-          <div class="result-score" id="result-score" style="font-size:2rem">0</div>
-          <div class="result-total" id="result-total">10 dan</div>
-        </div>
-        <div class="grade-badge" id="grade-badge">—</div>
-        <p style="color:var(--muted);margin-bottom:24px;" id="result-msg">—</p>
-        <div class="divider"></div>
-        <div style="text-align:left;background:var(--cream);border-radius:10px;padding:14px 16px;margin-bottom:14px;font-size:0.92rem;line-height:1.9;">
-          <div><b>Jami savollar:</b> <span id="rs-total">0</span> ta</div>
-          <div><b>To'g'ri javoblar:</b> <span id="rs-ok">0</span> ta</div>
-          <div><b>Xato javoblar:</b> <span id="rs-bad">0</span> ta</div>
-          <div><b>Umumiy natija:</b> <span id="res-percent">0%</span></div>
-          <div><b>Sarflangan vaqt:</b> <span id="res-time">0:00</span></div>
-        </div>
-        <div style="text-align:left;border-left:4px solid var(--gold);background:#FFFDF7;border-radius:8px;padding:12px 14px;font-size:0.9rem;color:var(--ink);line-height:1.6;" id="rs-verdict"></div>
-        <button class="btn btn-primary btn-full mt-24" onclick="finishExam()" data-t="r.finish">Yakunlash</button>
-        <p style="font-size:0.82rem;color:var(--muted);margin-top:10px;">Natijangiz o'qituvchiga yuborildi</p>
-      </div>
-    </div>
-  </div>
-  <div class="ornament-footer"></div>
-</div>
-
-
-<!-- ══════════════════════════════════════ -->
-<!-- JAVASCRIPT                            -->
-<!-- ══════════════════════════════════════ -->
-<script>
-// ── TELEGRAM MINI APP ───────────────────
-
-/* ── UZ/RU перевод интерфейса ── */
-var MT_RU = {
-"nav.exit":"Выход","d.title":"Панель учителя",
-"d.upload":"1. Загрузить тест","d.uploadD":"Загрузить материал, создать вопросы",
-"d.review":"2. Проверка","d.reviewD":"Подтверждение вопросов",
-"d.exam":"3. Новый экзамен","d.examD":"Создать экзамен из пакета",
-"d.stats":"4. Статистика","d.statsD":"Просмотр результатов учеников",
-"c.title":"Создание экзамена","c.sub":"Настройте и получите ссылку для класса",
-"c.name":"Название экзамена","c.time":"Секунд на вопрос (0 = без таймера)",
-"c.till":"Срок действия (пусто = бессрочно)","c.expl":" Показывать пояснение после ответа",
-"c.create":"Создать и получить ссылку →",
-"st.title":"Анализ результатов",
-"q.welcome":"Добро пожаловать!","q.start":"Начать тест →",
-"r.done":"Тест завершён!","r.finish":"Завершить"
-};
-var MT_UZ = {};
-function mtLang(){ try{return localStorage.getItem('mt_lang')||'uz'}catch(e){return 'uz'} }
-function setLang(l){
-  if(!Object.keys(MT_UZ).length){ document.querySelectorAll('[data-t]').forEach(function(e){MT_UZ[e.getAttribute('data-t')]=e.innerHTML}); }
-  document.querySelectorAll('[data-t]').forEach(function(e){
-    var k=e.getAttribute('data-t');
-    e.innerHTML = l==='ru' ? (MT_RU[k]||MT_UZ[k]) : MT_UZ[k];
-  });
-  document.querySelectorAll('.lang-sw button').forEach(function(b){
-    b.style.background = b.dataset.l===l ? 'rgba(255,255,255,.28)' : 'transparent';
-  });
-  try{localStorage.setItem('mt_lang',l)}catch(e){}
-  window.MT_L = l;
-}
-// приём языка из URL (?lang=ru), затем из памяти
-(function(){
-  var u=new URLSearchParams(location.search).get('lang');
-  if(u==='ru'||u==='uz'){ try{localStorage.setItem('mt_lang',u)}catch(e){} }
-  window.addEventListener('DOMContentLoaded',function(){ setLang(mtLang()); });
-})();
-
-let tg = null;
-try {
-  tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
-  if (tg) {
-    tg.ready();
-    tg.expand();
-    const u = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
-    if (u) {
-      const name = [u.first_name, u.last_name].filter(Boolean).join(' ');
-      window.addEventListener('DOMContentLoaded', () => {
-        const inp = document.getElementById('student-name-input');
-        if (inp && name) inp.value = name;
-      });
+// запрос в Supabase от имени service_role (RLS не применяется)
+async function sb(env, path, init = {}) {
+  const r = await fetch(`${env.SUPABASE_URL}/rest/v1/${path}`, {
+    ...init,
+    headers: {
+      apikey: env.SUPABASE_SERVICE_KEY,
+      Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+      'Content-Type': 'application/json',
+      ...(init.headers || {})
     }
-  }
-} catch (e) { /* приложение работает и вне Telegram */ }
-
-// ── NAVIGATION ──────────────────────────
-function go(screenId) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active','fade-in'));
-  const next = document.getElementById(screenId);
-  if (next) {
-    next.classList.add('active','fade-in');
-    window.scrollTo(0,0);
-  }
-}
-
-// открыть создание экзамена + подгрузить пакеты
-function openCreate(){
-  go('s-create-quiz');
-  loadPacks();
-}
-
-// ── TEACHER LOGIN ────────────────────────
-let TOKEN = "";
-let ME = null;
-let EXAM_LINK = "";
-
-const api = (path, body) => fetch(path, {
-  method: 'POST', headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(body)
-}).then(r => r.json());
-
-function enterDashboard(){
-  document.getElementById('me-name').textContent = ME ? ME.name : '';
-  document.getElementById('login-error').classList.remove('show');
-  go('s-teacher-dashboard');
-}
-
-// открыть статистику + загрузить свежие результаты
-function openStats(){
-  go('s-stats');
-  loadMyExams();
-}
-
-async function loadMyExams(){
-  const sel = document.getElementById('st-exam');
-  sel.innerHTML = '<option value="">Yuklanmoqda…</option>';
-  try {
-    const out = await api('/api/my-exams', { token: TOKEN });
-    if (!out.ok || !out.exams.length) { sel.innerHTML = '<option value="">Imtihon yo\'q</option>'; return; }
-    sel.innerHTML = '<option value="">— Umumiy sarhisob uchun tanlang —</option>';
-    out.exams.forEach(e => {
-      const o = document.createElement('option');
-      o.value = e.code;
-      o.textContent = e.title + ' (' + e.attempts + ' urinish)';
-      sel.appendChild(o);
-    });
-  } catch(e) { sel.innerHTML = '<option value="">Yuklab bo\'lmadi</option>'; }
-}
-
-async function loadSummary(){
-  const code = document.getElementById('st-exam').value;
-  const box = document.getElementById('st-summary');
-  if (!code) { box.innerHTML = '<div class="card card-sm" style="color:var(--muted);">Hisobotni ko\'rish uchun imtihonni tanlang.</div>'; return; }
-  box.innerHTML = '<div class="card card-sm" style="color:var(--muted);">Hisobot shakllantirilmoqda…</div>';
-  try {
-    const out = await api('/api/exam-summary', { token: TOKEN, code });
-    if (!out.ok) throw 0;
-    if (!out.summary) { box.innerHTML = '<div class="card card-sm" style="color:var(--muted);">Bu imtihon bo\'yicha hali natijalar yo\'q.</div>'; return; }
-    box.innerHTML = renderReport(out.exam, out.summary, code);
-  } catch(e) { box.innerHTML = '<div class="card card-sm" style="color:var(--danger);">Hisobotni yuklab bo\'lmadi.</div>'; }
-}
-
-function kpi(v,l,c){
-  return '<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;">'
-    +'<div style="font-size:1.7rem;font-weight:800;color:'+(c||'var(--lapis)')+';line-height:1.1">'+v+'</div>'
-    +'<div style="font-size:0.76rem;color:var(--muted);margin-top:5px;line-height:1.35">'+l+'</div></div>';
-}
-
-function renderReport(exam, s, code){
-  const mm = Math.floor(s.avgTime/60), ss = s.avgTime%60;
-  const tot = s.count;
-  const passed = s.grades ? (tot - (s.grades[2]||0)) : 0;
-  const passPct = tot ? Math.round(passed/tot*100) : 0;
-  const dotc = s.avg>=80?'var(--success)':s.avg>=50?'#B8860B':'var(--danger)';
-
-  let h = '';
-
-  // шапка отчёта
-  h += '<div class="card" style="margin-bottom:16px;padding:20px 22px;">';
-  h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">';
-  h += '<div><div style="font-family:\'Playfair Display\',serif;font-size:1.25rem;color:var(--lapis);">'+esc(exam.title)+'</div>';
-  h += '<div style="font-size:0.8rem;color:var(--muted);margin-top:3px;">Imtihon kodi: <b style="letter-spacing:.5px">'+esc(code)+'</b></div></div>';
-  h += '<button class="btn btn-secondary btn-sm" onclick="exportCsv(\''+code+'\')">⤓ Excel (CSV)</button>';
-  h += '</div></div>';
-
-  // KPI
-  h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px;">';
-  h += kpi(tot, "Imtihon topshirgan<br>o'quvchilar");
-  h += kpi(s.avg+'%', "Guruhning<br>o'rtacha natijasi", dotc);
-  h += kpi(passPct+'%', "Ijobiy baho<br>olganlar ulushi");
-  h += kpi(mm+':'+String(ss).padStart(2,'0'), "O'rtacha sarflangan<br>vaqt");
-  h += '</div>';
-
-  // топ-3
-  h += '<div class="card" style="margin-bottom:16px;padding:20px 22px;">';
-  h += '<div style="font-weight:700;color:var(--lapis);margin-bottom:14px;">🏆 Eng yuqori natija ko\'rsatgan 3 nafar o\'quvchi</div>';
-  const med=['🥇','🥈','🥉'], mc=['#C9952A','#9AA5B1','#B08D57'];
-  (s.best||[]).forEach(function(r,i){
-    h += '<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;background:'+(i===0?'#FFFBF0':'var(--cream)')+';margin-bottom:8px;border:1px solid '+(i===0?'#F0DFB0':'var(--border)')+';">'
-      +'<span style="font-size:1.3rem">'+med[i]+'</span>'
-      +'<div style="flex:1"><div style="font-weight:700;color:var(--ink);font-size:0.95rem">'+esc(r.student)+'</div>'
-      +'<div style="font-size:0.78rem;color:var(--muted)">To\'g\'ri javoblar: '+r.correct+' / '+r.total+'</div></div>'
-      +'<div style="font-weight:800;font-size:1.1rem;color:'+mc[i]+'">'+r.percent+'%</div></div>';
   });
-  h += '</div>';
-
-  // распределение оценок
-  h += '<div class="card" style="margin-bottom:16px;padding:20px 22px;">';
-  h += '<div style="font-weight:700;color:var(--lapis);margin-bottom:14px;">Baholar taqsimoti</div>';
-  const gl=[['5',"A'lo",'#059669'],['4','Yaxshi','#1D4ED8'],['3','Qoniqarli','#B8860B'],['2','Qoniqarsiz','#DC2626']];
-  gl.forEach(function(g){
-    const v=(s.grades&&s.grades[g[0]])||0, pc=tot?Math.round(v/tot*100):0;
-    h += '<div style="margin-bottom:11px;">'
-      +'<div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:5px;">'
-      +'<span style="color:var(--ink)"><b>'+g[0]+'</b> — '+g[1]+'</span>'
-      +'<span style="color:var(--muted)">'+v+' ta ('+pc+'%)</span></div>'
-      +'<div style="height:9px;background:var(--border);border-radius:6px;overflow:hidden"><div style="width:'+pc+'%;height:100%;background:'+g[2]+';border-radius:6px"></div></div></div>';
-  });
-  h += '</div>';
-
-  // сложные вопросы
-  if (s.hard && s.hard.length){
-    h += '<div class="card" style="margin-bottom:16px;padding:20px 22px;">';
-    h += '<div style="font-weight:700;color:var(--danger);margin-bottom:6px;">Eng ko\'p xato qilingan savollar</div>';
-    h += '<div style="font-size:0.8rem;color:var(--muted);margin-bottom:12px;">Ushbu savollar mavzusini qayta tushuntirish tavsiya etiladi</div>';
-    s.hard.forEach(function(x){
-      h += '<div style="margin-bottom:10px;">'
-        +'<div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:5px;">'
-        +'<span>Savol № '+x.q+'</span><span style="color:var(--danger);font-weight:700">'+x.wrongPct+'% xato</span></div>'
-        +'<div style="height:8px;background:var(--border);border-radius:6px;overflow:hidden"><div style="width:'+x.wrongPct+'%;height:100%;background:#DC2626;border-radius:6px"></div></div></div>';
-    });
-    h += '</div>';
-  }
-
-  // требуют внимания
-  if (s.worst && s.worst.length){
-    h += '<div class="card" style="margin-bottom:16px;padding:20px 22px;">';
-    h += '<div style="font-weight:700;color:var(--lapis);margin-bottom:12px;">E\'tibor talab qiladigan o\'quvchilar</div>';
-    s.worst.forEach(function(r){
-      h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:0.9rem;">'
-        +'<span>'+esc(r.student)+'</span>'
-        +'<span style="color:'+(r.percent<50?'var(--danger)':'var(--muted)')+';font-weight:700">'+r.correct+'/'+r.total+' · '+r.percent+'%</span></div>';
-    });
-    h += '</div>';
-  }
-
-  // вывод
-  const verdict = s.avg>=80 ? "Guruh mavzuni yuqori darajada o'zlashtirgan. Natijalar barqaror, qo'shimcha mustahkamlash talab etilmaydi."
-    : s.avg>=65 ? "Guruhning umumiy tayyorgarligi qoniqarli. Ayrim o'quvchilar bilan individual ishlash tavsiya etiladi."
-    : s.avg>=50 ? "Guruh mavzuni qisman o'zlashtirgan. Xato ko'p uchragan savollar mavzusini takrorlash zarur."
-    : "Guruhning umumiy natijasi past. Mavzuni qaytadan tushuntirib, mustahkamlovchi mashg'ulot o'tkazish tavsiya etiladi.";
-  h += '<div class="card" style="padding:18px 22px;border-left:4px solid var(--gold);">';
-  h += '<div style="font-weight:700;color:var(--lapis);margin-bottom:6px;">Tahliliy xulosa</div>';
-  h += '<div style="font-size:0.92rem;line-height:1.65;color:var(--ink)">'+verdict+'</div></div>';
-
-  return h;
+  const t = await r.text();
+  if (!r.ok) throw new Error(`SB ${r.status}: ${t}`);
+  return t ? JSON.parse(t) : null;
 }
 
-async function exportCsv(code){
-  const out = await api('/api/stats', { token: TOKEN, limit: 500 });
-  if (!out.ok) return;
-  const rows = out.results.filter(r => r.exam_code === code);
-  let csv = "O'quvchi;Imtihon;Ball;Foiz;Baho;Vaqt (s);Sana\n";
-  rows.forEach(r => {
-    csv += [r.student, r.exam_title||'', r.correct+'/'+r.total, r.percent+'%', r.grade_mark, r.duration_s||0,
-      new Date(r.created_at).toLocaleString()].join(';') + "\n";
-  });
-  const blob = new Blob(["\ufeff"+csv], {type:'text/csv;charset=utf-8'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob); a.download = 'MuallimTest_'+code+'.csv'; a.click();
+// ============================================================
+//  АНАЛИТИКА — журнал событий (analytics_events)
+//  Не должна ломать основной функционал, если упадёт.
+// ============================================================
+function detectDevice(userAgent) {
+  const ua = (userAgent || '').toLowerCase();
+  if (/tablet|ipad/.test(ua)) return 'tablet';
+  if (/mobile|android|iphone/.test(ua)) return 'mobile';
+  return 'desktop';
 }
 
-function esc(s){ return String(s==null?'':s).replace(/</g,'&lt;'); }
-
-function logout(){
-  TOKEN = ""; ME = null;
-  try { localStorage.removeItem('eq_token'); } catch(e) {}
-  location.href = location.pathname;
-}
-
-const BOT = 'eduquiz_pm_bot';
-
-function loginFail(msg){
-  const e = document.getElementById('login-error');
-  e.textContent = msg; e.classList.add('show');
-}
-
-async function tgLogin(payload){
+async function logEvent(env, request, data) {
   try {
-    const r = await api('/api/tg-auth', payload);
-    if (r.ok) {
-      TOKEN = r.token; ME = r.me;
-      try { localStorage.setItem('eq_token', TOKEN); } catch(e) {}
-      enterDashboard();
-      return;
-    }
-    loginFail("Telegram tekshiruvi o'tmadi");
-  } catch(e) { loginFail("Internet bilan bog'lanib bo'lmadi"); }
-}
-
-function loginMiniApp(){
-  let initData = '';
-  try { initData = Telegram.WebApp.initData || ''; } catch(e) {}
-  if (!initData) { loginFail("Telegram ma'lumoti topilmadi"); return; }
-  tgLogin({ initData });
-}
-
-window.onTelegramAuth = user => tgLogin({ widget: user });
-
-function mountTelegramButton(){
-  const box = document.getElementById('tg-widget');
-  if (!box || box.dataset.done) return;
-  box.dataset.done = '1';
-  const sc = document.createElement('script');
-  sc.async = true;
-  sc.src = 'https://telegram.org/js/telegram-widget.js?22';
-  sc.setAttribute('data-telegram-login', BOT);
-  sc.setAttribute('data-size', 'large');
-  sc.setAttribute('data-radius', '10');
-  sc.setAttribute('data-userpic', 'false');
-  sc.setAttribute('data-request-access', 'write');
-  sc.setAttribute('data-onauth', 'onTelegramAuth(user)');
-  sc.onerror = () => loginFail("Telegram tugmasi yuklanmadi");
-  box.appendChild(sc);
-}
-
-// ── ПАКЕТЫ (для создания экзамена) ──
-async function loadPacks(){
-  const sel = document.getElementById('ex-pack');
-  sel.innerHTML = '<option value="">Yuklanmoqda…</option>';
-  try {
-    const out = await api('/api/packs', { token: TOKEN });
-    if (!out.ok) throw 0;
-    if (!out.packs.length) {
-      sel.innerHTML = '<option value="">Paket yo\'q — avval test yuklang</option>';
-      return;
-    }
-    sel.innerHTML = '';
-    out.packs.forEach(p => {
-      const o = document.createElement('option');
-      o.value = p.id;
-      o.textContent = p.title + ' (' + p.approved + ' savol)';
-      o.dataset.n = p.approved;
-      sel.appendChild(o);
-    });
-    sel.onchange = showMax; showMax();
-  } catch(e) {
-    sel.innerHTML = '<option value="">Yuklab bo\'lmadi</option>';
-  }
-}
-function showMax(){
-  var sel=document.getElementById('ex-pack');
-  var o=sel.options[sel.selectedIndex];
-  var n=o&&o.dataset?o.dataset.n:'';
-  document.getElementById('ex-max').textContent = n ? '(mavjud: '+n+')' : '';
-}
-
-async function createExam(){
-  const titleEl=document.getElementById('ex-title');
-  var errEl=document.getElementById('ex-err');
-  if(!titleEl.value.trim()){
-    titleEl.style.borderColor='var(--danger)';
-    errEl.textContent="Imtihon nomini kiriting"; errEl.classList.add('show');
-    titleEl.focus(); return;
-  }
-  titleEl.style.borderColor=''; errEl.classList.remove('show');
-  const packId = document.getElementById('ex-pack').value;
-  if(!packId){ errEl.textContent="Savollar to'plamini (paket) tanlang"; errEl.classList.add('show'); return; }
-  const till=document.getElementById('ex-till').value.trim();
-  const body={ token:TOKEN, title:titleEl.value.trim(),
-    subjects:['math'],
-    pack_id: +packId,
-    q_count:+document.getElementById('ex-count').value||0,
-    time_per_q:+document.getElementById('ex-time').value||0,
-    show_expl:document.getElementById('ex-expl').checked,
-    active_till: till ? new Date(till).toISOString() : null };
-  try{
-    const res=await fetch("/api/exam",{method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(body)});
-    const out=await res.json();
-    if(!out.ok) throw 0;
-    EXAM_LINK=location.origin+"/?exam="+out.code;
-    document.getElementById('ex-link-text').innerHTML=
-      '<b>Kod: '+out.code+'</b><br>'+EXAM_LINK;
-    document.getElementById('ex-link-box').style.display='block';
-  }catch(e){ alert("Yaratib bo'lmadi. Internetni tekshiring."); }
-}
-function copyExamLink(){
-  navigator.clipboard.writeText(EXAM_LINK).then(()=>alert("Nusxalandi! Sinf guruhiga joylashtiring."));
-}
-
-const MARK_WORD = {5:"A'lo",4:"Yaxshi",3:"Qoniqarli",2:"Qoniqarsiz"};
-const MARK_CLASS = {5:"badge-green",4:"badge-blue",3:"badge-yellow",2:""};
-
-async function loadResults(){
-  const t = document.getElementById('live-results');
-  const empty = document.getElementById('no-results');
-  if (!t || !empty) return;
-  try {
-    const out = await api("/api/stats", { token: TOKEN, limit: 100 });
-    if (!out.ok) throw 0;
-    const rows = out.results;
-    t.querySelectorAll('tr:not(:first-child)').forEach(r=>r.remove());
-    empty.style.display = rows.length ? 'none' : 'block';
-    rows.forEach(r=>{
-      const m = Math.floor(r.duration_s/60), s = r.duration_s%60;
-      const d = new Date(r.created_at);
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${r.student}</td>`+
-        `<td>${r.exam_title || '—'}${r.exam_code ? `<br><span style="font-size:0.72rem;color:var(--muted);letter-spacing:0.5px;">${r.exam_code}</span>` : ''}</td>`+
-        `<td>${r.correct}/${r.total}</td><td>${r.percent}%</td>`+
-        `<td><span class="badge ${MARK_CLASS[r.grade_mark]||''}" ${r.grade_mark===2?'style="background:#FEF2F2;color:#991B1B;"':''}>${MARK_WORD[r.grade_mark]||r.grade_mark}</span></td>`+
-        `<td>${m}:${String(s).padStart(2,'0')}</td>`+
-        `<td>${d.toLocaleDateString()} ${d.toLocaleTimeString().slice(0,5)}</td>`;
-      t.appendChild(tr);
-    });
-  } catch(e){ empty.style.display='block'; }
-}
-
-// ── QUIZ ──────────────────────────
-const LANG = 'uz';
-const SUBJECT = 'math';
-let quizData = [];
-
-const UI = {
-  uz: { pick:"Bitta to'g'ri javobni tanlang", next:"Keyingi savol →",
-        loadErr:"Savollarni yuklab bo'lmadi. Internetni tekshiring." }
-};
-
-// вопросы берём из пакета экзамена через воркер (случайные N уже перемешаны сервером)
-async function loadBank(){
-  if (!EXAM || !EXAM.pack_id) { quizData = []; return; }
-  const n = EXAM.q_count || 10;
-  const res = await fetch("/api/pack-questions?pack=" + encodeURIComponent(EXAM.pack_id) + "&n=" + n);
-  if(!res.ok) throw new Error("load failed");
-  const out = await res.json();
-  const rows = (out && out.questions) ? out.questions : [];
-  quizData = rows.map(r => ({
-    q:    LANG==='ru' ? (r.question_ru||r.question_uz) : (r.question_uz||r.question_ru),
-    opts: LANG==='ru' ? (r.options_ru||r.options_uz) : (r.options_uz||r.options_ru),
-    correct: r.correct - 1,
-    expl: LANG==='ru' ? (r.explanation_ru||r.explanation_uz) : (r.explanation_uz||r.explanation_ru),
-    svg:  r.svg || null,
-    img:  r.image_url || null,
-    box:  r.image_box || null
-  }));
-}
-
-// ── QUIZ STATE ────────────────────────────
-let currentQ = 0;
-let score = 0;
-let answered = false;
-let timerInterval = null;
-let timeLeft = 45;
-let startTime = null;
-let totalElapsed = 0;
-let answerLog = [];
-
-const letters = ['A', 'B', 'C', 'D', 'E'];
-
-async function startQuiz() {
-  const nameInput = document.getElementById('student-name-input').value.trim();
-  if (!nameInput) {
-    document.getElementById('student-name-input').focus();
-    document.getElementById('student-name-input').style.borderColor = 'var(--danger)';
-    return;
-  }
-  // один ученик — одна попытка
-  if (window.EXAM_CODE) {
-    try {
-      const c = await fetch('/api/check-attempt?code='+encodeURIComponent(window.EXAM_CODE)+'&student='+encodeURIComponent(nameInput));
-      const cj = await c.json();
-      if (cj.taken) { alert("Siz bu imtihonni allaqachon topshirgansiz."); return; }
-    } catch(e) {}
-  }
-  try { await loadBank(); }
-  catch(e){ alert(UI[LANG].loadErr); return; }
-  answerLog = [];
-  if (quizData.length === 0) { alert("Bu imtihonda savollar yo'q."); return; }
-  currentQ = 0;
-  score = 0;
-  totalElapsed = 0;
-  startTime = Date.now();
-  go('s-question');
-  showQuestion();
-}
-
-function cropBox(url,box){
-  var id='c'+Math.random().toString(36).slice(2,8);
-  return '<div id="'+id+'" data-src="'+url+'" data-box="'+box+'" class="crop" style="margin:10px auto;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff;max-width:420px"></div>';
-}
-function renderCrops(root){
-  (root||document).querySelectorAll('.crop:not([data-done])').forEach(function(el){
-    el.setAttribute('data-done','1');
-    var b=String(el.dataset.box).split(',').map(Number);
-    if(b.length!==4)return;
-    var img=new Image();
-    img.onload=function(){
-      var W=img.naturalWidth,H=img.naturalHeight;
-      var x1=b[1]/1000*W, y1=b[0]/1000*H, x2=b[3]/1000*W, y2=b[2]/1000*H;
-      var cw=Math.max(10,x2-x1), ch=Math.max(10,y2-y1);
-      el.style.maxWidth=Math.round(cw)+'px';
-      el.style.margin='10px auto';
-      el.innerHTML='<div style="position:relative;width:100%;padding-bottom:'+(ch/cw*100)+'%;overflow:hidden">'
-        +'<img src="'+el.dataset.src+'" style="position:absolute;width:'+(W/cw*100)+'%;height:auto;left:'+(-x1/cw*100)+'%;top:'+(-y1/ch*100)+'%">'
-        +'</div>';
+    const cf = (request && request.cf) || {};
+    const userAgent = request ? (request.headers.get('user-agent') || '') : '';
+    const payload = {
+      event_type: data.event_type,
+      role: data.role,
+      teacher_id: data.teacher_id ?? null,
+      student_name: data.student_name ?? null,
+      pack_id: data.pack_id ? String(data.pack_id) : null,
+      exam_code: data.exam_code ?? null,
+      country: cf.country ?? null,
+      city: cf.city ?? null,
+      device: detectDevice(userAgent),
+      lang: data.lang ?? null,
+      user_agent: userAgent,
     };
-    img.onerror=function(){el.remove()};
-    img.src=el.dataset.src;
-  });
-}
-
-function showQuestion() {
-  answered = false;
-  const data = quizData[currentQ];
-
-  document.getElementById('q-current').textContent = currentQ + 1;
-  document.getElementById('q-total').textContent = quizData.length;
-  document.getElementById('q-num-label').textContent = currentQ + 1;
-  document.getElementById('q-score-label').textContent = `${score} / ${currentQ} to'g'ri`;
-  document.getElementById('progress-fill').style.width = ((currentQ + 1) / quizData.length * 100) + '%';
-  document.getElementById('q-text').textContent = data.q;
-  document.getElementById('pick-label').textContent = UI[LANG].pick;
-  document.getElementById('next-label').textContent = UI[LANG].next;
-  const imgBox = document.getElementById('q-image');
-  if (data.img && data.box) { imgBox.innerHTML = cropBox(data.img, data.box); renderCrops(imgBox); }
-  else imgBox.innerHTML = data.svg ? data.svg : '';
-  document.getElementById('next-btn-wrap').style.display = 'none';
-
-  const exBox = document.getElementById('explanation-box');
-  exBox.style.display = 'none';
-  exBox.textContent = '';
-
-  const container = document.getElementById('options-container');
-  container.innerHTML = '';
-  data.opts.forEach((opt, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'option-btn';
-    btn.innerHTML = `<span class="option-letter">${letters[i]}</span>${opt}`;
-    btn.onclick = () => selectAnswer(i, data.correct, btn);
-    container.appendChild(btn);
-  });
-
-  clearInterval(timerInterval);
-  const TPQ = EXAM ? (+EXAM.time_per_q||0) : 45;
-  document.getElementById('timer-badge').style.display = TPQ>0 ? '' : 'none';
-  if (TPQ === 0) return;
-  timeLeft = TPQ;
-  updateTimer();
-  timerInterval = setInterval(() => {
-    timeLeft--;
-    updateTimer();
-    if (timeLeft <= 0) {
-      clearInterval(timerInterval);
-      if (!answered) autoExpire();
-    }
-  }, 1000);
-}
-
-function updateTimer() {
-  const badge = document.getElementById('timer-badge');
-  document.getElementById('timer-display').textContent = timeLeft;
-  badge.className = 'timer-badge' + (timeLeft <= 10 ? ' warning' : '');
-}
-
-function showExplanation() {
-  if (EXAM && !EXAM.show_expl) return;
-  const data = quizData[currentQ];
-  if (data.expl) {
-    const box = document.getElementById('explanation-box');
-    box.textContent = '💡 ' + data.expl;
-    box.style.display = 'block';
+    const res = await fetch(`${env.SUPABASE_URL}/rest/v1/analytics_events`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: env.SUPABASE_SERVICE_KEY,
+        Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+        Prefer: 'return=minimal',
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) console.error('analytics_events insert failed:', res.status, await res.text());
+  } catch (err) {
+    console.error('logEvent error:', err);
   }
 }
 
-function selectAnswer(chosen, correct, clickedBtn) {
-  if (answered) return;
-  answered = true;
-  clearInterval(timerInterval);
-
-  const allBtns = document.querySelectorAll('.option-btn');
-  allBtns.forEach((b, i) => {
-    b.disabled = true;
-    if (i === correct) b.classList.add('correct');
-  });
-
-  if (chosen === correct) {
-    score++;
-    clickedBtn.classList.remove('wrong');
-  } else {
-    clickedBtn.classList.add('wrong');
-  }
-  answerLog.push({ q: quizData[currentQ].q, ok: chosen === correct });
-
-  showExplanation();
-  document.getElementById('next-btn-wrap').style.display = 'block';
-}
-
-function autoExpire() {
-  answered = true;
-  const allBtns = document.querySelectorAll('.option-btn');
-  allBtns.forEach((b, i) => {
-    b.disabled = true;
-    if (i === quizData[currentQ].correct) b.classList.add('correct');
-  });
-  answerLog.push({ q: quizData[currentQ].q, ok: false });
-  showExplanation();
-  document.getElementById('next-btn-wrap').style.display = 'block';
-}
-
-function nextQuestion() {
-  currentQ++;
-  if (currentQ < quizData.length) {
-    showQuestion();
-  } else {
-    showResult();
-  }
-}
-
-function finishExam(){
-  try { if (window.Telegram && Telegram.WebApp && Telegram.WebApp.initData) { Telegram.WebApp.close(); return; } } catch(e){}
-  location.href = '/';
-}
-
-function showResult() {
-  clearInterval(timerInterval);
-  const elapsed = Math.round((Date.now() - startTime) / 1000);
-  const mins = Math.floor(elapsed / 60);
-  const secs = elapsed % 60;
-  const pct = Math.round(score / quizData.length * 100);
-
-  const grade = pct >= 90 ? 5 : pct >= 70 ? 4 : pct >= 50 ? 3 : 2;
-  const msgs = {
-    5: "A'lo! Ajoyib natija 🌟",
-    4: "Yaxshi! Ko'p savollarga to'g'ri javob berding 👍",
-    3: "Qoniqarli. Mavzuni takrorlagan ma'qul 📚",
-    2: "Mavzuni mustahkamlash kerak. Yana urinib ko'r 💪"
-  };
-  const gradeClasses = { 5:'grade-5', 4:'grade-4', 3:'grade-3', 2:'grade-2' };
-
-  document.getElementById('result-score').textContent = score;
-  document.getElementById('result-total').textContent = `${quizData.length} dan`;
-  document.getElementById('result-msg').textContent = msgs[grade];
-  document.getElementById('res-percent').textContent = pct + '%';
-  document.getElementById('res-time').textContent = `${mins}:${String(secs).padStart(2,'0')}`;
-  document.getElementById('rs-total').textContent = quizData.length;
-  document.getElementById('rs-ok').textContent = score;
-  document.getElementById('rs-bad').textContent = quizData.length - score;
-  var ce=document.getElementById('result-emoji'), cc=document.getElementById('result-circle');
-  if(pct>=90){ce.textContent='🏆';cc.style.background='linear-gradient(135deg,#0E7A5F,#12A87E)'}
-  else if(pct>=70){ce.textContent='👏';cc.style.background='linear-gradient(135deg,#1B3A6B,#2A5298)'}
-  else if(pct>=50){ce.textContent='💪';cc.style.background='linear-gradient(135deg,#B8860B,#D6A431)'}
-  else {ce.textContent='📚';cc.style.background='linear-gradient(135deg,#9B3B34,#C4534A)'}
-  document.getElementById('rs-verdict').textContent =
-    pct >= 90 ? "Mavzu to'liq o'zlashtirilgan. Ajoyib natija — shu ruhda davom eting!"
-    : pct >= 70 ? "Mavzu yaxshi o'zlashtirilgan. Ayrim savollarda kichik xatoliklar bor."
-    : pct >= 50 ? "Mavzu qisman o'zlashtirilgan. Xato qilingan mavzularni qayta ko'rib chiqing."
-    : "Mavzu yetarli o'zlashtirilmagan. Materialni takrorlab, yana urinib ko'ring.";
-
-  const badge = document.getElementById('grade-badge');
-  badge.textContent = `Baho: ${grade}`;
-  badge.className = 'grade-badge ' + gradeClasses[grade];
-
-  go('s-student-result');
-  saveResult(elapsed, pct, grade);
-}
-
-async function saveResult(elapsed, pct, grade){
+// отправка в конкретный чат
+async function tg(env, chat, text) {
+  if (!env.TG_BOT_TOKEN || !chat) return;
   try {
-    const rr = await fetch("/api/result", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: String(chat), text, parse_mode: 'HTML' })
+    });
+  } catch (e) { /* телеграм недоступен — результат всё равно сохранён */ }
+}
+
+// ── тексты для учителя — правьте здесь ──
+const mmss = t => `${Math.floor((t || 0) / 60)}:${String((t || 0) % 60).padStart(2, '0')}`;
+
+// время словами: 4 daqiqa 12 soniya
+function timeWords(sec) {
+  const s = Math.max(0, +sec || 0);
+  const m = Math.floor(s / 60), r = s % 60;
+  if (!m) return `${r} soniya`;
+  return `${m} daqiqa ${r} soniya`;
+}
+
+// строка таблицы: метка слева, значение справа
+const pad = (s, n) => String(s) + ' '.repeat(Math.max(0, n - String(s).length));
+
+// ctx: { title, rank, of }  — может быть пустым
+function fmtResult(r, c = {}) {
+  const dot = r.percent >= 80 ? '🟢' : r.percent >= 50 ? '🟡' : '🔴';
+  const mark = { 5: "A'lo", 4: 'Yaxshi', 3: 'Qoniqarli', 2: 'Qoniqarsiz' }[r.grade_mark] || r.grade_mark;
+  const wrong = Array.isArray(r.answers)
+    ? r.answers.filter(a => !(a && a.ok)).length
+    : Math.max(0, (r.total || 0) - (r.correct || 0));
+  const n = Math.round((r.percent || 0) / 10);
+  const bar = '█'.repeat(n) + '░'.repeat(10 - n);
+
+  // аналитический вывод по результату
+  const verdict = r.percent >= 90 ? "Mavzu to'liq o'zlashtirilgan. O'quvchi materialni mustahkam biladi."
+    : r.percent >= 70 ? "Mavzu yaxshi o'zlashtirilgan. Ayrim savollarda kichik xatoliklar kuzatildi."
+    : r.percent >= 50 ? "Mavzu qisman o'zlashtirilgan. Xato qilingan mavzularni qayta ko'rib chiqish tavsiya etiladi."
+    : "Mavzu yetarli darajada o'zlashtirilmagan. O'quvchi bilan qo'shimcha mashg'ulot o'tkazish tavsiya etiladi.";
+
+  const L = [];
+  L.push('🏛 <b>MUALLIMTEST</b>');
+  L.push('<i>Imtihon natijasi to\'g\'risida ma\'lumot</i>');
+  L.push('');
+  L.push(`👤 <b>FIO:</b> ${esc(r.student)}`);
+  if (c.title) L.push(`📘 <b>Imtihon nomi:</b> ${esc(c.title)}`);
+  if (r.exam_code) L.push(`🔑 <b>Imtihon kodi:</b> <code>${esc(r.exam_code)}</code>`);
+  L.push('');
+  L.push(`📝 <b>Jami savollar soni:</b> ${r.total} ta`);
+  L.push(`✅ <b>To'g'ri javoblar:</b> ${r.correct} ta`);
+  L.push(`❌ <b>Xato javoblar:</b> ${wrong} ta`);
+  L.push(`🎯 <b>Baho:</b> ${r.grade_mark} — ${mark}`);
+  L.push(`⏱ <b>Sarflangan vaqt:</b> ${timeWords(r.duration_s)}`);
+  if (c.rank) L.push(`🏅 <b>Guruhdagi o'rni:</b> ${c.rank} / ${c.of}`);
+  L.push('');
+  L.push(`${dot} <b>Umumiy natija:</b> ${r.percent}%`);
+  L.push(`<code>${bar}</code>`);
+  L.push('');
+  L.push(`<blockquote>📊 <b>Xulosa.</b> ${verdict}</blockquote>`);
+
+  if (Array.isArray(r.answers)) {
+    const bad = r.answers.map((a, i) => (a && a.ok ? null : i + 1)).filter(Boolean);
+    if (bad.length) L.push(`📌 <b>Xato qilingan savol raqamlari:</b> ${bad.join(', ')}`);
+  }
+  if (r.duration_s && r.total && r.duration_s / r.total < 5)
+    L.push(`\n⚠️ <i>Eslatma: har bir savolga o'rtacha ${Math.round(r.duration_s / r.total)} soniya sarflangan. Javoblar tez berilgani sababli natijani qo'shimcha tekshirish tavsiya etiladi.</i>`);
+
+  return L.join('\n');
+}
+
+function fmtSummary(ex, rows) {
+  const avg = Math.round(rows.reduce((s, r) => s + (r.percent || 0), 0) / rows.length);
+  const avgTime = Math.round(rows.reduce((s, r) => s + (r.duration_s || 0), 0) / rows.length);
+  const medal = ['🥇', '🥈', '🥉'];
+  const g = { 5: 0, 4: 0, 3: 0, 2: 0 };
+  rows.forEach(r => { g[r.grade_mark] = (g[r.grade_mark] || 0) + 1; });
+  const tot = rows.length;
+  const passed = rows.filter(r => (r.percent || 0) >= 50).length;
+  const passPct = Math.round(passed / tot * 100);
+  const barOf = v => { const n = tot ? Math.round(v / tot * 10) : 0; return '█'.repeat(n) + '░'.repeat(10 - n); };
+  const dot = avg >= 80 ? '🟢' : avg >= 50 ? '🟡' : '🔴';
+
+  const verdict = avg >= 80
+    ? "Guruh mavzuni yuqori darajada o'zlashtirgan. Natijalar barqaror."
+    : avg >= 65
+    ? "Guruhning umumiy tayyorgarligi qoniqarli. Ayrim o'quvchilar bilan qo'shimcha ishlash tavsiya etiladi."
+    : avg >= 50
+    ? "Guruh mavzuni qisman o'zlashtirgan. Xato ko'p uchragan mavzularni takrorlash zarur."
+    : "Guruhning natijasi past. Mavzuni qaytadan tushuntirish va mustahkamlash tavsiya etiladi.";
+
+  const L = [];
+  L.push('🏛 <b>MUALLIMTEST</b>');
+  L.push('<i>Kunlik umumiy hisobot</i>');
+  L.push('');
+  L.push(`📘 <b>Imtihon nomi:</b> ${esc(ex.title)}`);
+  L.push(`🔑 <b>Imtihon kodi:</b> <code>${esc(ex.code)}</code>`);
+  L.push('');
+  L.push(`👥 <b>Imtihon topshirganlar:</b> ${tot} o'quvchi`);
+  L.push(`${dot} <b>Guruhning o'rtacha natijasi:</b> ${avg}%`);
+  L.push(`✅ <b>50% dan yuqori natija ko'rsatganlar:</b> ${passed} ta (${passPct}%)`);
+  L.push(`⏱ <b>O'rtacha sarflangan vaqt:</b> ${timeWords(avgTime)}`);
+  L.push('');
+  L.push('<b>Baholar taqsimoti</b>');
+  L.push(`<code>5  A'lo        ${barOf(g[5])}  ${g[5]} ta</code>`);
+  L.push(`<code>4  Yaxshi      ${barOf(g[4])}  ${g[4]} ta</code>`);
+  L.push(`<code>3  Qoniqarli   ${barOf(g[3])}  ${g[3]} ta</code>`);
+  L.push(`<code>2  Qoniqarsiz  ${barOf(g[2])}  ${g[2]} ta</code>`);
+  L.push('');
+  L.push('<b>Eng yuqori natijalar</b>');
+  rows.slice(0, 3).forEach((r, i) => {
+    L.push(`${medal[i]} ${esc(r.student)} — ${r.correct}/${r.total} (${r.percent}%)`);
+  });
+  L.push('');
+  L.push(`<blockquote>📊 <b>Tahliliy xulosa.</b> ${verdict}</blockquote>`);
+
+  if (ex.active_till) {
+    const d = new Date(ex.active_till).toLocaleString('ru-RU', { timeZone: 'Asia/Tashkent' });
+    L.push(`⏳ <b>Imtihon yakunlanadi:</b> ${d}`);
+  }
+  return L.join('\n');
+}
+
+const genCode = () => Array.from(
+  crypto.getRandomValues(new Uint8Array(5)),
+  b => 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[b % 30]
+).join('');
+
+// ══════════ безопасность ══════════
+const ENC = new TextEncoder();
+const b64  = b => btoa(String.fromCharCode(...new Uint8Array(b)));
+const hex  = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+
+async function hmac(keyRaw, msg) {
+  const k = await crypto.subtle.importKey('raw', keyRaw, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  return crypto.subtle.sign('HMAC', k, ENC.encode(msg));
+}
+
+// сравнение без утечки времени
+function same(a, b) {
+  if (a.length !== b.length) return false;
+  let d = 0;
+  for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return d === 0;
+}
+
+// ── пропуск учителя: id.срок.подпись ──
+const sessKey = env => ENC.encode('eduquiz-session:' + env.SUPABASE_SERVICE_KEY);
+
+async function mkToken(env, id) {
+  const body = `${id}.${Date.now() + 30 * 864e5}`;          // 30 дней
+  return `${body}.${b64(await hmac(sessKey(env), body))}`;
+}
+
+async function readToken(env, t) {
+  if (!t || typeof t !== 'string') return null;
+  const i = t.lastIndexOf('.');
+  if (i < 0) return null;
+  const body = t.slice(0, i), sig = t.slice(i + 1);
+  const [id, exp] = body.split('.');
+  if (!id || !exp || +exp < Date.now()) return null;
+  if (!same(sig, b64(await hmac(sessKey(env), body)))) return null;
+  return +id;
+}
+
+// ── подпись Telegram: доказывает, что человек реально из бота ──
+async function checkInitData(env, initData) {
+  if (!initData || !env.TG_BOT_TOKEN) return null;
+  const p = new URLSearchParams(initData);
+  const got = p.get('hash');
+  if (!got) return null;
+  p.delete('hash');
+  const dcs = [...p.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1))
+    .map(([k, v]) => `${k}=${v}`).join('\n');
+  const secret = await hmac(ENC.encode('WebAppData'), env.TG_BOT_TOKEN);
+  if (!same(hex(await hmac(new Uint8Array(secret), dcs)), got)) return null;
+  if (Date.now() / 1000 - (+p.get('auth_date') || 0) > 86400) return null;   // старше суток
+  try { return JSON.parse(p.get('user')); } catch (e) { return null; }
+}
+
+// ── подпись кнопки Telegram на сайте (в браузере) ──
+async function checkWidget(env, d) {
+  if (!d || !d.hash || !env.TG_BOT_TOKEN) return null;
+  const rest = { ...d };
+  delete rest.hash;
+  const dcs = Object.keys(rest).sort().map(k => `${k}=${rest[k]}`).join('\n');
+  const secret = await crypto.subtle.digest('SHA-256', ENC.encode(env.TG_BOT_TOKEN));
+  if (!same(hex(await hmac(new Uint8Array(secret), dcs)), d.hash)) return null;
+  if (Date.now() / 1000 - (+rest.auth_date || 0) > 86400) return null;
+  return rest;
+}
+
+const auth = async (env, b) => readToken(env, b && b.token);
+
+// ── результат ученика ──
+async function postResult(req, env, ctx) {
+  const b = await req.json();
+  const total = Math.max(0, Math.min(200, +b.total || 0));
+  const correct = Math.max(0, Math.min(total, +b.correct || 0));
+  const percent = total ? Math.round(correct / total * 100) : 0;
+  const row = {
+    exam_code: b.exam_code ? String(b.exam_code).slice(0, 16) : null,
+    student: String(b.student || '').trim().slice(0, 80) || '—',
+    subject: String(b.subject || 'math').slice(0, 40),
+    lang: 'uz',
+    total,
+    correct,
+    percent,
+    // та же шкала, что показывается ученику на экране результата
+    grade_mark: percent >= 90 ? 5 : percent >= 70 ? 4 : percent >= 50 ? 3 : 2,
+    duration_s: b.duration_s != null ? +b.duration_s : null,
+    answers: b.answers ?? null
+  };
+  // защита: экзамен просрочен или ученик уже сдавал
+  let teacherIdForLog = null;
+  if (row.exam_code) {
+    try {
+      const ex0 = await sb(env, `exams?code=eq.${encodeURIComponent(row.exam_code)}&select=active_till,teacher_id&limit=1`);
+      if (ex0 && ex0[0] && ex0[0].active_till && new Date(ex0[0].active_till) < new Date())
+        return J({ error: 'expired' }, 410);
+      if (ex0 && ex0[0]) teacherIdForLog = ex0[0].teacher_id ?? null;
+      const dup = await sb(env,
+        `results?exam_code=eq.${encodeURIComponent(row.exam_code)}&student=eq.${encodeURIComponent(row.student)}&select=id&limit=1`);
+      if (dup && dup.length) return J({ error: 'already_taken' }, 409);
+    } catch (e) { /* проверка не удалась — пропускаем */ }
+  }
+
+  const saved = await sb(env, 'results', {
+    method: 'POST',
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify(row)
+  });
+
+  const id = saved?.[0]?.id ?? null;
+
+  // куда слать и что показать: название экзамена, телеграм учителя, место в классе
+  let chat = env.TG_CHAT_ID;
+  const c = {};
+  if (row.exam_code) {
+    try {
+      const ex = await sb(env,
+        `exams?code=eq.${encodeURIComponent(row.exam_code)}&select=title,teacher_chat_id&limit=1`);
+      if (ex && ex[0]) {
+        c.title = ex[0].title;
+        if (ex[0].teacher_chat_id) chat = ex[0].teacher_chat_id;
+      }
+      // место среди всех, кто прошёл этот экзамен: выше % → выше; при равенстве быстрее → выше
+      const all = await sb(env,
+        `results?exam_code=eq.${encodeURIComponent(row.exam_code)}`
+        + '&select=id,percent,duration_s&limit=500');
+      all.sort((a, b) => (b.percent - a.percent) || ((a.duration_s || 9e9) - (b.duration_s || 9e9)));
+      const i = all.findIndex(x => x.id === id);
+      if (i >= 0 && all.length > 1) { c.rank = i + 1; c.of = all.length; }
+    } catch (e) { /* не нашли — уйдёт без названия и места */ }
+  }
+  ctx.waitUntil(tg(env, chat, fmtResult(row, c)));   // не заставляем ученика ждать телеграм
+
+  // === АНАЛИТИКА: ученик завершил тест ===
+  ctx.waitUntil(logEvent(env, req, {
+    event_type: 'exam_finished',
+    role: 'student',
+    teacher_id: teacherIdForLog,
+    student_name: row.student,
+    exam_code: row.exam_code,
+    lang: row.lang,
+  }));
+
+  return J({ ok: true, id });
+}
+
+// ── вход через Telegram: и из бота, и из браузера ──
+// аккаунта нет — создаём молча; есть — просто впускаем
+async function tgAuth(req, env, ctx) {
+  const b = await req.json();
+  const u = b.initData ? await checkInitData(env, b.initData)
+          : b.widget   ? await checkWidget(env, b.widget)
+          : null;
+  if (!u || !u.id) return J({ error: 'bad_auth' }, 401);
+
+  const tgid = String(u.id);
+  const name = [u.first_name, u.last_name].filter(Boolean).join(' ').slice(0, 80) || 'id ' + tgid;
+  const info = { name, username: u.username || null, photo_url: u.photo_url || null };
+
+  let rows = await sb(env, `teachers?tg_chat_id=eq.${tgid}&select=id,name,username,photo_url&limit=1`);
+  let t;
+  if (rows.length) {
+    t = rows[0];
+    // имя в Telegram могли поменять — подтягиваем свежее
+    if (t.name !== info.name || t.username !== info.username) {
+      const up = await sb(env, `teachers?id=eq.${t.id}`, {
+        method: 'PATCH',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify(info)
+      });
+      t = up[0];
+    }
+  } else {
+    const saved = await sb(env, 'teachers', {
+      method: 'POST',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify({ tg_chat_id: tgid, ...info })
+    });
+    t = saved[0];
+  }
+
+  // === АНАЛИТИКА: учитель вошёл ===
+  ctx.waitUntil(logEvent(env, req, {
+    event_type: 'teacher_login',
+    role: 'teacher',
+    teacher_id: t.id,
+  }));
+
+  return J({ ok: true, token: await mkToken(env, t.id), me: pub(t) });
+}
+
+const pub = t => ({ name: t.name, username: t.username, photo_url: t.photo_url });
+
+// ── проверка пропуска при возврате на сайт ──
+async function me(req, env) {
+  const id = await auth(env, await req.json());
+  if (!id) return J({ error: 'auth' }, 401);
+  const rows = await sb(env, `teachers?id=eq.${id}&select=name,username,photo_url&limit=1`);
+  if (!rows.length) return J({ error: 'auth' }, 401);
+  return J({ ok: true, me: pub(rows[0]) });
+}
+
+// ── учитель создаёт экзамен ──
+async function createExam(req, env, ctx) {
+  const b = await req.json();
+  const id = await auth(env, b);
+  if (!id) return J({ error: 'auth' }, 401);
+  const t = await sb(env, `teachers?id=eq.${id}&select=tg_chat_id&limit=1`);
+  if (!t.length) return J({ error: 'auth' }, 401);
+  const code = genCode();
+  const saved = await sb(env, 'exams', {
+    method: 'POST',
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify({
+      code,
+      title: String(b.title || '').trim().slice(0, 120) || 'Imtihon',
+      subjects: Array.isArray(b.subjects) && b.subjects.length ? b.subjects : ['math'],
+      q_count: +b.q_count || 8,
+      time_per_q: +b.time_per_q || 0,
+      show_expl: !!b.show_expl,
+      active_till: b.active_till || null,
+      pack_id: b.pack_id ? +b.pack_id : null,   // из какого пакета брать вопросы
+      teacher_id: id,
+      teacher_chat_id: t[0].tg_chat_id     // берём из аккаунта, руками вводить не надо
+    })
+  });
+
+  // === АНАЛИТИКА: учитель создал тест ===
+  ctx.waitUntil(logEvent(env, req, {
+    event_type: 'exam_created',
+    role: 'teacher',
+    teacher_id: id,
+    pack_id: b.pack_id ?? null,
+    exam_code: code,
+  }));
+
+  return J({ ok: true, code, exam: saved?.[0] ?? null });
+}
+
+// ── ученик открывает ссылку ?exam=CODE ──
+async function getExam(env, code, req, ctx) {
+  if (!code) return J({ error: 'code' }, 400);
+  const rows = await sb(env,
+    `exams?code=eq.${encodeURIComponent(code)}`
+    + '&select=code,title,subjects,q_count,time_per_q,show_expl,active_till,pack_id,teacher_id&limit=1');
+  if (!rows.length) return J({ error: 'not_found' }, 404);
+  if (rows[0].active_till && new Date(rows[0].active_till) < new Date())
+    return J({ error: 'expired' }, 410);
+
+  // === АНАЛИТИКА: ученик открыл ссылку на тест ===
+  ctx.waitUntil(logEvent(env, req, {
+    event_type: 'exam_opened',
+    role: 'student',
+    teacher_id: rows[0].teacher_id ?? null,
+    pack_id: rows[0].pack_id ?? null,
+    exam_code: rows[0].code,
+  }));
+
+  return J({ ok: true, exam: rows[0] });
+}
+
+// ── статистика у учителя (она же проверка пароля при входе) ──
+async function stats(req, env) {
+  const b = await req.json();
+  const id = await auth(env, b);
+  if (!id) return J({ error: 'auth' }, 401);
+  const n = Math.min(+b.limit || 100, 500);
+
+  // только свои экзамены — чужие результаты учителю не видны
+  const exams = await sb(env, `exams?teacher_id=eq.${id}&select=code,title&limit=200`);
+  if (!exams.length) return J({ ok: true, results: [] });
+  const byCode = {};
+  for (const e of exams) byCode[e.code] = e.title;
+  const list = '(' + exams.map(e => `"${e.code}"`).join(',') + ')';
+
+  const results = await sb(env,
+    `results?exam_code=in.${encodeURIComponent(list)}`
+    + '&select=student,exam_code,total,correct,percent,grade_mark,duration_s,created_at'
+    + `&order=created_at.desc&limit=${n}`);
+  for (const r of results) r.exam_title = byCode[r.exam_code] || null;
+  return J({ ok: true, results });
+}
+
+// ══════════ ЗАГРУЗКА МАТЕРИАЛА → ТЕСТЫ (Gemini + резерв) ══════════
+// Учитель грузит файл (PDF/картинка) → ИИ читает → вопросы в questions (draft).
+
+// строгая инструкция для модели: что вернуть и в каком виде
+function ingestPrompt(lang) {
+  const langNote = lang === 'ru'
+    ? 'Сформулируй ВСЕ вопросы, варианты и пояснения на РУССКОМ языке.'
+    : lang === 'uz'
+    ? 'Barcha savollar, variantlar va izohlarni faqat OʻZBEK (lotin) tilida yoz.'
+    : lang === 'en'
+    ? 'Write ALL questions, options and explanations in ENGLISH.'
+    : 'Сохрани язык оригинала материала.';
+  return [
+    'Ты — генератор тестов для учителя. Тебе дан учебный материал (текст или изображение).',
+    'Задача: превратить его в тестовые вопросы с одним правильным ответом.',
+    langNote,
+    'Правила:',
+    '1. Если в материале уже есть готовые вопросы с вариантами — извлеки их как есть.',
+    '2. Если есть вопрос, но нет вариантов — придумай 4 правдоподобных варианта.',
+    '3. Если правильный ответ указан в материале — используй его. Если нет — реши сам и поставь "ai_solved": true.',
+    '4. У каждого вопроса ровно 4 варианта. Ровно один правильный.',
+    '5. Дистракторы — правдоподобные, похожей длины, без "все верны" и абсурда.',
+    '6. К каждому вопросу добавь короткое пояснение (1-2 предложения), почему ответ верный.',
+    '7. Если для решения задачи НУЖЕН рисунок из материала (фото, схема, чертёж, фигура, график) — укажи его положение на странице в поле "box": [ymin, xmin, ymax, xmax] в координатах 0-1000 относительно всего изображения. Захвати рисунок целиком с небольшим запасом. Также укажи "page": номер файла (1 = первый файл, 2 = второй). Если рисунок не нужен — поля "box" и "page" НЕ добавляй. НЕ описывай картинку словами вместо box — просто дай координаты.',
+    '8. Обработай ВЕСЬ материал целиком — извлеки ВСЕ вопросы, которые есть в файле, не останавливайся на первом.',
+    'Верни ТОЛЬКО валидный JSON без markdown, без пояснений вокруг. Формат:',
+    '{"questions":[{"q":"текст вопроса","options":["A","B","C","D"],"correct":1,"explanation":"...","ai_solved":false,"page":1,"box":[120,340,480,760]}]}',
+    '"correct" — номер правильного варианта, СЧИТАЯ С ЕДИНИЦЫ (1 = первый).',
+    'Если материал не годится для теста — верни {"questions":[]}.'
+  ].join('\n');
+}
+
+// вызов Gemini (принимает и текст, и файл inline_data). Повтор при перегрузке.
+async function callGemini(env, prompt, filePart) {
+  const key = env.GEMINI_API_KEY;
+  if (!key) throw new Error('no_gemini_key');
+  const MODELS = ['gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
+  const parts = [{ text: prompt }];
+  if (filePart) parts.push({ inline_data: { mime_type: filePart.mime, data: filePart.b64 } });
+  const body = JSON.stringify({
+    contents: [{ parts }],
+    generationConfig: { temperature: 0.2, maxOutputTokens: 12288, responseMimeType: 'application/json' }
+  });
+  let last = '';
+  for (let attempt = 0; attempt < MODELS.length; attempt++) {
+    if (attempt) await new Promise(r => setTimeout(r, 800));
+    const r = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${MODELS[attempt]}:generateContent?key=${key}`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }
+    );
+    const t = await r.text();
+    if (r.ok) {
+      const j = JSON.parse(t);
+      return j?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
+    }
+    last = `gemini ${r.status}: ${t}`;
+    if (r.status !== 503 && r.status !== 429) break;   // повторяем только перегрузку
+  }
+  throw new Error(last);
+}
+
+// несколько файлов (страниц) в ОДНОМ запросе — ИИ видит весь материал сразу
+async function callGeminiMulti(env, prompt, fileParts) {
+  const key = env.GEMINI_API_KEY;
+  if (!key) throw new Error('no_gemini_key');
+  const MODELS = ['gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
+  const parts = [{ text: prompt }];
+  for (const fp of fileParts) parts.push({ inline_data: { mime_type: fp.mime, data: fp.b64 } });
+  const body = JSON.stringify({
+    contents: [{ parts }],
+    generationConfig: { temperature: 0.2, maxOutputTokens: 12288, responseMimeType: 'application/json' }
+  });
+  let last = '';
+  for (let attempt = 0; attempt < MODELS.length; attempt++) {
+    if (attempt) await new Promise(r => setTimeout(r, 800));
+    const r = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${MODELS[attempt]}:generateContent?key=${key}`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }
+    );
+    const t = await r.text();
+    if (r.ok) {
+      const j = JSON.parse(t);
+      return j?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
+    }
+    last = `gemini ${r.status}: ${t}`;
+    if (r.status !== 503 && r.status !== 429) break;
+  }
+  throw new Error(last);
+}
+
+// резерв: Groq (только текст). Используется, если Gemini недоступен и файл — текстовый.
+async function callGroqText(env, prompt, text) {
+  const key = env.GROQ_API_KEY;
+  if (!key) throw new Error('no_groq_key');
+  const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      temperature: 0.3,
+      response_format: { type: 'json_object' },
+      messages: [
+        { role: 'system', content: prompt },
+        { role: 'user', content: text }
+      ]
+    })
+  });
+  const t = await r.text();
+  if (!r.ok) throw new Error(`groq ${r.status}: ${t}`);
+  const j = JSON.parse(t);
+  return j?.choices?.[0]?.message?.content || '';
+}
+
+// вытащить JSON из ответа модели (на случай мусора вокруг)
+function parseModelJson(s) {
+  if (!s) return null;
+  let str = s.trim().replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```\s*$/, '');
+  try { return JSON.parse(str); } catch (e) {}
+  const a = str.indexOf('{'), b = str.lastIndexOf('}');
+  if (a >= 0 && b > a) { try { return JSON.parse(str.slice(a, b + 1)); } catch (e) {} }
+  return null;
+}
+
+// прочитать тело файла из multipart/form-data
+async function readUpload(req) {
+  const form = await req.formData();
+  const files = form.getAll('file').filter(f => f && typeof f !== 'string');
+  const lang = String(form.get('lang') || '').toLowerCase();
+  const teacherToken = String(form.get('token') || '');
+  const packTitle = String(form.get('pack_title') || '').slice(0, 120);
+  const packId = form.get('pack_id') ? +form.get('pack_id') : null;
+  if (!files.length) return { error: 'no_file' };
+  const parts = [];
+  for (const file of files) {
+    const mime = file.type || 'application/octet-stream';
+    const buf = new Uint8Array(await file.arrayBuffer());
+    if (buf.length > 12 * 1024 * 1024) return { error: 'too_big' };
+    parts.push({ mime, buf, name: file.name || 'file' });
+  }
+  return { files: parts, lang, teacherToken, packTitle, packId, name: parts[0].name };
+}
+
+// загрузка файла в Supabase Storage (bucket materials), возвращает публичную ссылку
+async function uploadToStorage(env, teacherId, buf, mime, idx) {
+  const ext = mime.includes('png') ? 'png' : mime.includes('pdf') ? 'pdf' : 'jpg';
+  const path = `t${teacherId}/${Date.now().toString(36)}_${idx}.${ext}`;
+  const r = await fetch(`${env.SUPABASE_URL}/storage/v1/object/materials/${path}`, {
+    method: 'POST',
+    headers: {
+      apikey: env.SUPABASE_SERVICE_KEY,
+      Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+      'Content-Type': mime
+    },
+    body: buf
+  });
+  if (!r.ok) return null;
+  return `${env.SUPABASE_URL}/storage/v1/object/public/materials/${path}`;
+}
+
+const B64CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+function toB64(bytes) {
+  let out = '';
+  const len = bytes.length;
+  for (let i = 0; i < len; i += 3) {
+    const a = bytes[i];
+    const b = i + 1 < len ? bytes[i + 1] : undefined;
+    const c = i + 2 < len ? bytes[i + 2] : undefined;
+    out += B64CHARS[a >> 2];
+    out += B64CHARS[((a & 3) << 4) | (b === undefined ? 0 : b >> 4)];
+    out += (b === undefined) ? '=' : B64CHARS[((b & 15) << 2) | (c === undefined ? 0 : c >> 6)];
+    out += (c === undefined) ? '=' : B64CHARS[c & 63];
+  }
+  return out;
+}
+
+const isTextLike = mime =>
+  mime.startsWith('text/') || mime.includes('json') || mime.includes('csv');
+
+async function ingest(req, env) {
+  const up = await readUpload(req);
+  if (up.error) return J({ error: up.error }, 400);
+
+  const teacherId = await readToken(env, up.teacherToken);
+  if (!teacherId) return J({ error: 'auth' }, 401);
+
+  const prompt = ingestPrompt(up.lang);
+
+  // Все файлы идём ОДНИМ запросом к ИИ, чтобы вопросы, переходящие со страницы на страницу
+  // (или из файла в файл), собирались правильно, а не рвались.
+  let allQs = [];
+  let lastErr = '';
+
+  const inlineFiles = up.files.filter(f => f.mime.startsWith('image/') || f.mime === 'application/pdf').slice(0, 2);
+  const textFiles   = up.files.filter(f => isTextLike(f.mime));
+
+  // сохраняем исходники в Storage — чтобы прикреплять к вопросам реальные картинки
+  const pageUrls = [];
+  for (let i = 0; i < inlineFiles.length; i++) {
+    const u = await uploadToStorage(env, teacherId, inlineFiles[i].buf, inlineFiles[i].mime, i);
+    pageUrls.push(u);
+  }
+
+  // картинки/PDF — вместе одним вызовом (ИИ видит все страницы сразу)
+  if (inlineFiles.length) {
+    try {
+      const fileParts = inlineFiles.map(f => ({ mime: f.mime, b64: toB64(f.buf) }));
+      const raw = await callGeminiMulti(env, prompt, fileParts);
+      const parsed = parseModelJson(raw);
+      if (parsed && Array.isArray(parsed.questions)) allQs = allQs.concat(parsed.questions);
+    } catch (e) { lastErr = String(e.message || e).slice(0, 300); }
+  }
+
+  // текстовые файлы — склеиваем в один текст
+  if (textFiles.length) {
+    try {
+      let text = '';
+      for (const f of textFiles) text += '\n\n' + new TextDecoder().decode(f.buf);
+      text = text.slice(0, 60000);
+      let raw = '';
+      try { raw = await callGemini(env, prompt + '\n\nМАТЕРИАЛ:\n' + text, null); }
+      catch (e) { raw = await callGroqText(env, prompt, text); }
+      const parsed = parseModelJson(raw);
+      if (parsed && Array.isArray(parsed.questions)) allQs = allQs.concat(parsed.questions);
+    } catch (e) { lastErr = String(e.message || e).slice(0, 300); }
+  }
+
+  if (!allQs.length) {
+    if (lastErr) return J({ error: 'ai: ' + lastErr, detail: lastErr }, 200);
+    return J({ ok: true, inserted: 0, questions: [], pack_id: null });
+  }
+  const qs = allQs;
+
+  // складываем распознанные вопросы черновиками.
+  // Платформа универсальная: grade/subject/topic_id не заполняем (в базе они теперь nullable).
+  const lang = (up.lang === 'ru' || up.lang === 'uz' || up.lang === 'en') ? up.lang : 'uz';
+
+  // пакет: либо дописываем в выбранный, либо создаём новый
+  let packId = null;
+  if (up.packId) {
+    const own = await sb(env, `packs?id=eq.${up.packId}&teacher_id=eq.${teacherId}&select=id&limit=1`);
+    if (own.length) packId = own[0].id;
+  }
+  if (!packId) {
+    const pack = await sb(env, 'packs', {
+      method: 'POST',
+      headers: { Prefer: 'return=representation' },
       body: JSON.stringify({
-        exam_code: window.EXAM_CODE || null,
-        student: document.getElementById('student-name-input').value.trim(),
-        subject: SUBJECT, lang: LANG,
-        total: quizData.length, correct: score, percent: pct,
-        grade_mark: grade, duration_s: elapsed, answers: answerLog
+        teacher_id: teacherId,
+        title: (up.packTitle || up.name || 'Yuklangan test').slice(0, 120),
+        lang
       })
     });
-    const rj = await rr.json();
-    if (rj && rj.error === 'expired') alert("Imtihon muddati tugagan — natija saqlanmadi.");
-    if (rj && rj.error === 'already_taken') alert("Siz allaqachon topshirgansiz — natija saqlanmadi.");
-  } catch(e) { /* нет сети — результат просто не запишется */ }
-}
-
-let EXAM = null;
-async function loadExam(code){
-  const res=await fetch("/api/exam?code="+encodeURIComponent(code));
-  const out=await res.json();
-  if(out.error==='expired'){ alert("Imtihon muddati tugagan"); return; }
-  if(!out.ok){ alert("Imtihon topilmadi"); return; }
-  EXAM=out.exam;
-  window.EXAM_CODE=EXAM.code;
-  const w=document.querySelector('#s-student-name .page-title'); if(w) w.textContent=EXAM.title;
-}
-
-window.addEventListener('DOMContentLoaded', async () => {
-  const code = new URLSearchParams(location.search).get('exam');
-  if (code) {                        // ученик пришёл по ссылке
-    go('s-student-name');
-    loadExam(code).catch(()=>{});
-    return;
+    packId = pack?.[0]?.id ?? null;
   }
 
-  let tgu = null, initData = '';
-  try { tgu = Telegram.WebApp.initDataUnsafe.user; initData = Telegram.WebApp.initData || ''; } catch(e) {}
-  const inTG = !!(tgu && tgu.id && initData);
-  document.getElementById('lg-mini').style.display = inTG ? 'block' : 'none';
-  document.getElementById('lg-web').style.display  = inTG ? 'none'  : 'block';
-  if (inTG) {
-    document.getElementById('lg-who').textContent =
-      [tgu.first_name, tgu.last_name].filter(Boolean).join(' ') || ('id ' + tgu.id);
-  } else {
-    mountTelegramButton();
+  const stamp = Date.now().toString(36);
+  const rows = [];
+  qs.slice(0, 60).forEach((q, i) => {
+    const opts = Array.isArray(q.options) ? q.options.map(String).slice(0, 6) : [];
+    if (!q.q || opts.length < 2) return;
+    let correct = parseInt(q.correct, 10);
+    if (!(correct >= 1 && correct <= opts.length)) correct = 1;
+    const qtext = String(q.q).slice(0, 2000);
+    const expl = q.explanation ? String(q.explanation).slice(0, 1000) : null;
+    // реальная картинка из исходника: ссылка на страницу + область
+    let imgUrl = null, imgBox = null;
+    if (Array.isArray(q.box) && q.box.length === 4) {
+      const pageIdx = Math.max(0, (parseInt(q.page, 10) || 1) - 1);
+      if (pageUrls[pageIdx]) {
+        imgUrl = pageUrls[pageIdx];
+        imgBox = q.box.map(function (v) { return Math.max(0, Math.min(1000, +v || 0)); }).join(',');
+      }
+    }
+    rows.push({
+      id: `up_${teacherId}_${stamp}_${i}`,
+      format: 'single_choice',
+      difficulty: 'medium',
+      question_ru: qtext,
+      question_uz: qtext,
+      options_ru: opts,
+      options_uz: opts,
+      correct,
+      explanation_ru: expl,
+      explanation_uz: expl,
+      status: 'draft',
+      source: 'ai',
+      teacher_id: teacherId,
+      ai_solved: !!q.ai_solved,
+      pack_id: packId,
+      image_url: imgUrl,
+      image_box: imgBox
+    });
+  });
+
+  if (!rows.length) return J({ ok: true, inserted: 0, questions: [], pack_id: packId });
+
+  const saved = await sb(env, 'questions', {
+    method: 'POST',
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify(rows)
+  });
+
+  return J({ ok: true, inserted: saved?.length || 0, pack_id: packId, questions: saved || [] });
+}
+
+// ── список пакетов учителя (для выбора при создании экзамена) ──
+async function packs(req, env) {
+  const b = await req.json();
+  const id = await auth(env, b);
+  if (!id) return J({ error: 'auth' }, 401);
+  const rows = await sb(env,
+    `packs?teacher_id=eq.${id}&select=id,title,lang,created_at&order=created_at.desc&limit=200`);
+  // сколько approved-вопросов в каждом пакете
+  const out = [];
+  for (const p of rows) {
+    const all = await sb(env, `questions?pack_id=eq.${p.id}&select=id,status`);
+    const list = Array.isArray(all) ? all : [];
+    out.push({
+      ...p,
+      approved: list.filter(q => q.status === 'approved').length,
+      draft: list.filter(q => q.status === 'draft').length
+    });
+  }
+  return J({ ok: true, packs: out });
+}
+
+// ── вопросы пакета для ученика: случайные N из approved ──
+async function packQuestions(env, packId, n) {
+  if (!packId) return J({ error: 'pack' }, 400);
+  const rows = await sb(env,
+    `questions?pack_id=eq.${encodeURIComponent(packId)}&status=eq.approved`
+    + '&select=question_ru,question_uz,options_ru,options_uz,correct,explanation_ru,explanation_uz,svg,image_url,image_box&limit=200');
+  if (!rows || !rows.length) return J({ ok: true, questions: [] });
+  // перемешиваем и берём N
+  for (let i = rows.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [rows[i], rows[j]] = [rows[j], rows[i]];
+  }
+  const take = n > 0 ? Math.min(n, rows.length) : rows.length;
+  return J({ ok: true, questions: rows.slice(0, take) });
+}
+
+// ── черновики пакета (для проверки учителем) ──
+async function draftQuestions(req, env) {
+  const b = await req.json();
+  const id = await auth(env, b);
+  if (!id) return J({ error: 'auth' }, 401);
+  const packId = +b.pack_id;
+  if (!packId) return J({ error: 'pack' }, 400);
+  const rows = await sb(env,
+    `questions?pack_id=eq.${packId}&teacher_id=eq.${id}`
+    + '&select=id,question_uz,question_ru,options_uz,options_ru,correct,explanation_uz,ai_solved,status,svg,image_url,image_box'
+    + '&order=id');
+  return J({ ok: true, questions: rows || [] });
+}
+
+// ── одобрить / изменить / удалить вопрос ──
+async function editQuestion(req, env) {
+  const b = await req.json();
+  const id = await auth(env, b);
+  if (!id) return J({ error: 'auth' }, 401);
+  const qid = String(b.id || '');
+  if (!qid) return J({ error: 'id' }, 400);
+  // проверяем, что вопрос принадлежит этому учителю
+  const own = await sb(env, `questions?id=eq.${encodeURIComponent(qid)}&teacher_id=eq.${id}&select=id&limit=1`);
+  if (!own.length) return J({ error: 'not_found' }, 404);
+
+  if (b.action === 'delete') {
+    await sb(env, `questions?id=eq.${encodeURIComponent(qid)}`, { method: 'DELETE' });
+    return J({ ok: true });
+  }
+  const patch = {};
+  if (b.action === 'approve') patch.status = 'approved';
+  if (b.question != null) { patch.question_uz = String(b.question).slice(0, 2000); patch.question_ru = patch.question_uz; }
+  if (Array.isArray(b.options)) { const o = b.options.map(String).slice(0, 6); patch.options_uz = o; patch.options_ru = o; }
+  if (b.correct != null) patch.correct = Math.max(1, +b.correct);
+  if (b.image_box !== undefined) patch.image_box = b.image_box ? String(b.image_box).slice(0, 40) : null;
+  if (!Object.keys(patch).length) return J({ error: 'nothing' }, 400);
+  await sb(env, `questions?id=eq.${encodeURIComponent(qid)}`, {
+    method: 'PATCH', body: JSON.stringify(patch)
+  });
+  return J({ ok: true });
+}
+
+// ── сводка по одному экзамену (аналитика класса) ──
+async function examSummary(req, env) {
+  const b = await req.json();
+  const id = await auth(env, b);
+  if (!id) return J({ error: 'auth' }, 401);
+  const code = String(b.code || '').slice(0, 16);
+  if (!code) return J({ error: 'code' }, 400);
+
+  // экзамен должен принадлежать этому учителю
+  const ex = await sb(env, `exams?code=eq.${encodeURIComponent(code)}&teacher_id=eq.${id}&select=code,title&limit=1`);
+  if (!ex.length) return J({ error: 'not_found' }, 404);
+
+  const rows = await sb(env,
+    `results?exam_code=eq.${encodeURIComponent(code)}`
+    + '&select=student,correct,total,percent,grade_mark,duration_s,answers,created_at&order=percent.desc&limit=1000');
+  if (!rows.length) return J({ ok: true, exam: ex[0], summary: null });
+
+  const n = rows.length;
+  const avg = Math.round(rows.reduce((s, r) => s + (r.percent || 0), 0) / n);
+  const avgTime = Math.round(rows.reduce((s, r) => s + (r.duration_s || 0), 0) / n);
+  const grades = { 5: 0, 4: 0, 3: 0, 2: 0 };
+  rows.forEach(r => { grades[r.grade_mark] = (grades[r.grade_mark] || 0) + 1; });
+
+  // сложные вопросы: по answers считаем долю ошибок на каждый номер
+  const qStat = {};   // idx -> {wrong, total}
+  rows.forEach(r => {
+    if (Array.isArray(r.answers)) {
+      r.answers.forEach((a, i) => {
+        if (!qStat[i]) qStat[i] = { wrong: 0, total: 0 };
+        qStat[i].total++;
+        if (!(a && a.ok)) qStat[i].wrong++;
+      });
+    }
+  });
+  const hard = Object.entries(qStat)
+    .map(([i, v]) => ({ q: +i + 1, wrongPct: Math.round(v.wrong / v.total * 100), total: v.total }))
+    .filter(x => x.wrongPct >= 50)
+    .sort((a, b) => b.wrongPct - a.wrongPct)
+    .slice(0, 5);
+
+  return J({
+    ok: true,
+    exam: ex[0],
+    summary: {
+      count: n, avg, avgTime, grades,
+      best: rows.slice(0, 3).map(r => ({ student: r.student, correct: r.correct, total: r.total, percent: r.percent })),
+      worst: rows.slice(-3).reverse().map(r => ({ student: r.student, correct: r.correct, total: r.total, percent: r.percent })),
+      hard
+    }
+  });
+}
+
+// ── список экзаменов учителя (для выбора в статистике) ──
+async function myExams(req, env) {
+  const b = await req.json();
+  const id = await auth(env, b);
+  if (!id) return J({ error: 'auth' }, 401);
+  const rows = await sb(env,
+    `exams?teacher_id=eq.${id}&select=code,title,created_at&order=created_at.desc&limit=200`);
+  // число попыток по каждому
+  const out = [];
+  for (const e of rows) {
+    const r = await sb(env, `results?exam_code=eq.${encodeURIComponent(e.code)}&select=student`);
+    out.push({ ...e, attempts: Array.isArray(r) ? r.length : 0 });
+  }
+  return J({ ok: true, exams: out });
+}
+
+// ── удалить пакет вместе с вопросами ──
+async function deletePack(req, env) {
+  const b = await req.json();
+  const id = await auth(env, b);
+  if (!id) return J({ error: 'auth' }, 401);
+  const packId = +b.pack_id;
+  if (!packId) return J({ error: 'pack' }, 400);
+  const own = await sb(env, `packs?id=eq.${packId}&teacher_id=eq.${id}&select=id&limit=1`);
+  if (!own.length) return J({ error: 'not_found' }, 404);
+  await sb(env, `questions?pack_id=eq.${packId}`, { method: 'DELETE' });
+  await sb(env, `packs?id=eq.${packId}`, { method: 'DELETE' });
+  return J({ ok: true });
+}
+
+// ── проверка: сдавал ли уже этот ученик ──
+async function checkAttempt(env, code, student, req, ctx) {
+  if (!code || !student) return J({ ok: true, taken: false });
+  const rows = await sb(env,
+    `results?exam_code=eq.${encodeURIComponent(code)}&student=eq.${encodeURIComponent(student)}&select=id&limit=1`);
+  const taken = !!(rows && rows.length);
+
+  // === АНАЛИТИКА: ученик начал тест (первая проверка попытки = момент старта) ===
+  if (!taken && ctx) {
+    let teacherIdForLog = null;
+    try {
+      const ex0 = await sb(env, `exams?code=eq.${encodeURIComponent(code)}&select=teacher_id,pack_id&limit=1`);
+      if (ex0 && ex0[0]) teacherIdForLog = ex0[0].teacher_id ?? null;
+    } catch (e) {}
+    ctx.waitUntil(logEvent(env, req, {
+      event_type: 'exam_started',
+      role: 'student',
+      teacher_id: teacherIdForLog,
+      student_name: student,
+      exam_code: code,
+    }));
   }
 
-  let saved = '';
-  try { saved = localStorage.getItem('eq_token') || ''; } catch(e) {}
-  if (!saved) return;
+  return J({ ok: true, taken });
+}
+
+// ── ежедневная сводка (будильник) ──
+async function dailySummary(env) {
+  const exams = await sb(env,
+    'exams?select=code,title,active_till,teacher_chat_id&order=created_at.desc&limit=50');
+  const now = new Date();
+  for (const ex of exams) {
+    if (ex.active_till && new Date(ex.active_till) < now) continue;  // экзамен закончился
+    const chat = ex.teacher_chat_id || env.TG_CHAT_ID;
+    if (!chat) continue;
+    const rows = await sb(env,
+      `results?exam_code=eq.${encodeURIComponent(ex.code)}`
+      + '&select=student,correct,total,percent,grade_mark,duration_s&order=percent.desc&limit=500');
+    if (!rows.length) continue;                                      // никто не проходил
+    await tg(env, chat, fmtSummary(ex, rows));
+  }
+}
+
+// ══════════ ДАШБОРД АНАЛИТИКИ ══════════
+async function analyticsDashboard(req, env) {
+  const url = new URL(req.url);
+  const key = url.searchParams.get('key');
+  if (!key || key !== env.ANALYTICS_DASHBOARD_KEY) {
+    return J({ error: 'unauthorized' }, 401);
+  }
   try {
-    const r = await api('/api/me', { token: saved });
-    if (r.ok) { TOKEN = saved; ME = r.me; enterDashboard(); }
-    else localStorage.removeItem('eq_token');
-  } catch(e) { /* нет сети — остаёмся на экране входа */ }
-});
-</script>
-</body>
-</html>
+    const [teachers, results, events] = await Promise.all([
+      sb(env, 'teachers?select=id,name,username,created_at'),
+      sb(env, 'results?select=student,subject,lang,percent,created_at,exam_code'),
+      sb(env, 'analytics_events?select=*&order=created_at.desc&limit=2000'),
+    ]);
+    return new Response(JSON.stringify({ teachers, results, events }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
+  } catch (e) {
+    return J({ error: String(e && e.message || e) }, 500);
+  }
+}
+
+export default {
+  async fetch(req, env, ctx) {
+    const url = new URL(req.url);
+    if (!url.pathname.startsWith('/api/')) return env.ASSETS.fetch(req);
+    try {
+      const p = url.pathname, m = req.method;
+      if (m === 'POST' && p === '/api/result') return await postResult(req, env, ctx);
+      if (m === 'POST' && p === '/api/tg-auth') return await tgAuth(req, env, ctx);
+      if (m === 'POST' && p === '/api/me') return await me(req, env);
+      if (m === 'POST' && p === '/api/exam') return await createExam(req, env, ctx);
+      if (m === 'GET' && p === '/api/exam') return await getExam(env, url.searchParams.get('code'), req, ctx);
+      if (m === 'GET' && p === '/api/check-attempt')
+        return await checkAttempt(env, url.searchParams.get('code'), url.searchParams.get('student'), req, ctx);
+      if (m === 'POST' && p === '/api/stats') return await stats(req, env);
+      if (m === 'POST' && p === '/api/exam-summary') return await examSummary(req, env);
+      if (m === 'POST' && p === '/api/my-exams') return await myExams(req, env);
+      if (m === 'POST' && p === '/api/ingest') return await ingest(req, env);
+      if (m === 'POST' && p === '/api/packs') return await packs(req, env);
+      if (m === 'POST' && p === '/api/pack-delete') return await deletePack(req, env);
+      if (m === 'POST' && p === '/api/drafts') return await draftQuestions(req, env);
+      if (m === 'POST' && p === '/api/question') return await editQuestion(req, env);
+      if (m === 'GET'  && p === '/api/pack-questions')
+        return await packQuestions(env, url.searchParams.get('pack'), +url.searchParams.get('n') || 0);
+      if (m === 'GET' && p === '/api/analytics') return await analyticsDashboard(req, env);
+      if (m === 'GET' && p === '/api/ai-test') {
+        try {
+          const out = await callGemini(env, 'Ответь одним словом: работает', null);
+          return J({ ok: true, out });
+        } catch (e) { return J({ ok: false, detail: String(e.message || e).slice(0, 500) }); }
+      }
+      return J({ error: 'not_found' }, 404);
+    } catch (e) {
+      return J({ error: String(e && e.message || e) }, 500);
+    }
+  },
+
+  // срабатывает по расписанию из wrangler.jsonc
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(dailySummary(env));
+  }
+};
