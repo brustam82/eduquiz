@@ -25,6 +25,50 @@ async function sb(env, path, init = {}) {
   return t ? JSON.parse(t) : null;
 }
 
+// ============================================================
+//  АНАЛИТИКА — журнал событий (analytics_events)
+//  Не должна ломать основной функционал, если упадёт.
+// ============================================================
+function detectDevice(userAgent) {
+  const ua = (userAgent || '').toLowerCase();
+  if (/tablet|ipad/.test(ua)) return 'tablet';
+  if (/mobile|android|iphone/.test(ua)) return 'mobile';
+  return 'desktop';
+}
+
+async function logEvent(env, request, data) {
+  try {
+    const cf = (request && request.cf) || {};
+    const userAgent = request ? (request.headers.get('user-agent') || '') : '';
+    const payload = {
+      event_type: data.event_type,
+      role: data.role,
+      teacher_id: data.teacher_id ?? null,
+      student_name: data.student_name ?? null,
+      pack_id: data.pack_id ? String(data.pack_id) : null,
+      exam_code: data.exam_code ?? null,
+      country: cf.country ?? null,
+      city: cf.city ?? null,
+      device: detectDevice(userAgent),
+      lang: data.lang ?? null,
+      user_agent: userAgent,
+    };
+    const res = await fetch(`${env.SUPABASE_URL}/rest/v1/analytics_events`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: env.SUPABASE_SERVICE_KEY,
+        Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+        Prefer: 'return=minimal',
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) console.error('analytics_events insert failed:', res.status, await res.text());
+  } catch (err) {
+    console.error('logEvent error:', err);
+  }
+}
+
 // отправка в конкретный чат
 async function tg(env, chat, text) {
   if (!env.TG_BOT_TOKEN || !chat) return;
@@ -240,11 +284,13 @@ async function postResult(req, env, ctx) {
     answers: b.answers ?? null
   };
   // защита: экзамен просрочен или ученик уже сдавал
+  let teacherIdForLog = null;
   if (row.exam_code) {
     try {
-      const ex0 = await sb(env, `exams?code=eq.${encodeURIComponent(row.exam_code)}&select=active_till&limit=1`);
+      const ex0 = await sb(env, `exams?code=eq.${encodeURIComponent(row.exam_code)}&select=active_till,teacher_id&limit=1`);
       if (ex0 && ex0[0] && ex0[0].active_till && new Date(ex0[0].active_till) < new Date())
         return J({ error: 'expired' }, 410);
+      if (ex0 && ex0[0]) teacherIdForLog = ex0[0].teacher_id ?? null;
       const dup = await sb(env,
         `results?exam_code=eq.${encodeURIComponent(row.exam_code)}&student=eq.${encodeURIComponent(row.student)}&select=id&limit=1`);
       if (dup && dup.length) return J({ error: 'already_taken' }, 409);
@@ -280,12 +326,23 @@ async function postResult(req, env, ctx) {
     } catch (e) { /* не нашли — уйдёт без названия и места */ }
   }
   ctx.waitUntil(tg(env, chat, fmtResult(row, c)));   // не заставляем ученика ждать телеграм
+
+  // === АНАЛИТИКА: ученик завершил тест ===
+  ctx.waitUntil(logEvent(env, req, {
+    event_type: 'exam_finished',
+    role: 'student',
+    teacher_id: teacherIdForLog,
+    student_name: row.student,
+    exam_code: row.exam_code,
+    lang: row.lang,
+  }));
+
   return J({ ok: true, id });
 }
 
 // ── вход через Telegram: и из бота, и из браузера ──
 // аккаунта нет — создаём молча; есть — просто впускаем
-async function tgAuth(req, env) {
+async function tgAuth(req, env, ctx) {
   const b = await req.json();
   const u = b.initData ? await checkInitData(env, b.initData)
           : b.widget   ? await checkWidget(env, b.widget)
@@ -317,6 +374,14 @@ async function tgAuth(req, env) {
     });
     t = saved[0];
   }
+
+  // === АНАЛИТИКА: учитель вошёл ===
+  ctx.waitUntil(logEvent(env, req, {
+    event_type: 'teacher_login',
+    role: 'teacher',
+    teacher_id: t.id,
+  }));
+
   return J({ ok: true, token: await mkToken(env, t.id), me: pub(t) });
 }
 
@@ -332,7 +397,7 @@ async function me(req, env) {
 }
 
 // ── учитель создаёт экзамен ──
-async function createExam(req, env) {
+async function createExam(req, env, ctx) {
   const b = await req.json();
   const id = await auth(env, b);
   if (!id) return J({ error: 'auth' }, 401);
@@ -355,18 +420,38 @@ async function createExam(req, env) {
       teacher_chat_id: t[0].tg_chat_id     // берём из аккаунта, руками вводить не надо
     })
   });
+
+  // === АНАЛИТИКА: учитель создал тест ===
+  ctx.waitUntil(logEvent(env, req, {
+    event_type: 'exam_created',
+    role: 'teacher',
+    teacher_id: id,
+    pack_id: b.pack_id ?? null,
+    exam_code: code,
+  }));
+
   return J({ ok: true, code, exam: saved?.[0] ?? null });
 }
 
 // ── ученик открывает ссылку ?exam=CODE ──
-async function getExam(env, code) {
+async function getExam(env, code, req, ctx) {
   if (!code) return J({ error: 'code' }, 400);
   const rows = await sb(env,
     `exams?code=eq.${encodeURIComponent(code)}`
-    + '&select=code,title,subjects,q_count,time_per_q,show_expl,active_till,pack_id&limit=1');
+    + '&select=code,title,subjects,q_count,time_per_q,show_expl,active_till,pack_id,teacher_id&limit=1');
   if (!rows.length) return J({ error: 'not_found' }, 404);
   if (rows[0].active_till && new Date(rows[0].active_till) < new Date())
     return J({ error: 'expired' }, 410);
+
+  // === АНАЛИТИКА: ученик открыл ссылку на тест ===
+  ctx.waitUntil(logEvent(env, req, {
+    event_type: 'exam_opened',
+    role: 'student',
+    teacher_id: rows[0].teacher_id ?? null,
+    pack_id: rows[0].pack_id ?? null,
+    exam_code: rows[0].code,
+  }));
+
   return J({ ok: true, exam: rows[0] });
 }
 
@@ -859,11 +944,29 @@ async function deletePack(req, env) {
 }
 
 // ── проверка: сдавал ли уже этот ученик ──
-async function checkAttempt(env, code, student) {
+async function checkAttempt(env, code, student, req, ctx) {
   if (!code || !student) return J({ ok: true, taken: false });
   const rows = await sb(env,
     `results?exam_code=eq.${encodeURIComponent(code)}&student=eq.${encodeURIComponent(student)}&select=id&limit=1`);
-  return J({ ok: true, taken: !!(rows && rows.length) });
+  const taken = !!(rows && rows.length);
+
+  // === АНАЛИТИКА: ученик начал тест (первая проверка попытки = момент старта) ===
+  if (!taken && ctx) {
+    let teacherIdForLog = null;
+    try {
+      const ex0 = await sb(env, `exams?code=eq.${encodeURIComponent(code)}&select=teacher_id,pack_id&limit=1`);
+      if (ex0 && ex0[0]) teacherIdForLog = ex0[0].teacher_id ?? null;
+    } catch (e) {}
+    ctx.waitUntil(logEvent(env, req, {
+      event_type: 'exam_started',
+      role: 'student',
+      teacher_id: teacherIdForLog,
+      student_name: student,
+      exam_code: code,
+    }));
+  }
+
+  return J({ ok: true, taken });
 }
 
 // ── ежедневная сводка (будильник) ──
@@ -883,6 +986,31 @@ async function dailySummary(env) {
   }
 }
 
+// ══════════ ДАШБОРД АНАЛИТИКИ ══════════
+async function analyticsDashboard(req, env) {
+  const url = new URL(req.url);
+  const key = url.searchParams.get('key');
+  if (!key || key !== env.ANALYTICS_DASHBOARD_KEY) {
+    return J({ error: 'unauthorized' }, 401);
+  }
+  try {
+    const [teachers, results, events] = await Promise.all([
+      sb(env, 'teachers?select=id,name,username,created_at'),
+      sb(env, 'results?select=student,subject,lang,percent,created_at,exam_code'),
+      sb(env, 'analytics_events?select=*&order=created_at.desc&limit=2000'),
+    ]);
+    return new Response(JSON.stringify({ teachers, results, events }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
+  } catch (e) {
+    return J({ error: String(e && e.message || e) }, 500);
+  }
+}
+
 export default {
   async fetch(req, env, ctx) {
     const url = new URL(req.url);
@@ -890,12 +1018,12 @@ export default {
     try {
       const p = url.pathname, m = req.method;
       if (m === 'POST' && p === '/api/result') return await postResult(req, env, ctx);
-      if (m === 'POST' && p === '/api/tg-auth') return await tgAuth(req, env);
+      if (m === 'POST' && p === '/api/tg-auth') return await tgAuth(req, env, ctx);
       if (m === 'POST' && p === '/api/me') return await me(req, env);
-      if (m === 'POST' && p === '/api/exam') return await createExam(req, env);
-      if (m === 'GET' && p === '/api/exam') return await getExam(env, url.searchParams.get('code'));
+      if (m === 'POST' && p === '/api/exam') return await createExam(req, env, ctx);
+      if (m === 'GET' && p === '/api/exam') return await getExam(env, url.searchParams.get('code'), req, ctx);
       if (m === 'GET' && p === '/api/check-attempt')
-        return await checkAttempt(env, url.searchParams.get('code'), url.searchParams.get('student'));
+        return await checkAttempt(env, url.searchParams.get('code'), url.searchParams.get('student'), req, ctx);
       if (m === 'POST' && p === '/api/stats') return await stats(req, env);
       if (m === 'POST' && p === '/api/exam-summary') return await examSummary(req, env);
       if (m === 'POST' && p === '/api/my-exams') return await myExams(req, env);
@@ -906,6 +1034,7 @@ export default {
       if (m === 'POST' && p === '/api/question') return await editQuestion(req, env);
       if (m === 'GET'  && p === '/api/pack-questions')
         return await packQuestions(env, url.searchParams.get('pack'), +url.searchParams.get('n') || 0);
+      if (m === 'GET' && p === '/api/analytics') return await analyticsDashboard(req, env);
       if (m === 'GET' && p === '/api/ai-test') {
         try {
           const out = await callGemini(env, 'Ответь одним словом: работает', null);
