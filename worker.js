@@ -994,12 +994,13 @@ async function analyticsDashboard(req, env) {
     return J({ error: 'unauthorized' }, 401);
   }
   try {
-    const [teachers, results, events] = await Promise.all([
-      sb(env, 'teachers?select=id,name,username,created_at'),
-      sb(env, 'results?select=student,subject,lang,percent,created_at,exam_code'),
+    const [teachers, results, events, exams] = await Promise.all([
+      sb(env, 'teachers?select=id,name,username,tg_chat_id,created_at'),
+      sb(env, 'results?select=student,subject,lang,percent,correct,total,duration_s,created_at,exam_code'),
       sb(env, 'analytics_events?select=*&order=created_at.desc&limit=2000'),
+      sb(env, 'exams?select=code,title,teacher_id,created_at,active_till'),
     ]);
-    return new Response(JSON.stringify({ teachers, results, events }), {
+    return new Response(JSON.stringify({ teachers, results, events, exams }), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
@@ -1010,6 +1011,7 @@ async function analyticsDashboard(req, env) {
     return J({ error: String(e && e.message || e) }, 500);
   }
 }
+
 
 export default {
   async fetch(req, env, ctx) {
