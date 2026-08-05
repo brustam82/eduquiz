@@ -25,50 +25,6 @@ async function sb(env, path, init = {}) {
   return t ? JSON.parse(t) : null;
 }
 
-// ============================================================
-//  АНАЛИТИКА — журнал событий (analytics_events)
-//  Не должна ломать основной функционал, если упадёт.
-// ============================================================
-function detectDevice(userAgent) {
-  const ua = (userAgent || '').toLowerCase();
-  if (/tablet|ipad/.test(ua)) return 'tablet';
-  if (/mobile|android|iphone/.test(ua)) return 'mobile';
-  return 'desktop';
-}
-
-async function logEvent(env, request, data) {
-  try {
-    const cf = (request && request.cf) || {};
-    const userAgent = request ? (request.headers.get('user-agent') || '') : '';
-    const payload = {
-      event_type: data.event_type,
-      role: data.role,
-      teacher_id: data.teacher_id ?? null,
-      student_name: data.student_name ?? null,
-      pack_id: data.pack_id ? String(data.pack_id) : null,
-      exam_code: data.exam_code ?? null,
-      country: cf.country ?? null,
-      city: cf.city ?? null,
-      device: detectDevice(userAgent),
-      lang: data.lang ?? null,
-      user_agent: userAgent,
-    };
-    const res = await fetch(`${env.SUPABASE_URL}/rest/v1/analytics_events`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: env.SUPABASE_SERVICE_KEY,
-        Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-        Prefer: 'return=minimal',
-      },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) console.error('analytics_events insert failed:', res.status, await res.text());
-  } catch (err) {
-    console.error('logEvent error:', err);
-  }
-}
-
 // отправка в конкретный чат
 async function tg(env, chat, text) {
   if (!env.TG_BOT_TOKEN || !chat) return;
@@ -105,38 +61,35 @@ function fmtResult(r, c = {}) {
   const n = Math.round((r.percent || 0) / 10);
   const bar = '█'.repeat(n) + '░'.repeat(10 - n);
 
-  // аналитический вывод по результату
-  const verdict = r.percent >= 90 ? "Mavzu to'liq o'zlashtirilgan. O'quvchi materialni mustahkam biladi."
-    : r.percent >= 70 ? "Mavzu yaxshi o'zlashtirilgan. Ayrim savollarda kichik xatoliklar kuzatildi."
-    : r.percent >= 50 ? "Mavzu qisman o'zlashtirilgan. Xato qilingan mavzularni qayta ko'rib chiqish tavsiya etiladi."
-    : "Mavzu yetarli darajada o'zlashtirilmagan. O'quvchi bilan qo'shimcha mashg'ulot o'tkazish tavsiya etiladi.";
+  const tbl = [
+    `${pad('Jami savollar', 22)}${r.total}`,
+    `${pad("To'g'ri javoblar", 22)}${r.correct}`,
+    `${pad('Xato javoblar', 22)}${wrong}`,
+    `${pad('Natija', 22)}${r.percent}%`,
+    `${pad('Baho', 22)}${r.grade_mark} (${mark})`,
+    `${pad('Sarflangan vaqt', 22)}${timeWords(r.duration_s)}`
+  ].join('\n');
 
   const L = [];
   L.push('🏛 <b>MUALLIMTEST</b>');
   L.push('<i>Imtihon natijasi to\'g\'risida ma\'lumot</i>');
   L.push('');
-  L.push(`👤 <b>FIO:</b> ${esc(r.student)}`);
-  if (c.title) L.push(`📘 <b>Imtihon nomi:</b> ${esc(c.title)}`);
-  if (r.exam_code) L.push(`🔑 <b>Imtihon kodi:</b> <code>${esc(r.exam_code)}</code>`);
+  L.push(`👤 <b>${esc(r.student)}</b>`);
+  if (c.title) L.push(`📘 ${esc(c.title)}`);
+  if (r.exam_code) L.push(`🔑 Imtihon kodi: <code>${esc(r.exam_code)}</code>`);
   L.push('');
-  L.push(`📝 <b>Jami savollar soni:</b> ${r.total} ta`);
-  L.push(`✅ <b>To'g'ri javoblar:</b> ${r.correct} ta`);
-  L.push(`❌ <b>Xato javoblar:</b> ${wrong} ta`);
-  L.push(`🎯 <b>Baho:</b> ${r.grade_mark} — ${mark}`);
-  L.push(`⏱ <b>Sarflangan vaqt:</b> ${timeWords(r.duration_s)}`);
-  if (c.rank) L.push(`🏅 <b>Guruhdagi o'rni:</b> ${c.rank} / ${c.of}`);
-  L.push('');
-  L.push(`${dot} <b>Umumiy natija:</b> ${r.percent}%`);
-  L.push(`<code>${bar}</code>`);
-  L.push('');
-  L.push(`<blockquote>📊 <b>Xulosa.</b> ${verdict}</blockquote>`);
+  L.push(`<pre>${tbl}</pre>`);
+  L.push(`${dot} <code>${bar}</code> ${r.percent}%`);
 
+  const extra = [];
+  if (r.duration_s && r.total && r.duration_s / r.total < 5)
+    extra.push('⚠️ Javoblar juda tez berilgan — tekshirish tavsiya etiladi.');
   if (Array.isArray(r.answers)) {
     const bad = r.answers.map((a, i) => (a && a.ok ? null : i + 1)).filter(Boolean);
-    if (bad.length) L.push(`📌 <b>Xato qilingan savol raqamlari:</b> ${bad.join(', ')}`);
+    if (bad.length) extra.push(`📌 Xato qilingan savollar: ${bad.join(', ')}`);
   }
-  if (r.duration_s && r.total && r.duration_s / r.total < 5)
-    L.push(`\n⚠️ <i>Eslatma: har bir savolga o'rtacha ${Math.round(r.duration_s / r.total)} soniya sarflangan. Javoblar tez berilgani sababli natijani qo'shimcha tekshirish tavsiya etiladi.</i>`);
+  if (c.rank) extra.push(`🏅 Guruhda egallagan o'rni: ${c.rank} / ${c.of}`);
+  if (extra.length) { L.push(''); L.push(`<blockquote>${extra.join('\n')}</blockquote>`); }
 
   return L.join('\n');
 }
@@ -148,47 +101,40 @@ function fmtSummary(ex, rows) {
   const g = { 5: 0, 4: 0, 3: 0, 2: 0 };
   rows.forEach(r => { g[r.grade_mark] = (g[r.grade_mark] || 0) + 1; });
   const tot = rows.length;
-  const passed = rows.filter(r => (r.percent || 0) >= 50).length;
-  const passPct = Math.round(passed / tot * 100);
   const barOf = v => { const n = tot ? Math.round(v / tot * 10) : 0; return '█'.repeat(n) + '░'.repeat(10 - n); };
-  const dot = avg >= 80 ? '🟢' : avg >= 50 ? '🟡' : '🔴';
 
-  const verdict = avg >= 80
-    ? "Guruh mavzuni yuqori darajada o'zlashtirgan. Natijalar barqaror."
-    : avg >= 65
-    ? "Guruhning umumiy tayyorgarligi qoniqarli. Ayrim o'quvchilar bilan qo'shimcha ishlash tavsiya etiladi."
-    : avg >= 50
-    ? "Guruh mavzuni qisman o'zlashtirgan. Xato ko'p uchragan mavzularni takrorlash zarur."
-    : "Guruhning natijasi past. Mavzuni qaytadan tushuntirish va mustahkamlash tavsiya etiladi.";
+  const tbl = [
+    `${pad('Qatnashganlar', 22)}${tot} o'quvchi`,
+    `${pad("O'rtacha natija", 22)}${avg}%`,
+    `${pad("O'rtacha vaqt", 22)}${timeWords(avgTime)}`
+  ].join('\n');
+
+  const grades = [
+    `5  A'lo        ${barOf(g[5])}  ${g[5]}`,
+    `4  Yaxshi      ${barOf(g[4])}  ${g[4]}`,
+    `3  Qoniqarli   ${barOf(g[3])}  ${g[3]}`,
+    `2  Qoniqarsiz  ${barOf(g[2])}  ${g[2]}`
+  ].join('\n');
 
   const L = [];
   L.push('🏛 <b>MUALLIMTEST</b>');
   L.push('<i>Kunlik umumiy hisobot</i>');
   L.push('');
-  L.push(`📘 <b>Imtihon nomi:</b> ${esc(ex.title)}`);
-  L.push(`🔑 <b>Imtihon kodi:</b> <code>${esc(ex.code)}</code>`);
+  L.push(`📘 <b>${esc(ex.title)}</b>`);
+  L.push(`🔑 Imtihon kodi: <code>${esc(ex.code)}</code>`);
   L.push('');
-  L.push(`👥 <b>Imtihon topshirganlar:</b> ${tot} o'quvchi`);
-  L.push(`${dot} <b>Guruhning o'rtacha natijasi:</b> ${avg}%`);
-  L.push(`✅ <b>50% dan yuqori natija ko'rsatganlar:</b> ${passed} ta (${passPct}%)`);
-  L.push(`⏱ <b>O'rtacha sarflangan vaqt:</b> ${timeWords(avgTime)}`);
-  L.push('');
+  L.push(`<pre>${tbl}</pre>`);
   L.push('<b>Baholar taqsimoti</b>');
-  L.push(`<code>5  A'lo        ${barOf(g[5])}  ${g[5]} ta</code>`);
-  L.push(`<code>4  Yaxshi      ${barOf(g[4])}  ${g[4]} ta</code>`);
-  L.push(`<code>3  Qoniqarli   ${barOf(g[3])}  ${g[3]} ta</code>`);
-  L.push(`<code>2  Qoniqarsiz  ${barOf(g[2])}  ${g[2]} ta</code>`);
-  L.push('');
+  L.push(`<pre>${grades}</pre>`);
   L.push('<b>Eng yuqori natijalar</b>');
   rows.slice(0, 3).forEach((r, i) => {
     L.push(`${medal[i]} ${esc(r.student)} — ${r.correct}/${r.total} (${r.percent}%)`);
   });
-  L.push('');
-  L.push(`<blockquote>📊 <b>Tahliliy xulosa.</b> ${verdict}</blockquote>`);
 
   if (ex.active_till) {
     const d = new Date(ex.active_till).toLocaleString('ru-RU', { timeZone: 'Asia/Tashkent' });
-    L.push(`⏳ <b>Imtihon yakunlanadi:</b> ${d}`);
+    L.push('');
+    L.push(`<blockquote>⏳ Imtihon yakunlanadi: ${d}</blockquote>`);
   }
   return L.join('\n');
 }
@@ -284,13 +230,11 @@ async function postResult(req, env, ctx) {
     answers: b.answers ?? null
   };
   // защита: экзамен просрочен или ученик уже сдавал
-  let teacherIdForLog = null;
   if (row.exam_code) {
     try {
-      const ex0 = await sb(env, `exams?code=eq.${encodeURIComponent(row.exam_code)}&select=active_till,teacher_id&limit=1`);
+      const ex0 = await sb(env, `exams?code=eq.${encodeURIComponent(row.exam_code)}&select=active_till&limit=1`);
       if (ex0 && ex0[0] && ex0[0].active_till && new Date(ex0[0].active_till) < new Date())
         return J({ error: 'expired' }, 410);
-      if (ex0 && ex0[0]) teacherIdForLog = ex0[0].teacher_id ?? null;
       const dup = await sb(env,
         `results?exam_code=eq.${encodeURIComponent(row.exam_code)}&student=eq.${encodeURIComponent(row.student)}&select=id&limit=1`);
       if (dup && dup.length) return J({ error: 'already_taken' }, 409);
@@ -326,23 +270,12 @@ async function postResult(req, env, ctx) {
     } catch (e) { /* не нашли — уйдёт без названия и места */ }
   }
   ctx.waitUntil(tg(env, chat, fmtResult(row, c)));   // не заставляем ученика ждать телеграм
-
-  // === АНАЛИТИКА: ученик завершил тест ===
-  ctx.waitUntil(logEvent(env, req, {
-    event_type: 'exam_finished',
-    role: 'student',
-    teacher_id: teacherIdForLog,
-    student_name: row.student,
-    exam_code: row.exam_code,
-    lang: row.lang,
-  }));
-
   return J({ ok: true, id });
 }
 
 // ── вход через Telegram: и из бота, и из браузера ──
 // аккаунта нет — создаём молча; есть — просто впускаем
-async function tgAuth(req, env, ctx) {
+async function tgAuth(req, env) {
   const b = await req.json();
   const u = b.initData ? await checkInitData(env, b.initData)
           : b.widget   ? await checkWidget(env, b.widget)
@@ -374,14 +307,6 @@ async function tgAuth(req, env, ctx) {
     });
     t = saved[0];
   }
-
-  // === АНАЛИТИКА: учитель вошёл ===
-  ctx.waitUntil(logEvent(env, req, {
-    event_type: 'teacher_login',
-    role: 'teacher',
-    teacher_id: t.id,
-  }));
-
   return J({ ok: true, token: await mkToken(env, t.id), me: pub(t) });
 }
 
@@ -397,7 +322,7 @@ async function me(req, env) {
 }
 
 // ── учитель создаёт экзамен ──
-async function createExam(req, env, ctx) {
+async function createExam(req, env) {
   const b = await req.json();
   const id = await auth(env, b);
   if (!id) return J({ error: 'auth' }, 401);
@@ -420,38 +345,18 @@ async function createExam(req, env, ctx) {
       teacher_chat_id: t[0].tg_chat_id     // берём из аккаунта, руками вводить не надо
     })
   });
-
-  // === АНАЛИТИКА: учитель создал тест ===
-  ctx.waitUntil(logEvent(env, req, {
-    event_type: 'exam_created',
-    role: 'teacher',
-    teacher_id: id,
-    pack_id: b.pack_id ?? null,
-    exam_code: code,
-  }));
-
   return J({ ok: true, code, exam: saved?.[0] ?? null });
 }
 
 // ── ученик открывает ссылку ?exam=CODE ──
-async function getExam(env, code, req, ctx) {
+async function getExam(env, code) {
   if (!code) return J({ error: 'code' }, 400);
   const rows = await sb(env,
     `exams?code=eq.${encodeURIComponent(code)}`
-    + '&select=code,title,subjects,q_count,time_per_q,show_expl,active_till,pack_id,teacher_id&limit=1');
+    + '&select=code,title,subjects,q_count,time_per_q,show_expl,active_till,pack_id&limit=1');
   if (!rows.length) return J({ error: 'not_found' }, 404);
   if (rows[0].active_till && new Date(rows[0].active_till) < new Date())
     return J({ error: 'expired' }, 410);
-
-  // === АНАЛИТИКА: ученик открыл ссылку на тест ===
-  ctx.waitUntil(logEvent(env, req, {
-    event_type: 'exam_opened',
-    role: 'student',
-    teacher_id: rows[0].teacher_id ?? null,
-    pack_id: rows[0].pack_id ?? null,
-    exam_code: rows[0].code,
-  }));
-
   return J({ ok: true, exam: rows[0] });
 }
 
@@ -944,29 +849,11 @@ async function deletePack(req, env) {
 }
 
 // ── проверка: сдавал ли уже этот ученик ──
-async function checkAttempt(env, code, student, req, ctx) {
+async function checkAttempt(env, code, student) {
   if (!code || !student) return J({ ok: true, taken: false });
   const rows = await sb(env,
     `results?exam_code=eq.${encodeURIComponent(code)}&student=eq.${encodeURIComponent(student)}&select=id&limit=1`);
-  const taken = !!(rows && rows.length);
-
-  // === АНАЛИТИКА: ученик начал тест (первая проверка попытки = момент старта) ===
-  if (!taken && ctx) {
-    let teacherIdForLog = null;
-    try {
-      const ex0 = await sb(env, `exams?code=eq.${encodeURIComponent(code)}&select=teacher_id,pack_id&limit=1`);
-      if (ex0 && ex0[0]) teacherIdForLog = ex0[0].teacher_id ?? null;
-    } catch (e) {}
-    ctx.waitUntil(logEvent(env, req, {
-      event_type: 'exam_started',
-      role: 'student',
-      teacher_id: teacherIdForLog,
-      student_name: student,
-      exam_code: code,
-    }));
-  }
-
-  return J({ ok: true, taken });
+  return J({ ok: true, taken: !!(rows && rows.length) });
 }
 
 // ── ежедневная сводка (будильник) ──
@@ -986,31 +873,6 @@ async function dailySummary(env) {
   }
 }
 
-// ══════════ ДАШБОРД АНАЛИТИКИ ══════════
-async function analyticsDashboard(req, env) {
-  const url = new URL(req.url);
-  const key = url.searchParams.get('key');
-  if (!key || key !== env.ANALYTICS_DASHBOARD_KEY) {
-    return J({ error: 'unauthorized' }, 401);
-  }
-  try {
-    const [teachers, results, events] = await Promise.all([
-      sb(env, 'teachers?select=id,name,username,created_at'),
-      sb(env, 'results?select=student,subject,lang,percent,created_at,exam_code'),
-      sb(env, 'analytics_events?select=*&order=created_at.desc&limit=2000'),
-    ]);
-    return new Response(JSON.stringify({ teachers, results, events }), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
-  } catch (e) {
-    return J({ error: String(e && e.message || e) }, 500);
-  }
-}
-
 export default {
   async fetch(req, env, ctx) {
     const url = new URL(req.url);
@@ -1018,12 +880,12 @@ export default {
     try {
       const p = url.pathname, m = req.method;
       if (m === 'POST' && p === '/api/result') return await postResult(req, env, ctx);
-      if (m === 'POST' && p === '/api/tg-auth') return await tgAuth(req, env, ctx);
+      if (m === 'POST' && p === '/api/tg-auth') return await tgAuth(req, env);
       if (m === 'POST' && p === '/api/me') return await me(req, env);
-      if (m === 'POST' && p === '/api/exam') return await createExam(req, env, ctx);
-      if (m === 'GET' && p === '/api/exam') return await getExam(env, url.searchParams.get('code'), req, ctx);
+      if (m === 'POST' && p === '/api/exam') return await createExam(req, env);
+      if (m === 'GET' && p === '/api/exam') return await getExam(env, url.searchParams.get('code'));
       if (m === 'GET' && p === '/api/check-attempt')
-        return await checkAttempt(env, url.searchParams.get('code'), url.searchParams.get('student'), req, ctx);
+        return await checkAttempt(env, url.searchParams.get('code'), url.searchParams.get('student'));
       if (m === 'POST' && p === '/api/stats') return await stats(req, env);
       if (m === 'POST' && p === '/api/exam-summary') return await examSummary(req, env);
       if (m === 'POST' && p === '/api/my-exams') return await myExams(req, env);
@@ -1034,7 +896,6 @@ export default {
       if (m === 'POST' && p === '/api/question') return await editQuestion(req, env);
       if (m === 'GET'  && p === '/api/pack-questions')
         return await packQuestions(env, url.searchParams.get('pack'), +url.searchParams.get('n') || 0);
-      if (m === 'GET' && p === '/api/analytics') return await analyticsDashboard(req, env);
       if (m === 'GET' && p === '/api/ai-test') {
         try {
           const out = await callGemini(env, 'Ответь одним словом: работает', null);
