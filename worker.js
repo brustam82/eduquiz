@@ -533,7 +533,9 @@ async function callGemini(env, prompt, filePart) {
       return j?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
     }
     last = `gemini ${r.status}: ${t}`;
-    if (r.status !== 503 && r.status !== 429) break;   // повторяем только перегрузку
+    // 401/403 — беда с ключом, следующая модель не спасёт.
+    // Всё остальное (404 «нет такой модели», 400, 429, 503) — пробуем следующую.
+    if (r.status === 401 || r.status === 403) break;
   }
   throw new Error(last);
 }
@@ -562,7 +564,7 @@ async function callGeminiMulti(env, prompt, fileParts) {
       return j?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
     }
     last = `gemini ${r.status}: ${t}`;
-    if (r.status !== 503 && r.status !== 429) break;
+    if (r.status === 401 || r.status === 403) break;
   }
   throw new Error(last);
 }
@@ -1045,7 +1047,10 @@ export default {
       }
       return J({ error: 'not_found' }, 404);
     } catch (e) {
-      return J({ error: String(e && e.message || e) }, 500);
+      // подробности — только в логи воркера, клиенту не показываем:
+      // тексты ошибок Supabase раскрывают названия таблиц и колонок
+      console.error('API error', req.method, url.pathname, (e && e.stack) || e);
+      return J({ error: 'internal' }, 500);
     }
   },
 
