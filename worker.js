@@ -95,6 +95,103 @@ function timeWords(sec) {
 // строка таблицы: метка слева, значение справа
 const pad = (s, n) => String(s) + ' '.repeat(Math.max(0, n - String(s).length));
 
+// ══════════ ЗАКЛЮЧЕНИЕ ПО РЕЗУЛЬТАТУ ══════════
+// Не одна шаблонная фраза, а разбор по четырём признакам: уровень освоения,
+// темп работы, где сосредоточены ошибки, место в группе. В конце — рекомендация.
+function buildVerdict(r, c = {}) {
+  const p = r.percent || 0;
+  const L = [];
+
+  // 1) уровень освоения
+  L.push(
+    p >= 90 ? "Mavzu to'liq o'zlashtirilgan: o'quvchi savollarning deyarli barchasiga to'g'ri javob berdi."
+    : p >= 70 ? "Mavzu yaxshi o'zlashtirilgan, biroq ayrim savollarda xatoliklar kuzatildi."
+    : p >= 50 ? "Mavzu qisman o'zlashtirilgan: asosiy tushunchalar shakllangan, ammo bilim mustahkam emas."
+    : "Mavzu yetarli darajada o'zlashtirilmagan: xato javoblar soni to'g'ri javoblardan ko'p."
+  );
+
+  // 2) темп работы
+  if (r.duration_s && r.total) {
+    const perQ = Math.round(r.duration_s / r.total);
+    if (perQ < 8 && p >= 90)
+      L.push(`Har bir savolga o'rtacha ${perQ} soniya sarflangan: material avtomatizm darajasida o'zlashtirilgan.`);
+    else if (perQ < 8)
+      L.push(`Har bir savolga o'rtacha ${perQ} soniya sarflangan — bu juda tez. Javoblar o'ylanmasdan belgilangan bo'lishi mumkin, natijani qo'shimcha tekshirish tavsiya etiladi.`);
+    else if (perQ > 90)
+      L.push(`Har bir savolga o'rtacha ${perQ} soniya sarflangan — bu ko'p. O'quvchi javoblarni uzoq izlagan, bilim tezkor emas.`);
+  }
+
+  // 3) где сосредоточены ошибки — видно только из журнала ответов
+  if (Array.isArray(r.answers) && r.answers.length >= 6) {
+    const a = r.answers, n = a.length, half = Math.floor(n / 2);
+    const bad = i => !(a[i] && a[i].ok);
+    let first = 0, second = 0, run = 0, maxRun = 0;
+    for (let i = 0; i < n; i++) {
+      if (bad(i)) { i < half ? first++ : second++; run++; if (run > maxRun) maxRun = run; }
+      else run = 0;
+    }
+    if (second >= 3 && second >= first * 2)
+      L.push("Xatolarning aksariyati imtihon oxirida uchradi: diqqat susaygan yoki vaqt yetmagan bo'lishi mumkin.");
+    else if (first >= 3 && first >= second * 2)
+      L.push("Xatolar asosan boshida uchrab, keyin natija yaxshilangan — o'quvchi imtihonga sekin kirishgan.");
+    if (maxRun >= 4)
+      L.push(`Ketma-ket ${maxRun} ta savolda xato qilingan: ehtimol, aynan shu mavzu bloki o'zlashtirilmagan.`);
+  }
+
+  // 4) место в группе — только когда группа достаточно большая
+  if (c.rank && c.of >= 5) {
+    const share = c.rank / c.of;
+    if (share <= 0.25)
+      L.push(`Guruhda ${c.rank}-o'rin (${c.of} nafardan): eng yaxshi natijalar qatorida.`);
+    else if (share >= 0.75)
+      L.push(`Guruhda ${c.rank}-o'rin (${c.of} nafardan): natija guruh o'rtachasidan past.`);
+  }
+
+  // 5) что делать дальше
+  L.push(
+    p >= 90 ? "Tavsiya: o'quvchiga murakkabroq topshiriqlar berish mumkin."
+    : p >= 70 ? "Tavsiya: xato qilingan savollar mavzusini qisqacha takrorlash yetarli."
+    : p >= 50 ? "Tavsiya: mavzuni qayta tushuntirib, shu bo'yicha qo'shimcha mashq berish lozim."
+    : "Tavsiya: o'quvchi bilan alohida shug'ullanish va mavzuni boshidan tushuntirish zarur."
+  );
+
+  return L.join(' ');
+}
+
+// заключение по группе: средний уровень, разброс, полярность, рекомендация
+function buildGroupVerdict(rows, avg) {
+  const n = rows.length, L = [];
+  const pct = rows.map(r => r.percent || 0);
+  const top = pct.filter(p => p >= 90).length;
+  const fail = pct.filter(p => p < 50).length;
+  const spread = Math.max.apply(null, pct) - Math.min.apply(null, pct);
+
+  L.push(
+    avg >= 80 ? "Guruh mavzuni yuqori darajada o'zlashtirgan."
+    : avg >= 65 ? "Guruhning umumiy tayyorgarligi qoniqarli."
+    : avg >= 50 ? "Guruh mavzuni qisman o'zlashtirgan."
+    : "Guruhning umumiy natijasi past: mavzu o'zlashtirilmagan."
+  );
+
+  if (n >= 5) {
+    if (spread >= 60 && top && fail)
+      L.push(`Natijalar keskin farq qiladi: ${top} nafar o'quvchi 90% dan yuqori, ${fail} nafari 50% dan past. Guruh ikki darajaga bo'lingan.`);
+    else if (spread <= 25)
+      L.push("Natijalar bir-biriga yaqin — guruh bir xil darajada tayyorlangan.");
+    if (fail >= Math.ceil(n / 2))
+      L.push(`O'quvchilarning yarmidan ko'pi (${fail} nafar) ijobiy bahoga yeta olmadi.`);
+  }
+
+  L.push(
+    avg >= 80 ? "Tavsiya: mavzuni mustahkamlab, keyingisiga o'tish mumkin."
+    : avg >= 65 ? "Tavsiya: past natija ko'rsatgan o'quvchilar bilan alohida ishlash lozim."
+    : avg >= 50 ? "Tavsiya: eng ko'p xato qilingan savollar mavzusini qayta tushuntirish zarur."
+    : "Tavsiya: mavzuni butun guruh bilan boshidan qayta o'tish tavsiya etiladi."
+  );
+
+  return L.join(' ');
+}
+
 // ctx: { title, rank, of }  — может быть пустым
 function fmtResult(r, c = {}) {
   const dot = r.percent >= 80 ? '🟢' : r.percent >= 50 ? '🟡' : '🔴';
@@ -105,11 +202,7 @@ function fmtResult(r, c = {}) {
   const n = Math.round((r.percent || 0) / 10);
   const bar = '█'.repeat(n) + '░'.repeat(10 - n);
 
-  // аналитический вывод по результату
-  const verdict = r.percent >= 90 ? "Mavzu to'liq o'zlashtirilgan. O'quvchi materialni mustahkam biladi."
-    : r.percent >= 70 ? "Mavzu yaxshi o'zlashtirilgan. Ayrim savollarda kichik xatoliklar kuzatildi."
-    : r.percent >= 50 ? "Mavzu qisman o'zlashtirilgan. Xato qilingan mavzularni qayta ko'rib chiqish tavsiya etiladi."
-    : "Mavzu yetarli darajada o'zlashtirilmagan. O'quvchi bilan qo'shimcha mashg'ulot o'tkazish tavsiya etiladi.";
+  const verdict = buildVerdict(r, c);
 
   const L = [];
   L.push('🏛 <b>MUALLIMTEST</b>');
@@ -153,13 +246,7 @@ function fmtSummary(ex, rows) {
   const barOf = v => { const n = tot ? Math.round(v / tot * 10) : 0; return '█'.repeat(n) + '░'.repeat(10 - n); };
   const dot = avg >= 80 ? '🟢' : avg >= 50 ? '🟡' : '🔴';
 
-  const verdict = avg >= 80
-    ? "Guruh mavzuni yuqori darajada o'zlashtirgan. Natijalar barqaror."
-    : avg >= 65
-    ? "Guruhning umumiy tayyorgarligi qoniqarli. Ayrim o'quvchilar bilan qo'shimcha ishlash tavsiya etiladi."
-    : avg >= 50
-    ? "Guruh mavzuni qisman o'zlashtirgan. Xato ko'p uchragan mavzularni takrorlash zarur."
-    : "Guruhning natijasi past. Mavzuni qaytadan tushuntirish va mustahkamlash tavsiya etiladi.";
+  const verdict = buildGroupVerdict(rows, avg);
 
   const L = [];
   L.push('🏛 <b>MUALLIMTEST</b>');
@@ -1027,6 +1114,24 @@ async function dailySummary(env) {
   }
 }
 
+// ── разбор по вопросам: тянем по отдельному запросу, а не вместе со всей
+//    аналитикой — журнал ответов тяжёлый и нужен не всегда ──
+async function answerDetail(req, env) {
+  let b = {};
+  try { b = await req.json(); } catch (e) {}
+  const want = env.ANALYTICS_DASHBOARD_KEY;
+  if (!b.key || !want || !same(String(b.key), want)) return J({ error: 'unauthorized' }, 401);
+
+  const code = String(b.exam_code || '').slice(0, 16);
+  const student = String(b.student || '').slice(0, 80);
+  if (!code || !student) return J({ error: 'params' }, 400);
+
+  const rows = await sb(env,
+    `results?exam_code=eq.${encodeURIComponent(code)}&student=eq.${encodeURIComponent(student)}`
+    + '&select=created_at,percent,correct,total,answers&order=created_at.desc&limit=10');
+  return J({ ok: true, rows: rows || [] });
+}
+
 // ══════════ ДАШБОРД АНАЛИТИКИ ══════════
 async function analyticsDashboard(req, env) {
   // ключ приходит в теле POST — как у всех остальных защищённых ручек.
@@ -1081,6 +1186,7 @@ export default {
       if (m === 'GET'  && p === '/api/pack-questions')
         return await packQuestions(env, url.searchParams.get('pack'), +url.searchParams.get('n') || 0);
       if (m === 'POST' && p === '/api/analytics') return await analyticsDashboard(req, env);
+      if (m === 'POST' && p === '/api/answers') return await answerDetail(req, env);
       // диагностика ИИ — только для вошедшего учителя,
       // иначе посторонние жгут платную квоту Gemini
       if (m === 'POST' && p === '/api/ai-test') {

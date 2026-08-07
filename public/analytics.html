@@ -125,6 +125,19 @@
   .spark div:hover{background:var(--gold)}
   .warnbox{background:#FFFBEB;border:1px solid #F0DFB0;border-radius:10px;padding:11px 14px;
     font-size:.78rem;color:#92400E;line-height:1.45;margin-bottom:16px}
+
+  /* ── разбор по вопросам ── */
+  .chip.sm{padding:4px 11px;font-size:.75rem}
+  tr[data-detail] td{background:var(--cream);padding:14px 16px}
+  .dhead{font-size:.8rem;font-weight:700;color:var(--lapis);margin-bottom:9px}
+  .qlist{display:flex;flex-direction:column;gap:5px}
+  .qrow{display:flex;gap:9px;align-items:flex-start;font-size:.81rem;line-height:1.4;
+    background:var(--white);border:1px solid var(--border);border-radius:8px;padding:7px 11px}
+  .qrow.bad{background:#FEF6F6;border-color:#F3D4D4}
+  .qrow .qn{color:var(--muted);min-width:22px}
+  .qrow .qi{font-weight:800;color:var(--success)}
+  .qrow.bad .qi{color:var(--danger)}
+  .qrow .qt{flex:1}
   @media(max-width:640px){.hide-s{display:none}}
 </style>
 </head>
@@ -774,8 +787,8 @@ function drawStudent(S, tid, key, shownName) {
   var card = el('div', 'card');
   var tbl = el('table');
   var tb = table(tbl, [['Дата', ''], ['Экзамен', ''], ['Результат', 'r'],
-                       ['Верных', 'r hide-s'], ['Оценка', 'r'], ['Время', 'r hide-s']]);
-  if (!rows.length) emptyRow(tb, 6, 'Попыток за выбранный период нет');
+                       ['Верных', 'r hide-s'], ['Оценка', 'r'], ['Время', 'r hide-s'], ['', 'r']]);
+  if (!rows.length) emptyRow(tb, 7, 'Попыток за выбранный период нет');
   rows.forEach(function (r) {
     var ex = S.examByCode[r.exam_code];
     var tr = el('tr');
@@ -787,10 +800,63 @@ function drawStudent(S, tid, key, shownName) {
     g.appendChild(el('span', gcls(r.percent || 0), String(gradeOf(r.percent || 0))));
     tr.appendChild(g);
     tr.appendChild(el('td', 'r hide-s', r.duration_s ? mmss(r.duration_s) : '—'));
+
+    /* разбор грузим только по нажатию — журнал ответов тяжёлый */
+    var tdB = el('td', 'r'), btn = el('button', 'chip sm', 'Разбор');
+    btn.onclick = function () { toggleAnswers(tr, btn, r); };
+    tdB.appendChild(btn); tr.appendChild(tdB);
     tb.appendChild(tr);
   });
   var wrap = el('div', 'tblwrap'); wrap.appendChild(tbl); card.appendChild(wrap);
   host.appendChild(card);
+}
+
+/* ══ разбор по вопросам ══
+   Подгружается отдельным запросом и раскрывается строкой под попыткой. */
+async function toggleAnswers(tr, btn, r) {
+  var next = tr.nextSibling;
+  if (next && next.getAttribute && next.getAttribute('data-detail') === '1') {
+    next.parentNode.removeChild(next); btn.textContent = 'Разбор'; return;
+  }
+  btn.disabled = true; btn.textContent = 'Грузим…';
+  var box = el('tr'); box.setAttribute('data-detail', '1');
+  var td = el('td'); td.colSpan = 7; box.appendChild(td);
+  try {
+    var res = await fetch('/api/answers', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: KEY, exam_code: r.exam_code, student: r.student })
+    });
+    var j = await res.json();
+    if (!j.ok) throw new Error(j.error || 'ошибка');
+
+    /* у ученика может быть несколько попыток по одному экзамену — берём ту же */
+    var mine = (j.rows || []).filter(function (x) { return x.created_at === r.created_at; })[0]
+            || (j.rows || [])[0];
+    var ans = mine && Array.isArray(mine.answers) ? mine.answers : null;
+
+    if (!ans || !ans.length) {
+      td.appendChild(el('div', 'empty', 'По этой попытке разбор не сохранён — тест сдавали до появления этой возможности.'));
+    } else {
+      var wrong = ans.filter(function (a) { return !(a && a.ok); }).length;
+      td.appendChild(el('div', 'dhead',
+        'Разбор: ' + (ans.length - wrong) + ' верно, ' + wrong + ' с ошибкой'));
+      var ul = el('div', 'qlist');
+      ans.forEach(function (a, i) {
+        var ok = !!(a && a.ok);
+        var row = el('div', 'qrow' + (ok ? '' : ' bad'));
+        row.appendChild(el('span', 'qn', (i + 1) + '.'));
+        row.appendChild(el('span', 'qi', ok ? '✓' : '✗'));
+        row.appendChild(el('span', 'qt', (a && a.q) || 'вопрос не сохранён'));
+        ul.appendChild(row);
+      });
+      td.appendChild(ul);
+    }
+  } catch (e) {
+    td.appendChild(el('div', 'empty', 'Не удалось загрузить разбор: ' + e.message));
+  }
+  if (tr.nextSibling) tr.parentNode.insertBefore(box, tr.nextSibling);
+  else tr.parentNode.appendChild(box);
+  btn.disabled = false; btn.textContent = 'Скрыть';
 }
 
 /* ══ куда смотреть сейчас ══ */
