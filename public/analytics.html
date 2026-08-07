@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="same-origin">
+<title>MuallimTest — Панель аналитики</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --lapis:#1B3A6B; --lapis-light:#2A5298; --gold:#C9952A;
+    --cream:#FAF7F2; --ink:#1A1A2E; --muted:#6B7280;
+    --success:#059669; --danger:#DC2626; --white:#fff; --border:#E5E1D8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--cream);color:var(--ink);
+    -webkit-font-smoothing:antialiased;padding:0 0 60px}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 18px}
+
+  header{background:var(--lapis);color:#fff;padding:22px 0;margin-bottom:26px}
+  header .wrap{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+  .brand{font-family:'Playfair Display',serif;font-size:1.5rem}
+  .brand span{color:var(--gold)}
+  .sub{font-size:.8rem;opacity:.75;margin-top:2px}
+  .hbtns{display:flex;gap:8px}
+
+  .btn{font:inherit;font-size:.85rem;font-weight:600;padding:9px 16px;border-radius:9px;
+    border:1px solid transparent;cursor:pointer;transition:.15s}
+  .btn-primary{background:var(--gold);color:#241a05}
+  .btn-primary:hover{filter:brightness(1.07)}
+  .btn-ghost{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.3)}
+  .btn-ghost:hover{background:rgba(255,255,255,.2)}
+  .btn:disabled{opacity:.55;cursor:default}
+
+  /* ── экран ввода ключа ── */
+  #gate{max-width:400px;margin:70px auto;background:var(--white);border:1px solid var(--border);
+    border-radius:16px;padding:32px 28px;text-align:center}
+  #gate h1{font-family:'Playfair Display',serif;font-size:1.35rem;color:var(--lapis);margin-bottom:6px}
+  #gate p{font-size:.85rem;color:var(--muted);margin-bottom:20px;line-height:1.5}
+  #gate input{width:100%;font:inherit;padding:12px 14px;border:1px solid var(--border);
+    border-radius:10px;margin-bottom:12px;background:var(--cream)}
+  #gate input:focus{outline:none;border-color:var(--lapis)}
+  #gate .btn{width:100%}
+  .err{color:var(--danger);font-size:.82rem;margin-top:12px;min-height:18px}
+
+  .card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px}
+  .card h2{font-size:.95rem;font-weight:700;color:var(--lapis);margin-bottom:16px}
+
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+  .kpi{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:18px 16px;text-align:center}
+  .kpi .v{font-size:1.85rem;font-weight:800;color:var(--lapis);line-height:1.1}
+  .kpi .l{font-size:.75rem;color:var(--muted);margin-top:6px;line-height:1.35}
+
+  /* ── столбчатый график ── */
+  .chart{display:flex;align-items:flex-end;gap:3px;height:150px;padding-top:6px;overflow-x:auto}
+  .chart .col{flex:1;min-width:9px;display:flex;flex-direction:column;justify-content:flex-end;
+    align-items:center;height:100%}
+  .chart .bar{width:100%;background:var(--lapis-light);border-radius:3px 3px 0 0;min-height:2px;transition:.2s}
+  .chart .col:hover .bar{background:var(--gold)}
+  .chart .cap{font-size:.6rem;color:var(--muted);margin-top:5px;white-space:nowrap}
+
+  /* ── горизонтальные полосы ── */
+  .row{margin-bottom:11px}
+  .row .top{display:flex;justify-content:space-between;font-size:.83rem;margin-bottom:5px;gap:10px}
+  .row .top b{font-weight:600}
+  .row .top .n{color:var(--muted);white-space:nowrap}
+  .track{height:9px;background:var(--border);border-radius:6px;overflow:hidden}
+  .fill{height:100%;background:var(--lapis);border-radius:6px}
+
+  .cols2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:760px){.cols2{grid-template-columns:1fr}}
+
+  .tblwrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:.82rem}
+  th{text-align:left;font-weight:600;color:var(--muted);font-size:.72rem;text-transform:uppercase;
+    letter-spacing:.4px;padding:0 10px 9px;border-bottom:1px solid var(--border);white-space:nowrap}
+  td{padding:9px 10px;border-bottom:1px solid #F2EFE8;vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  .tag{display:inline-block;font-size:.7rem;font-weight:600;padding:2px 8px;border-radius:20px;
+    background:#EEF2FF;color:var(--lapis);white-space:nowrap}
+  .tag.s{background:#ECFDF5;color:var(--success)}
+  .tag.t{background:#FFFBEB;color:#92400E}
+  .empty{color:var(--muted);font-size:.85rem;padding:10px 0}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+
+<!-- экран ввода ключа -->
+<div id="gate">
+  <h1>Панель аналитики</h1>
+  <p>Введите ключ доступа. Он сохранится до закрытия браузера и не попадёт в адресную строку.</p>
+  <input id="key" type="password" placeholder="Ключ доступа" autocomplete="off">
+  <button class="btn btn-primary" id="enter">Войти</button>
+  <div class="err" id="gate-err"></div>
+</div>
+
+<!-- дашборд -->
+<div id="app" class="hidden">
+  <header>
+    <div class="wrap">
+      <div>
+        <div class="brand">Muallim<span>Test</span></div>
+        <div class="sub" id="stamp">Панель аналитики</div>
+      </div>
+      <div class="hbtns">
+        <button class="btn btn-ghost" id="reload">Обновить</button>
+        <button class="btn btn-ghost" id="exit">Выйти</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="kpis" id="kpis"></div>
+
+    <div class="card">
+      <h2>Сдачи тестов за последние 30 дней</h2>
+      <div class="chart" id="chart"></div>
+    </div>
+
+    <div class="cols2">
+      <div class="card"><h2>Самые активные учителя</h2><div id="top-teachers"></div></div>
+      <div class="card"><h2>Распределение оценок</h2><div id="grades"></div></div>
+    </div>
+
+    <div class="cols2">
+      <div class="card"><h2>Устройства</h2><div id="devices"></div></div>
+      <div class="card"><h2>География</h2><div id="geo"></div></div>
+    </div>
+
+    <div class="card">
+      <h2>Последние события</h2>
+      <div class="tblwrap"><table id="events"></table></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══ доступ ══
+   Ключ живёт в sessionStorage (стирается при закрытии вкладки) и уходит
+   заголовком X-Dashboard-Key. В адресной строке его нет — значит он не
+   попадает ни в логи сервера, ни в историю браузера, ни в Referer. */
+var KEY = '';
+try { KEY = sessionStorage.getItem('mt_dash_key') || ''; } catch (e) {}
+
+var gate = document.getElementById('gate'),
+    app  = document.getElementById('app'),
+    gerr = document.getElementById('gate-err');
+
+async function load() {
+  var r = await fetch('/api/analytics', { headers: { 'X-Dashboard-Key': KEY } });
+  if (r.status === 401) throw new Error('Неверный ключ доступа');
+  if (!r.ok) throw new Error('Сервер вернул ошибку ' + r.status);
+  return r.json();
+}
+
+async function enter(fromStorage) {
+  gerr.textContent = '';
+  var btn = document.getElementById('enter');
+  btn.disabled = true; btn.textContent = 'Проверяем…';
+  try {
+    var data = await load();
+    try { sessionStorage.setItem('mt_dash_key', KEY); } catch (e) {}
+    gate.classList.add('hidden');
+    app.classList.remove('hidden');
+    render(data);
+  } catch (e) {
+    KEY = '';
+    try { sessionStorage.removeItem('mt_dash_key'); } catch (e2) {}
+    gate.classList.remove('hidden');
+    app.classList.add('hidden');
+    if (!fromStorage) gerr.textContent = e.message;
+  }
+  btn.disabled = false; btn.textContent = 'Войти';
+}
+
+document.getElementById('enter').onclick = function () {
+  KEY = document.getElementById('key').value.trim();
+  if (!KEY) { gerr.textContent = 'Введите ключ'; return; }
+  enter(false);
+};
+document.getElementById('key').addEventListener('keydown', function (e) {
+  if (e.key === 'Enter') document.getElementById('enter').click();
+});
+document.getElementById('exit').onclick = function () {
+  KEY = '';
+  try { sessionStorage.removeItem('mt_dash_key'); } catch (e) {}
+  location.reload();
+};
+document.getElementById('reload').onclick = async function () {
+  var b = this; b.disabled = true; b.textContent = 'Обновляем…';
+  try { render(await load()); } catch (e) { alert(e.message); }
+  b.disabled = false; b.textContent = 'Обновить';
+};
+
+/* ══ помощники ══
+   Всё, что пришло с сервера, вставляем только через textContent:
+   имена учеников и учителей вводят посторонние. */
+function el(tag, cls, text) {
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined && text !== null) n.textContent = text;
+  return n;
+}
+function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+function dayKey(d) { return d.toISOString().slice(0, 10); }
+function num(n) { return (n || 0).toLocaleString('ru-RU'); }
+
+function kpi(box, value, label) {
+  var c = el('div', 'kpi');
+  c.appendChild(el('div', 'v', value));
+  c.appendChild(el('div', 'l', label));
+  box.appendChild(c);
+}
+
+/* горизонтальная полоса: подпись, число, заполнение */
+function bar(box, label, count, max, color) {
+  var row = el('div', 'row'),
+      top = el('div', 'top');
+  top.appendChild(el('b', null, label));
+  top.appendChild(el('span', 'n', num(count)));
+  row.appendChild(top);
+  var track = el('div', 'track'), fill = el('div', 'fill');
+  fill.style.width = (max ? Math.round(count / max * 100) : 0) + '%';
+  if (color) fill.style.background = color;
+  track.appendChild(fill);
+  row.appendChild(track);
+  box.appendChild(row);
+}
+
+/* топ-N по количеству, из массива ключей */
+function topCounts(list, n) {
+  var m = {};
+  list.forEach(function (k) { if (k) m[k] = (m[k] || 0) + 1; });
+  return Object.keys(m).map(function (k) { return { k: k, v: m[k] }; })
+    .sort(function (a, b) { return b.v - a.v; }).slice(0, n);
+}
+
+function fillBars(box, pairs, emptyText) {
+  clear(box);
+  if (!pairs.length) { box.appendChild(el('div', 'empty', emptyText)); return; }
+  var max = pairs[0].v;
+  pairs.forEach(function (p) { bar(box, p.k, p.v, max); });
+}
+
+/* ══ отрисовка ══ */
+function render(d) {
+  var teachers = d.teachers || [], results = d.results || [],
+      events   = d.events   || [], exams   = d.exams   || [];
+  var now = new Date();
+
+  document.getElementById('stamp').textContent =
+    'Обновлено ' + now.toLocaleString('ru-RU', { timeZone: 'Asia/Tashkent' }) + ' (Ташкент)';
+
+  /* KPI */
+  var box = document.getElementById('kpis'); clear(box);
+  var active = exams.filter(function (e) { return !e.active_till || new Date(e.active_till) > now; }).length;
+  var avg = results.length
+    ? Math.round(results.reduce(function (s, r) { return s + (r.percent || 0); }, 0) / results.length) : 0;
+  kpi(box, num(teachers.length), 'Учителей');
+  kpi(box, num(exams.length),    'Экзаменов создано');
+  kpi(box, num(active),          'Из них действующих');
+  kpi(box, num(results.length),  'Тестов сдано');
+  kpi(box, avg + '%',            'Средний результат');
+
+  /* график сдач по дням */
+  var chart = document.getElementById('chart'); clear(chart);
+  var byDay = {}, days = [];
+  for (var i = 29; i >= 0; i--) {
+    var dt = new Date(now.getTime() - i * 864e5), k = dayKey(dt);
+    byDay[k] = 0; days.push({ k: k, d: dt });
+  }
+  results.forEach(function (r) {
+    var k = String(r.created_at || '').slice(0, 10);
+    if (k in byDay) byDay[k]++;
+  });
+  var maxDay = Math.max.apply(null, days.map(function (x) { return byDay[x.k]; }).concat([1]));
+  days.forEach(function (x, i) {
+    var col = el('div', 'col'), b = el('div', 'bar');
+    b.style.height = Math.round(byDay[x.k] / maxDay * 100) + '%';
+    b.title = x.d.toLocaleDateString('ru-RU') + ' — ' + byDay[x.k];
+    col.appendChild(b);
+    col.appendChild(el('div', 'cap', i % 5 === 0 ? x.d.getDate() + '.' + (x.d.getMonth() + 1) : ''));
+    chart.appendChild(col);
+  });
+
+  /* самые активные учителя: считаем сдачи по их экзаменам */
+  var nameById = {}, codeToTeacher = {}, perTeacher = {};
+  teachers.forEach(function (t) { nameById[t.id] = t.name || ('id ' + t.id); });
+  exams.forEach(function (e) { codeToTeacher[e.code] = e.teacher_id; });
+  results.forEach(function (r) {
+    var tid = codeToTeacher[r.exam_code];
+    if (tid != null) perTeacher[tid] = (perTeacher[tid] || 0) + 1;
+  });
+  var tp = Object.keys(perTeacher)
+    .map(function (id) { return { k: nameById[id] || ('id ' + id), v: perTeacher[id] }; })
+    .sort(function (a, b) { return b.v - a.v; }).slice(0, 8);
+  fillBars(document.getElementById('top-teachers'), tp, 'Пока нет сдач по экзаменам учителей');
+
+  /* распределение оценок */
+  var gbox = document.getElementById('grades'); clear(gbox);
+  var scale = [
+    ['5 — отлично',     90, 101, '#059669'],
+    ['4 — хорошо',      70,  90, '#1D4ED8'],
+    ['3 — удовл.',      50,  70, '#B8860B'],
+    ['2 — неудовл.',     0,  50, '#DC2626']
+  ];
+  var counts = scale.map(function (g) {
+    return results.filter(function (r) {
+      var p = r.percent || 0; return p >= g[1] && p < g[2];
+    }).length;
+  });
+  var gmax = Math.max.apply(null, counts.concat([1]));
+  if (!results.length) gbox.appendChild(el('div', 'empty', 'Пока нет результатов'));
+  else scale.forEach(function (g, i) { bar(gbox, g[0], counts[i], gmax, g[3]); });
+
+  /* устройства и география — из журнала событий */
+  fillBars(document.getElementById('devices'),
+    topCounts(events.map(function (e) { return e.device; }), 6), 'Нет данных');
+  fillBars(document.getElementById('geo'),
+    topCounts(events.map(function (e) {
+      return e.country ? (e.country + (e.city ? ' · ' + e.city : '')) : null;
+    }), 8), 'Нет данных');
+
+  /* последние события */
+  var LABEL = {
+    teacher_login:  'Вход учителя',
+    exam_created:   'Создан экзамен',
+    exam_opened:    'Открыт тест',
+    exam_started:   'Начат тест',
+    exam_finished:  'Тест завершён'
+  };
+  var tbl = document.getElementById('events'); clear(tbl);
+  var head = el('tr');
+  ['Время', 'Событие', 'Кто', 'Имя', 'Код', 'Устройство', 'Откуда'].forEach(function (h) {
+    head.appendChild(el('th', null, h));
+  });
+  var thead = el('thead'); thead.appendChild(head); tbl.appendChild(thead);
+
+  var tb = el('tbody');
+  if (!events.length) {
+    var tr0 = el('tr'), td0 = el('td', 'empty', 'Событий пока нет');
+    td0.colSpan = 7; tr0.appendChild(td0); tb.appendChild(tr0);
+  }
+  events.slice(0, 60).forEach(function (e) {
+    var tr = el('tr');
+    var t = e.created_at ? new Date(e.created_at) : null;
+    tr.appendChild(el('td', null, t ? t.toLocaleString('ru-RU', { timeZone: 'Asia/Tashkent' }) : '—'));
+
+    var tdE = el('td'),
+        tag = el('span', 'tag' + (e.role === 'student' ? ' s' : e.role === 'teacher' ? ' t' : ''),
+                 LABEL[e.event_type] || e.event_type || '—');
+    tdE.appendChild(tag); tr.appendChild(tdE);
+
+    tr.appendChild(el('td', null, e.role === 'teacher' ? 'учитель' : e.role === 'student' ? 'ученик' : '—'));
+    tr.appendChild(el('td', null, e.student_name || (e.teacher_id ? nameById[e.teacher_id] || '—' : '—')));
+    tr.appendChild(el('td', null, e.exam_code || '—'));
+    tr.appendChild(el('td', null, e.device || '—'));
+    tr.appendChild(el('td', null, [e.country, e.city].filter(Boolean).join(' · ') || '—'));
+    tb.appendChild(tr);
+  });
+  tbl.appendChild(tb);
+}
+
+/* уже входили в этой вкладке — заходим молча */
+if (KEY) enter(true); else document.getElementById('key').focus();
+</script>
+</body>
+</html>
