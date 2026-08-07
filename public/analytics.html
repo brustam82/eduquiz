@@ -95,6 +95,37 @@
   .tag.t{background:#FFFBEB;color:#92400E}
   .empty{color:var(--muted);font-size:.85rem;padding:10px 0}
   .hidden{display:none}
+
+  /* ── путь вглубь ── */
+  .crumbs{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:.84rem;margin-bottom:14px;min-height:20px}
+  .crumbs a{color:var(--lapis-light);cursor:pointer;border-bottom:1px solid rgba(42,82,152,.35)}
+  .crumbs a:hover{border-bottom-color:var(--lapis-light)}
+  .crumbs .sep{color:#9CA3AF}
+  .crumbs .cur{color:var(--muted)}
+
+  /* ── таблицы с переходом вглубь ── */
+  th.r,td.r{text-align:right}
+  tr.clk{cursor:pointer}
+  tr.clk:hover td{background:var(--cream)}
+  tr.top5 td{background:#FFFDF7}
+  tr.top5:hover td{background:#FFF8E8}
+  td.nm{font-weight:600}
+  td.arw{color:var(--gold);font-weight:700}
+  .uid{font-size:.72rem;color:var(--muted);font-weight:400}
+  .medal{width:26px}
+  .badge{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 9px;border-radius:20px;white-space:nowrap}
+  .g5{background:#ECFDF5;color:#047857}
+  .g4{background:#EFF6FF;color:#1D4ED8}
+  .g3{background:#FFFBEB;color:#92400E}
+  .g2{background:#FEF2F2;color:#B91C1C}
+
+  /* ── динамика результатов ученика ── */
+  .spark{display:flex;align-items:flex-end;gap:4px;height:70px;margin:4px 0 18px}
+  .spark div{flex:1;background:var(--lapis-light);border-radius:3px 3px 0 0;min-height:3px}
+  .spark div:hover{background:var(--gold)}
+  .warnbox{background:#FFFBEB;border:1px solid #F0DFB0;border-radius:10px;padding:11px 14px;
+    font-size:.78rem;color:#92400E;line-height:1.45;margin-bottom:16px}
+  @media(max-width:640px){.hide-s{display:none}}
 </style>
 </head>
 <body>
@@ -139,47 +170,56 @@
       </div>
     </div>
 
-    <div class="kpis" id="kpis"></div>
+    <!-- путь вглубь: Все учителя › Учитель › Ученик -->
+    <div class="crumbs" id="crumbs"></div>
 
-    <div class="card">
-      <h2>Сколько тестов сдавали по дням</h2>
-      <p class="hint">Высота столбика = сколько учеников закончили тест.
-        Наведите на столбик, чтобы увидеть дату и точное число.
-        <span id="chart-note"></span></p>
-      <div class="chart" id="chart"></div>
-    </div>
+    <!-- ── общий обзор ── -->
+    <div id="overview">
+      <div class="kpis" id="kpis"></div>
 
-    <div class="cols2">
       <div class="card">
-        <h2>Самые активные учителя</h2>
-        <p class="hint">Цифра справа = сколько учеников сдали тесты этого учителя за выбранный период.</p>
-        <div id="top-teachers"></div>
+        <h2>Сколько тестов сдавали по дням</h2>
+        <p class="hint">Высота столбика = сколько учеников закончили тест.
+          Наведите на столбик, чтобы увидеть дату и точное число.
+          <span id="chart-note"></span></p>
+        <div class="chart" id="chart"></div>
       </div>
+
+      <div class="card">
+        <h2>Все учителя</h2>
+        <p class="hint">Первые пять — самые активные, они подсвечены.
+          <b>Нажмите на строку</b>, чтобы посмотреть учеников этого учителя и их результаты.</p>
+        <div class="tblwrap"><table id="teachers"></table></div>
+      </div>
+
       <div class="card">
         <h2>Какие оценки получают ученики</h2>
         <p class="hint">Цифра справа = сколько работ получили эту оценку. В скобках — доля от всех работ.</p>
         <div id="grades"></div>
       </div>
+
+      <div class="cols2">
+        <div class="card">
+          <h2>С каких устройств заходят</h2>
+          <p class="hint">Цифра справа = сколько раз заходили с такого устройства (учителя и ученики вместе).</p>
+          <div id="devices"></div>
+        </div>
+        <div class="card">
+          <h2>Откуда заходят</h2>
+          <p class="hint">Цифра справа = сколько заходов из этого города. Определяется по интернет-адресу.</p>
+          <div id="geo"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Что происходило на платформе</h2>
+        <p class="hint">Последние действия за выбранный период, новые сверху.</p>
+        <div class="tblwrap"><table id="events"></table></div>
+      </div>
     </div>
 
-    <div class="cols2">
-      <div class="card">
-        <h2>С каких устройств заходят</h2>
-        <p class="hint">Цифра справа = сколько раз заходили с такого устройства (учителя и ученики вместе).</p>
-        <div id="devices"></div>
-      </div>
-      <div class="card">
-        <h2>Откуда заходят</h2>
-        <p class="hint">Цифра справа = сколько заходов из этого города. Определяется по интернет-адресу.</p>
-        <div id="geo"></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Что происходило на платформе</h2>
-      <p class="hint">Последние действия за выбранный период, новые сверху.</p>
-      <div class="tblwrap"><table id="events"></table></div>
-    </div>
+    <!-- ── детализация: ученики учителя / попытки ученика ── -->
+    <div id="detail" class="hidden"></div>
   </div>
 </div>
 
@@ -336,10 +376,9 @@ function fillBars(box, pairs, emptyText, unit) {
   pairs.forEach(function (p) { bar(box, p.k, p.v, max, null, unit); });
 }
 
-/* ══ отрисовка ══
-   Период применяется здесь, к уже загруженным данным. */
-function draw() {
-  if (!DATA) return;
+/* ══ общий срез по выбранному периоду ══
+   Считаем один раз и передаём во все уровни. */
+function scope() {
   var from = inFrom.value || '2000-01-01',
       to   = inTo.value   || iso(new Date());
   /* даты сравниваем как строки «ГГГГ-ММ-ДД» — для этого формата это верно */
@@ -347,12 +386,53 @@ function draw() {
     var k = String(row.created_at || '').slice(0, 10);
     return k >= from && k <= to;
   };
-
   var teachersAll = DATA.teachers || [], examsAll = DATA.exams || [];
-  var teachersNew = teachersAll.filter(inRange),
-      results     = (DATA.results || []).filter(inRange),
-      events      = (DATA.events  || []).filter(inRange),
-      exams       = examsAll.filter(inRange);
+  var nameById = {}, examByCode = {}, teacherByCode = {};
+  teachersAll.forEach(function (t) { nameById[t.id] = t.name || ('id ' + t.id); });
+  examsAll.forEach(function (e) { examByCode[e.code] = e; teacherByCode[e.code] = e.teacher_id; });
+  return {
+    from: from, to: to,
+    teachersAll: teachersAll, examsAll: examsAll,
+    teachersNew: teachersAll.filter(inRange),
+    results: (DATA.results || []).filter(inRange),
+    events:  (DATA.events  || []).filter(inRange),
+    exams:   examsAll.filter(inRange),
+    nameById: nameById, examByCode: examByCode, teacherByCode: teacherByCode
+  };
+}
+
+/* ученика опознаём по имени: своего аккаунта у него пока нет.
+   Приводим к одному виду, чтобы «Али  Валиев» и «али валиев» не раздваивались. */
+function skey(s) { return String(s || '').trim().toLowerCase().replace(/\s+/g, ' '); }
+function ddmm(d) { if (!d) return '—'; var p = d.split('-'); return p[2] + '.' + p[1] + '.' + p[0]; }
+function gradeOf(p) { return p >= 90 ? 5 : p >= 70 ? 4 : p >= 50 ? 3 : 2; }
+function gcls(p)    { return 'badge g' + gradeOf(p); }
+function mmss(sec)  { var s = Math.round(sec || 0); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+
+/* каркас таблицы: cols = [[заголовок, класс], ...] — возвращает tbody */
+function table(node, cols) {
+  clear(node);
+  var hd = el('tr');
+  cols.forEach(function (c) { hd.appendChild(el('th', c[1], c[0])); });
+  var th = el('thead'); th.appendChild(hd); node.appendChild(th);
+  var tb = el('tbody'); node.appendChild(tb);
+  return tb;
+}
+function emptyRow(tb, span, text) {
+  var tr = el('tr'), td = el('td', 'empty', text);
+  td.colSpan = span; tr.appendChild(td); tb.appendChild(tr);
+}
+function badgeCell(percent) {
+  var td = el('td', 'r');
+  td.appendChild(el('span', gcls(percent), percent + '%'));
+  return td;
+}
+
+/* ══ отрисовка ══ */
+function drawOverview(S) {
+  var teachersAll = S.teachersAll, examsAll = S.examsAll, teachersNew = S.teachersNew,
+      results = S.results, events = S.events, exams = S.exams,
+      from = S.from, to = S.to;
   var now = new Date();
 
   document.getElementById('stamp').textContent =
@@ -415,19 +495,39 @@ function draw() {
     chart.appendChild(col);
   });
 
-  /* ── самые активные учителя: считаем сдачи по их экзаменам ── */
-  var nameById = {}, codeToTeacher = {}, perTeacher = {};
-  teachersAll.forEach(function (t) { nameById[t.id] = t.name || ('id ' + t.id); });
-  examsAll.forEach(function (e) { codeToTeacher[e.code] = e.teacher_id; });
-  results.forEach(function (r) {
-    var tid = codeToTeacher[r.exam_code];
-    if (tid != null) perTeacher[tid] = (perTeacher[tid] || 0) + 1;
+  /* ── таблица всех учителей, первые пять подсвечены ── */
+  var stats = teacherStats(S);
+  var rows = teachersAll.map(function (t) {
+    var x = stats[t.id] || { done: 0, sum: 0, students: {}, last: '', exams: 0 };
+    return {
+      id: t.id, name: t.name || ('id ' + t.id), exams: x.exams, done: x.done,
+      students: Object.keys(x.students).length,
+      avg: x.done ? Math.round(x.sum / x.done) : 0, last: x.last
+    };
+  }).sort(function (a, b) { return b.done - a.done || b.students - a.students; });
+
+  var ttb = table(document.getElementById('teachers'), [
+    ['', 'medal'], ['Учитель', ''], ['Экзаменов', 'r'], ['Учеников', 'r'], ['Сдач', 'r'],
+    ['Средний', 'r'], ['Последняя сдача', 'r hide-s'], ['', 'r']
+  ]);
+  if (!rows.length) emptyRow(ttb, 8, 'Учителей пока нет');
+  rows.forEach(function (t, i) {
+    var tr = el('tr', 'clk' + (i < 5 && t.done ? ' top5' : ''));
+    tr.appendChild(el('td', 'medal', i < 3 && t.done ? ['🥇', '🥈', '🥉'][i] : (i < 5 && t.done ? '•' : '')));
+
+    var tdN = el('td', 'nm', t.name);
+    tdN.appendChild(el('div', 'uid', 'номер ' + t.id));
+    tr.appendChild(tdN);
+
+    tr.appendChild(el('td', 'r', num(t.exams)));
+    tr.appendChild(el('td', 'r', num(t.students)));
+    tr.appendChild(el('td', 'r', num(t.done)));
+    tr.appendChild(t.done ? badgeCell(t.avg) : el('td', 'r', '—'));
+    tr.appendChild(el('td', 'r hide-s', ddmm(t.last)));
+    tr.appendChild(el('td', 'r arw', '›'));
+    tr.onclick = function () { PATH = [t.id]; draw(); };
+    ttb.appendChild(tr);
   });
-  var tp = Object.keys(perTeacher)
-    .map(function (id) { return { k: nameById[id] || ('id ' + id), v: perTeacher[id] }; })
-    .sort(function (a, b) { return b.v - a.v; }).slice(0, 8);
-  fillBars(document.getElementById('top-teachers'), tp,
-    'За выбранный период сдач не было', ['сдача', 'сдачи', 'сдач']);
 
   /* ── распределение оценок ── */
   var gbox = document.getElementById('grades'); clear(gbox);
@@ -492,13 +592,221 @@ function draw() {
     tdE.appendChild(tag); tr.appendChild(tdE);
 
     tr.appendChild(el('td', null, e.role === 'teacher' ? 'учитель' : e.role === 'student' ? 'ученик' : '—'));
-    tr.appendChild(el('td', null, e.student_name || (e.teacher_id ? nameById[e.teacher_id] || '—' : '—')));
+    tr.appendChild(el('td', null, e.student_name || (e.teacher_id ? S.nameById[e.teacher_id] || '—' : '—')));
     tr.appendChild(el('td', null, e.exam_code || '—'));
     tr.appendChild(el('td', null, e.device || '—'));
     tr.appendChild(el('td', null, [e.country, e.city].filter(Boolean).join(' · ') || '—'));
     tb.appendChild(tr);
   });
   tbl.appendChild(tb);
+}
+
+/* ══ сводка по учителям ══ */
+function teacherStats(S) {
+  var m = {};
+  S.teachersAll.forEach(function (t) {
+    m[t.id] = { done: 0, sum: 0, students: {}, last: '', exams: 0 };
+  });
+  S.exams.forEach(function (e) { if (m[e.teacher_id]) m[e.teacher_id].exams++; });
+  S.results.forEach(function (r) {
+    var x = m[S.teacherByCode[r.exam_code]];
+    if (!x) return;
+    x.done++; x.sum += (r.percent || 0);
+    x.students[skey(r.student)] = String(r.student || '').trim();
+    var d = String(r.created_at || '').slice(0, 10);
+    if (d > x.last) x.last = d;
+  });
+  return m;
+}
+
+/* результаты, относящиеся к одному учителю */
+function resultsOfTeacher(S, tid) {
+  return S.results.filter(function (r) { return S.teacherByCode[r.exam_code] === tid; });
+}
+
+/* ══ путь вглубь ══ */
+var PATH = [];   // [] | [teacherId] | [teacherId, ключ ученика]
+
+function drawCrumbs(S) {
+  var box = document.getElementById('crumbs'); clear(box);
+  if (!PATH.length) return;                       // на обзоре путь не нужен
+
+  var home = el('a', null, 'Все учителя');
+  home.onclick = function () { PATH = []; draw(); };
+  box.appendChild(home);
+
+  var tname = S.nameById[PATH[0]] || ('номер ' + PATH[0]);
+  box.appendChild(el('span', 'sep', '›'));
+  if (PATH.length === 1) box.appendChild(el('span', 'cur', tname));
+  else {
+    var back = el('a', null, tname);
+    back.onclick = function () { PATH = [PATH[0]]; draw(); };
+    box.appendChild(back);
+    box.appendChild(el('span', 'sep', '›'));
+    box.appendChild(el('span', 'cur', PATH[2] || PATH[1]));
+  }
+}
+
+/* ── уровень 2: ученики выбранного учителя ── */
+function drawTeacher(S, tid) {
+  var host = document.getElementById('detail'); clear(host);
+  var mine = resultsOfTeacher(S, tid);
+  var tname = S.nameById[tid] || ('номер ' + tid);
+
+  var head = el('div', 'card');
+  head.appendChild(el('h2', null, 'Ученики учителя: ' + tname));
+  head.appendChild(el('p', 'hint',
+    'Все, кто проходил тесты этого учителя за выбранный период. Нажмите на ученика, чтобы увидеть каждую его попытку.'));
+  host.appendChild(head);
+
+  /* группируем по ученику */
+  var by = {};
+  mine.forEach(function (r) {
+    var k = skey(r.student);
+    if (!by[k]) by[k] = { name: String(r.student || '').trim() || '—', n: 0, sum: 0, best: 0, last: '', time: 0 };
+    var x = by[k];
+    x.n++; x.sum += (r.percent || 0);
+    if ((r.percent || 0) > x.best) x.best = r.percent || 0;
+    x.time += (r.duration_s || 0);
+    var d = String(r.created_at || '').slice(0, 10);
+    if (d > x.last) x.last = d;
+  });
+  var list = Object.keys(by).map(function (k) {
+    var x = by[k];
+    return { k: k, name: x.name, n: x.n, avg: Math.round(x.sum / x.n), best: x.best, last: x.last };
+  }).sort(function (a, b) { return b.avg - a.avg || b.n - a.n; });
+
+  var k = el('div', 'kpis');
+  kpi(k, num(list.length), 'Учеников сдавали тесты этого учителя');
+  kpi(k, num(mine.length), 'Сдач всего');
+  kpi(k, (mine.length ? Math.round(mine.reduce(function (s, r) { return s + (r.percent || 0); }, 0) / mine.length) : 0) + '%',
+    'Средний результат по всем ученикам');
+  kpi(k, num(S.exams.filter(function (e) { return e.teacher_id === tid; }).length), 'Экзаменов создано за период');
+  host.appendChild(k);
+
+  var card = el('div', 'card');
+  var tbl = el('table');
+  var tb = table(tbl, [['Ученик', ''], ['Сдач', 'r'], ['Средний', 'r'], ['Лучший', 'r'],
+                       ['Последняя сдача', 'r hide-s'], ['', 'r']]);
+  if (!list.length) emptyRow(tb, 6, 'За выбранный период тесты этого учителя не сдавали');
+  list.forEach(function (s) {
+    var tr = el('tr', 'clk');
+    tr.appendChild(el('td', 'nm', s.name));
+    tr.appendChild(el('td', 'r', num(s.n)));
+    tr.appendChild(badgeCell(s.avg));
+    tr.appendChild(el('td', 'r', s.best + '%'));
+    tr.appendChild(el('td', 'r hide-s', ddmm(s.last)));
+    tr.appendChild(el('td', 'r arw', '›'));
+    tr.onclick = function () { PATH = [tid, s.k, s.name]; draw(); };
+    tb.appendChild(tr);
+  });
+  var wrap = el('div', 'tblwrap'); wrap.appendChild(tbl); card.appendChild(wrap);
+  host.appendChild(card);
+
+  /* экзамены этого учителя */
+  var exCard = el('div', 'card');
+  exCard.appendChild(el('h2', null, 'Экзамены этого учителя'));
+  exCard.appendChild(el('p', 'hint', 'Сколько человек сдавали каждый экзамен и с каким средним результатом.'));
+  var exTbl = el('table');
+  var etb = table(exTbl, [['Название', ''], ['Код', ''], ['Сдач', 'r'], ['Средний', 'r'], ['Создан', 'r hide-s']]);
+  var exRows = S.examsAll.filter(function (e) { return e.teacher_id === tid; }).map(function (e) {
+    var rs = mine.filter(function (r) { return r.exam_code === e.code; });
+    return { e: e, n: rs.length,
+      avg: rs.length ? Math.round(rs.reduce(function (s, r) { return s + (r.percent || 0); }, 0) / rs.length) : 0 };
+  }).sort(function (a, b) { return b.n - a.n; });
+  if (!exRows.length) emptyRow(etb, 5, 'Экзаменов нет');
+  exRows.forEach(function (x) {
+    var tr = el('tr');
+    tr.appendChild(el('td', 'nm', x.e.title || '—'));
+    tr.appendChild(el('td', null, x.e.code || '—'));
+    tr.appendChild(el('td', 'r', num(x.n)));
+    tr.appendChild(x.n ? badgeCell(x.avg) : el('td', 'r', '—'));
+    tr.appendChild(el('td', 'r hide-s', ddmm(String(x.e.created_at || '').slice(0, 10))));
+    etb.appendChild(tr);
+  });
+  var w2 = el('div', 'tblwrap'); w2.appendChild(exTbl); exCard.appendChild(w2);
+  host.appendChild(exCard);
+}
+
+/* ── уровень 3: все попытки одного ученика ── */
+function drawStudent(S, tid, key, shownName) {
+  var host = document.getElementById('detail'); clear(host);
+  var rows = resultsOfTeacher(S, tid)
+    .filter(function (r) { return skey(r.student) === key; })
+    .sort(function (a, b) { return String(b.created_at).localeCompare(String(a.created_at)); });
+
+  var head = el('div', 'card');
+  head.appendChild(el('h2', null, shownName || key));
+  head.appendChild(el('p', 'hint',
+    'Каждая попытка этого ученика, новые сверху. Столбики показывают, как менялся результат: слева ранние тесты, справа поздние.'));
+  host.appendChild(head);
+
+  /* честно предупреждаем: пока ученик опознаётся только по введённому имени */
+  var warn = el('div', 'warnbox',
+    'Ученик определяется по имени, которое он вписал перед тестом — своего аккаунта у него пока нет. '
+    + 'Полные тёзки в этом списке сольются в одного человека. Это исправится, когда ученики начнут входить через Telegram.');
+  host.appendChild(warn);
+
+  var ps = rows.map(function (r) { return r.percent || 0; });
+  var k = el('div', 'kpis');
+  kpi(k, num(rows.length), 'Тестов сдано');
+  kpi(k, (ps.length ? Math.round(ps.reduce(function (a, b) { return a + b; }, 0) / ps.length) : 0) + '%', 'Средний результат');
+  kpi(k, (ps.length ? Math.max.apply(null, ps) : 0) + '%', 'Лучший результат');
+  kpi(k, (ps.length ? Math.min.apply(null, ps) : 0) + '%', 'Худший результат');
+  kpi(k, mmss(rows.length ? rows.reduce(function (s, r) { return s + (r.duration_s || 0); }, 0) / rows.length : 0),
+    'Среднее время на тест');
+  host.appendChild(k);
+
+  if (rows.length > 1) {
+    var card0 = el('div', 'card');
+    card0.appendChild(el('h2', null, 'Как менялся результат'));
+    var sp = el('div', 'spark');
+    rows.slice().reverse().forEach(function (r) {
+      var d = el('div');
+      d.style.height = Math.max(3, (r.percent || 0)) + '%';
+      d.title = ddmm(String(r.created_at || '').slice(0, 10)) + ' — ' + (r.percent || 0) + '%';
+      sp.appendChild(d);
+    });
+    card0.appendChild(sp);
+    host.appendChild(card0);
+  }
+
+  var card = el('div', 'card');
+  var tbl = el('table');
+  var tb = table(tbl, [['Дата', ''], ['Экзамен', ''], ['Результат', 'r'],
+                       ['Верных', 'r hide-s'], ['Оценка', 'r'], ['Время', 'r hide-s']]);
+  if (!rows.length) emptyRow(tb, 6, 'Попыток за выбранный период нет');
+  rows.forEach(function (r) {
+    var ex = S.examByCode[r.exam_code];
+    var tr = el('tr');
+    tr.appendChild(el('td', 'nm', ddmm(String(r.created_at || '').slice(0, 10))));
+    tr.appendChild(el('td', null, (ex && ex.title) || r.exam_code || '—'));
+    tr.appendChild(el('td', 'r', (r.percent || 0) + '%'));
+    tr.appendChild(el('td', 'r hide-s', (r.correct || 0) + ' / ' + (r.total || 0)));
+    var g = el('td', 'r');
+    g.appendChild(el('span', gcls(r.percent || 0), String(gradeOf(r.percent || 0))));
+    tr.appendChild(g);
+    tr.appendChild(el('td', 'r hide-s', r.duration_s ? mmss(r.duration_s) : '—'));
+    tb.appendChild(tr);
+  });
+  var wrap = el('div', 'tblwrap'); wrap.appendChild(tbl); card.appendChild(wrap);
+  host.appendChild(card);
+}
+
+/* ══ куда смотреть сейчас ══ */
+function draw() {
+  if (!DATA) return;
+  var S = scope();
+  var overview = document.getElementById('overview'), detail = document.getElementById('detail');
+  drawCrumbs(S);
+  if (!PATH.length) {
+    overview.classList.remove('hidden'); detail.classList.add('hidden');
+    drawOverview(S);
+  } else {
+    overview.classList.add('hidden'); detail.classList.remove('hidden');
+    if (PATH.length === 1) drawTeacher(S, PATH[0]);
+    else drawStudent(S, PATH[0], PATH[1], PATH[2]);
+  }
 }
 
 /* период по умолчанию — с 1 июля 2026 по сегодня */
