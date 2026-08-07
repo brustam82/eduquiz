@@ -1030,16 +1030,21 @@ async function dailySummary(env) {
 // ══════════ ДАШБОРД АНАЛИТИКИ ══════════
 async function analyticsDashboard(req, env) {
   const url = new URL(req.url);
-  const key = url.searchParams.get('key');
-  if (!key || key !== env.ANALYTICS_DASHBOARD_KEY) {
+  // ключ лучше слать заголовком: в адресе он оседает в логах, истории и Referer.
+  // Query-вариант оставлен временно, пока дашборд не переведён на заголовок.
+  const key = req.headers.get('x-dashboard-key') || url.searchParams.get('key');
+  const want = env.ANALYTICS_DASHBOARD_KEY;
+  if (!key || !want || !same(key, want)) {
     return J({ error: 'unauthorized' }, 401);
   }
   try {
+    // без limit выборки росли бы без предела и однажды упёрлись в память воркера
     const [teachers, results, events, exams] = await Promise.all([
-      sb(env, 'teachers?select=id,name,username,tg_chat_id,created_at'),
-      sb(env, 'results?select=student,subject,lang,percent,correct,total,duration_s,created_at,exam_code'),
+      sb(env, 'teachers?select=id,name,username,tg_chat_id,created_at&order=created_at.desc&limit=2000'),
+      sb(env, 'results?select=student,subject,lang,percent,correct,total,duration_s,created_at,exam_code'
+        + '&order=created_at.desc&limit=5000'),
       sb(env, 'analytics_events?select=*&order=created_at.desc&limit=2000'),
-      sb(env, 'exams?select=code,title,teacher_id,created_at,active_till'),
+      sb(env, 'exams?select=code,title,teacher_id,created_at,active_till&order=created_at.desc&limit=2000'),
     ]);
     return new Response(JSON.stringify({ teachers, results, events, exams }), {
       status: 200,
