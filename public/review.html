@@ -214,9 +214,14 @@ function openEditor(q,card){
 async function approve(d,q){
   var txt=d.querySelector('.qt').value.trim();
   var opts=[].map.call(d.querySelectorAll('.opt input[type=text]'),function(i){return i.value.trim()});
-  var correct=+d.querySelector('input[type=radio]:checked').value;
+  /* без этой проверки, если ни один вариант не отмечен, функция падала молча */
+  var sel=d.querySelector('input[type=radio]:checked');
+  if(!sel){alert("To'g'ri variantni belgilang");return}
+  var correct=+sel.value;
   var j=await api('/api/question',{id:q.id,action:'approve',question:txt,options:opts,correct:correct});
   if(j.ok){d.classList.add('done');d.querySelector('.b.ok').textContent='✓ Saqlandi'}
+  /* раньше при отказе сервера кнопка просто ничего не делала */
+  else{alert("Saqlanmadi: "+(j.error||'xato'))}
 }
 async function del(d,id){
   var j=await api('/api/question',{id:id,action:'delete'});

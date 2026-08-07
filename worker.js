@@ -193,10 +193,23 @@ function fmtSummary(ex, rows) {
   return L.join('\n');
 }
 
-const genCode = () => Array.from(
-  crypto.getRandomValues(new Uint8Array(5)),
-  b => 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[b % 30]
-).join('');
+// 31 символ: без похожих друг на друга I L O 0 1
+const CODE_ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
+// было `b % 30` при алфавите из 31 символа — цифра 9 не выпадала никогда.
+// Байты >= 248 отбрасываем, иначе первые 8 символов алфавита выпадали бы чаще.
+function genCode() {
+  const n = CODE_ABC.length, max = 256 - (256 % n);
+  let out = '';
+  while (out.length < 5) {
+    for (const b of crypto.getRandomValues(new Uint8Array(8))) {
+      if (b >= max) continue;
+      out += CODE_ABC[b % n];
+      if (out.length === 5) break;
+    }
+  }
+  return out;
+}
 
 // ══════════ безопасность ══════════
 const ENC = new TextEncoder();
@@ -410,11 +423,14 @@ async function createExam(req, env, ctx) {
     body: JSON.stringify({
       code,
       title: String(b.title || '').trim().slice(0, 120) || 'Imtihon',
-      subjects: Array.isArray(b.subjects) && b.subjects.length ? b.subjects : ['math'],
-      q_count: +b.q_count || 8,
-      time_per_q: +b.time_per_q || 0,
+      subjects: Array.isArray(b.subjects) && b.subjects.length
+        ? b.subjects.slice(0, 20).map(s => String(s).slice(0, 40))
+        : ['math'],
+      q_count: Math.min(Math.max(1, +b.q_count || 8), 100),
+      time_per_q: Math.min(Math.max(0, +b.time_per_q || 0), 3600),
       show_expl: !!b.show_expl,
-      active_till: b.active_till || null,
+      // формат не меняем — только отсекаем нечитаемую дату, чтобы она не ушла в БД
+      active_till: b.active_till && !isNaN(new Date(b.active_till)) ? b.active_till : null,
       pack_id: b.pack_id ? +b.pack_id : null,   // из какого пакета брать вопросы
       teacher_id: id,
       teacher_chat_id: t[0].tg_chat_id     // берём из аккаунта, руками вводить не надо
@@ -460,7 +476,8 @@ async function stats(req, env) {
   const b = await req.json();
   const id = await auth(env, b);
   if (!id) return J({ error: 'auth' }, 401);
-  const n = Math.min(+b.limit || 100, 500);
+  // Math.max нужен: отрицательный limit уходил в запрос как есть и ронял его
+  const n = Math.min(Math.max(1, +b.limit || 100), 500);
 
   // только свои экзамены — чужие результаты учителю не видны
   const exams = await sb(env, `exams?teacher_id=eq.${id}&select=code,title&limit=200`);
@@ -868,7 +885,14 @@ async function editQuestion(req, env) {
   if (b.action === 'approve') patch.status = 'approved';
   if (b.question != null) { patch.question_uz = String(b.question).slice(0, 2000); patch.question_ru = patch.question_uz; }
   if (Array.isArray(b.options)) { const o = b.options.map(String).slice(0, 6); patch.options_uz = o; patch.options_ru = o; }
-  if (b.correct != null) patch.correct = Math.max(1, +b.correct);
+  // верхняя граница обязательна: correct больше числа вариантов делал вопрос
+  // неотвечаемым — правильную кнопку было просто не нажать
+  if (b.correct != null) {
+    const optCount = Array.isArray(b.options) ? Math.min(b.options.length, 6) : 6;
+    const c = parseInt(b.correct, 10);
+    if (!(c >= 1 && c <= optCount)) return J({ error: 'correct' }, 400);
+    patch.correct = c;
+  }
   if (b.image_box !== undefined) patch.image_box = b.image_box ? String(b.image_box).slice(0, 40) : null;
   if (!Object.keys(patch).length) return J({ error: 'nothing' }, 400);
   await sb(env, `questions?id=eq.${encodeURIComponent(qid)}`, {
@@ -987,8 +1011,9 @@ async function checkAttempt(env, code, student, req, ctx) {
 
 // ── ежедневная сводка (будильник) ──
 async function dailySummary(env) {
+  // было limit=50: действующие экзамены старше 50-го молча оставались без отчёта
   const exams = await sb(env,
-    'exams?select=code,title,active_till,teacher_chat_id&order=created_at.desc&limit=50');
+    'exams?select=code,title,active_till,teacher_chat_id&order=created_at.desc&limit=500');
   const now = new Date();
   for (const ex of exams) {
     if (ex.active_till && new Date(ex.active_till) < now) continue;  // экзамен закончился
