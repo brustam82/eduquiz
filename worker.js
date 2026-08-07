@@ -518,7 +518,7 @@ async function callGemini(env, prompt, filePart) {
   if (filePart) parts.push({ inline_data: { mime_type: filePart.mime, data: filePart.b64 } });
   const body = JSON.stringify({
     contents: [{ parts }],
-    generationConfig: { temperature: 0.2, maxOutputTokens: 12288, responseMimeType: 'application/json' }
+    generationConfig: { temperature: 0.2, maxOutputTokens: 32768, responseMimeType: 'application/json' }
   });
   let last = '';
   for (let attempt = 0; attempt < MODELS.length; attempt++) {
@@ -530,7 +530,12 @@ async function callGemini(env, prompt, filePart) {
     const t = await r.text();
     if (r.ok) {
       const j = JSON.parse(t);
-      return j?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
+      const txt = j?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
+      if (txt) return txt;
+      // ответ пришёл, а текста нет — обычно модель упёрлась в лимит токенов.
+      // Раньше это молча возвращало '' и превращалось в «0 вопросов» без объяснения.
+      last = `gemini: пустой ответ, finishReason=${j?.candidates?.[0]?.finishReason || '?'}`;
+      continue;
     }
     last = `gemini ${r.status}: ${t}`;
     // 401/403 — беда с ключом, следующая модель не спасёт.
@@ -549,7 +554,7 @@ async function callGeminiMulti(env, prompt, fileParts) {
   for (const fp of fileParts) parts.push({ inline_data: { mime_type: fp.mime, data: fp.b64 } });
   const body = JSON.stringify({
     contents: [{ parts }],
-    generationConfig: { temperature: 0.2, maxOutputTokens: 12288, responseMimeType: 'application/json' }
+    generationConfig: { temperature: 0.2, maxOutputTokens: 32768, responseMimeType: 'application/json' }
   });
   let last = '';
   for (let attempt = 0; attempt < MODELS.length; attempt++) {
@@ -561,7 +566,12 @@ async function callGeminiMulti(env, prompt, fileParts) {
     const t = await r.text();
     if (r.ok) {
       const j = JSON.parse(t);
-      return j?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
+      const txt = j?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
+      if (txt) return txt;
+      // ответ пришёл, а текста нет — обычно модель упёрлась в лимит токенов.
+      // Раньше это молча возвращало '' и превращалось в «0 вопросов» без объяснения.
+      last = `gemini: пустой ответ, finishReason=${j?.candidates?.[0]?.finishReason || '?'}`;
+      continue;
     }
     last = `gemini ${r.status}: ${t}`;
     if (r.status === 401 || r.status === 403) break;
@@ -670,6 +680,7 @@ async function ingest(req, env) {
   // (или из файла в файл), собирались правильно, а не рвались.
   let allQs = [];
   let lastErr = '';
+  let rawPreview = '';   // что реально ответила модель — нужно, когда вопросов ноль
 
   const inlineFiles = up.files.filter(f => f.mime.startsWith('image/') || f.mime === 'application/pdf').slice(0, 2);
   const textFiles   = up.files.filter(f => isTextLike(f.mime));
@@ -686,6 +697,7 @@ async function ingest(req, env) {
     try {
       const fileParts = inlineFiles.map(f => ({ mime: f.mime, b64: toB64(f.buf) }));
       const raw = await callGeminiMulti(env, prompt, fileParts);
+      rawPreview = String(raw || '').slice(0, 400);
       const parsed = parseModelJson(raw);
       if (parsed && Array.isArray(parsed.questions)) allQs = allQs.concat(parsed.questions);
     } catch (e) { lastErr = String(e.message || e).slice(0, 300); }
@@ -707,7 +719,9 @@ async function ingest(req, env) {
 
   if (!allQs.length) {
     if (lastErr) return J({ error: 'ai: ' + lastErr, detail: lastErr }, 200);
-    return J({ ok: true, inserted: 0, questions: [], pack_id: null });
+    // модель ответила без ошибки, но вопросов нет — показываем её ответ,
+    // иначе учитель видит бессмысленное «распознано 0 вопросов»
+    return J({ ok: true, inserted: 0, questions: [], pack_id: null, raw: rawPreview });
   }
   const qs = allQs;
 

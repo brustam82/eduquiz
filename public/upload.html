@@ -162,8 +162,10 @@ async function upload(){
   try{
     var r=await fetch('/api/ingest',{method:'POST',body:fd});
     var j=await r.json();
-    if(j.ok){msg('✅ '+j.inserted+" ta savol tanildi. Endi tekshirib tasdiqlang.",true);
+    if(j.ok&&j.inserted>0){msg('✅ '+j.inserted+" ta savol tanildi. Endi tekshirib tasdiqlang.",true);
       document.getElementById('toReview').style.display='block';loadPacks()}
+    /* ноль вопросов — это не успех: показываем, что ответила модель */
+    else if(j.ok){msg("Savol topilmadi. AI javobi: "+(j.raw||"bo'sh"),false)}
     else{msg('Xato: '+(j.detail||j.hint||j.error||'qayta urining'),false)}
   }catch(e){msg("Internet xatosi. Qayta urining.",false)}
   b.disabled=false;b.textContent='Tanib olish'
