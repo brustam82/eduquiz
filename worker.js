@@ -1029,9 +1029,11 @@ async function dailySummary(env) {
 
 // ══════════ ДАШБОРД АНАЛИТИКИ ══════════
 async function analyticsDashboard(req, env) {
-  const url = new URL(req.url);
-  // ключ только заголовком: в адресе он оседал бы в логах, истории и Referer
-  const key = req.headers.get('x-dashboard-key');
+  // ключ приходит в теле POST — как у всех остальных защищённых ручек.
+  // Не в адресе: он оседал бы в логах, истории браузера и Referer.
+  // И не в заголовке: туда нельзя символы вне латиницы.
+  let key = '';
+  try { key = String((await req.json()).key || ''); } catch (e) {}
   const want = env.ANALYTICS_DASHBOARD_KEY;
   if (!key || !want || !same(key, want)) {
     return J({ error: 'unauthorized' }, 401);
@@ -1078,7 +1080,7 @@ export default {
       if (m === 'POST' && p === '/api/question') return await editQuestion(req, env);
       if (m === 'GET'  && p === '/api/pack-questions')
         return await packQuestions(env, url.searchParams.get('pack'), +url.searchParams.get('n') || 0);
-      if (m === 'GET' && p === '/api/analytics') return await analyticsDashboard(req, env);
+      if (m === 'POST' && p === '/api/analytics') return await analyticsDashboard(req, env);
       // диагностика ИИ — только для вошедшего учителя,
       // иначе посторонние жгут платную квоту Gemini
       if (m === 'POST' && p === '/api/ai-test') {

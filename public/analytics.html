@@ -139,8 +139,9 @@
 <script>
 /* ══ доступ ══
    Ключ живёт в sessionStorage (стирается при закрытии вкладки) и уходит
-   заголовком X-Dashboard-Key. В адресной строке его нет — значит он не
-   попадает ни в логи сервера, ни в историю браузера, ни в Referer. */
+   в теле POST-запроса. В адресной строке его нет — значит он не попадает
+   ни в логи сервера, ни в историю браузера, ни в Referer.
+   Тело, а не заголовок: в заголовки нельзя символы вне латиницы. */
 var KEY = '';
 try { KEY = sessionStorage.getItem('mt_dash_key') || ''; } catch (e) {}
 
@@ -149,7 +150,11 @@ var gate = document.getElementById('gate'),
     gerr = document.getElementById('gate-err');
 
 async function load() {
-  var r = await fetch('/api/analytics', { headers: { 'X-Dashboard-Key': KEY } });
+  var r = await fetch('/api/analytics', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key: KEY })
+  });
   if (r.status === 401) throw new Error('Неверный ключ доступа');
   if (!r.ok) throw new Error('Сервер вернул ошибку ' + r.status);
   return r.json();
