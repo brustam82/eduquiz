@@ -45,7 +45,19 @@
   .err{color:var(--danger);font-size:.82rem;margin-top:12px;min-height:18px}
 
   .card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px}
-  .card h2{font-size:.95rem;font-weight:700;color:var(--lapis);margin-bottom:16px}
+  .card h2{font-size:.95rem;font-weight:700;color:var(--lapis);margin-bottom:4px}
+  .hint{font-size:.76rem;color:var(--muted);line-height:1.45;margin-bottom:15px}
+
+  /* ── выбор периода ── */
+  .period{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+  .pgroup{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .pgroup label{font-size:.83rem;color:var(--muted)}
+  .pgroup input[type=date]{font:inherit;font-size:.85rem;padding:7px 10px;border:1px solid var(--border);
+    border-radius:8px;background:var(--cream);color:var(--ink)}
+  .chip{font:inherit;font-size:.79rem;font-weight:600;padding:7px 13px;border-radius:20px;cursor:pointer;
+    border:1px solid var(--border);background:var(--cream);color:var(--lapis);transition:.15s}
+  .chip:hover{border-color:var(--lapis)}
+  .chip.on{background:var(--lapis);color:#fff;border-color:var(--lapis)}
 
   .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
   .kpi{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:18px 16px;text-align:center}
@@ -112,25 +124,60 @@
   </header>
 
   <div class="wrap">
+    <!-- выбор периода -->
+    <div class="card period">
+      <div class="pgroup">
+        <label for="from">Период с</label>
+        <input type="date" id="from">
+        <label for="to">по</label>
+        <input type="date" id="to">
+      </div>
+      <div class="pgroup presets">
+        <button class="chip" data-preset="july">С 1 июля 2026</button>
+        <button class="chip" data-preset="30">Последние 30 дней</button>
+        <button class="chip" data-preset="all">Всё время</button>
+      </div>
+    </div>
+
     <div class="kpis" id="kpis"></div>
 
     <div class="card">
-      <h2>Сдачи тестов за последние 30 дней</h2>
+      <h2>Сколько тестов сдавали по дням</h2>
+      <p class="hint">Высота столбика = сколько учеников закончили тест.
+        Наведите на столбик, чтобы увидеть дату и точное число.
+        <span id="chart-note"></span></p>
       <div class="chart" id="chart"></div>
     </div>
 
     <div class="cols2">
-      <div class="card"><h2>Самые активные учителя</h2><div id="top-teachers"></div></div>
-      <div class="card"><h2>Распределение оценок</h2><div id="grades"></div></div>
+      <div class="card">
+        <h2>Самые активные учителя</h2>
+        <p class="hint">Цифра справа = сколько учеников сдали тесты этого учителя за выбранный период.</p>
+        <div id="top-teachers"></div>
+      </div>
+      <div class="card">
+        <h2>Какие оценки получают ученики</h2>
+        <p class="hint">Цифра справа = сколько работ получили эту оценку. В скобках — доля от всех работ.</p>
+        <div id="grades"></div>
+      </div>
     </div>
 
     <div class="cols2">
-      <div class="card"><h2>Устройства</h2><div id="devices"></div></div>
-      <div class="card"><h2>География</h2><div id="geo"></div></div>
+      <div class="card">
+        <h2>С каких устройств заходят</h2>
+        <p class="hint">Цифра справа = сколько раз заходили с такого устройства (учителя и ученики вместе).</p>
+        <div id="devices"></div>
+      </div>
+      <div class="card">
+        <h2>Откуда заходят</h2>
+        <p class="hint">Цифра справа = сколько заходов из этого города. Определяется по интернет-адресу.</p>
+        <div id="geo"></div>
+      </div>
     </div>
 
     <div class="card">
-      <h2>Последние события</h2>
+      <h2>Что происходило на платформе</h2>
+      <p class="hint">Последние действия за выбранный период, новые сверху.</p>
       <div class="tblwrap"><table id="events"></table></div>
     </div>
   </div>
@@ -144,6 +191,10 @@
    Тело, а не заголовок: в заголовки нельзя символы вне латиницы. */
 var KEY = '';
 try { KEY = sessionStorage.getItem('mt_dash_key') || ''; } catch (e) {}
+
+/* Данные тянем с сервера один раз, а период применяем уже здесь —
+   переключение периода мгновенное и не грузит сервер лишний раз. */
+var DATA = null;
 
 var gate = document.getElementById('gate'),
     app  = document.getElementById('app'),
@@ -165,11 +216,11 @@ async function enter(fromStorage) {
   var btn = document.getElementById('enter');
   btn.disabled = true; btn.textContent = 'Проверяем…';
   try {
-    var data = await load();
+    DATA = await load();
     try { sessionStorage.setItem('mt_dash_key', KEY); } catch (e) {}
     gate.classList.add('hidden');
     app.classList.remove('hidden');
-    render(data);
+    draw();
   } catch (e) {
     KEY = '';
     try { sessionStorage.removeItem('mt_dash_key'); } catch (e2) {}
@@ -195,9 +246,36 @@ document.getElementById('exit').onclick = function () {
 };
 document.getElementById('reload').onclick = async function () {
   var b = this; b.disabled = true; b.textContent = 'Обновляем…';
-  try { render(await load()); } catch (e) { alert(e.message); }
+  try { DATA = await load(); draw(); } catch (e) { alert(e.message); }
   b.disabled = false; b.textContent = 'Обновить';
 };
+
+/* ══ период ══ */
+var inFrom = document.getElementById('from'), inTo = document.getElementById('to');
+
+function iso(d) { return d.toISOString().slice(0, 10); }
+
+function setPeriod(from, to, chip) {
+  inFrom.value = from; inTo.value = to;
+  document.querySelectorAll('.chip').forEach(function (c) { c.classList.toggle('on', c === chip); });
+  if (DATA) draw();
+}
+
+document.querySelectorAll('.chip').forEach(function (c) {
+  c.onclick = function () {
+    var today = iso(new Date());
+    if (c.dataset.preset === 'july') setPeriod('2026-07-01', today, c);
+    else if (c.dataset.preset === '30') setPeriod(iso(new Date(Date.now() - 29 * 864e5)), today, c);
+    else setPeriod('2000-01-01', today, c);
+  };
+});
+/* при ручном вводе даты сбрасываем подсветку быстрых кнопок */
+[inFrom, inTo].forEach(function (i) {
+  i.onchange = function () {
+    document.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('on'); });
+    if (DATA) draw();
+  };
+});
 
 /* ══ помощники ══
    Всё, что пришло с сервера, вставляем только через textContent:
@@ -209,8 +287,15 @@ function el(tag, cls, text) {
   return n;
 }
 function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
-function dayKey(d) { return d.toISOString().slice(0, 10); }
 function num(n) { return (n || 0).toLocaleString('ru-RU'); }
+
+/* правильное окончание: 1 сдача, 2 сдачи, 5 сдач */
+function plural(n, one, few, many) {
+  var a = Math.abs(n) % 100, b = a % 10;
+  if (a > 10 && a < 20) return many;
+  if (b > 1 && b < 5) return few;
+  return b === 1 ? one : many;
+}
 
 function kpi(box, value, label) {
   var c = el('div', 'kpi');
@@ -219,12 +304,14 @@ function kpi(box, value, label) {
   box.appendChild(c);
 }
 
-/* горизонтальная полоса: подпись, число, заполнение */
-function bar(box, label, count, max, color) {
+/* горизонтальная полоса: подпись, число с единицей измерения, заполнение.
+   unit — тройка окончаний [1, 2-4, 5+]; без неё непонятно, что означает цифра */
+function bar(box, label, count, max, color, unit, extra) {
   var row = el('div', 'row'),
       top = el('div', 'top');
   top.appendChild(el('b', null, label));
-  top.appendChild(el('span', 'n', num(count)));
+  top.appendChild(el('span', 'n',
+    num(count) + ' ' + plural(count, unit[0], unit[1], unit[2]) + (extra ? ' (' + extra + ')' : '')));
   row.appendChild(top);
   var track = el('div', 'track'), fill = el('div', 'fill');
   fill.style.width = (max ? Math.round(count / max * 100) : 0) + '%';
@@ -242,58 +329,96 @@ function topCounts(list, n) {
     .sort(function (a, b) { return b.v - a.v; }).slice(0, n);
 }
 
-function fillBars(box, pairs, emptyText) {
+function fillBars(box, pairs, emptyText, unit) {
   clear(box);
   if (!pairs.length) { box.appendChild(el('div', 'empty', emptyText)); return; }
   var max = pairs[0].v;
-  pairs.forEach(function (p) { bar(box, p.k, p.v, max); });
+  pairs.forEach(function (p) { bar(box, p.k, p.v, max, null, unit); });
 }
 
-/* ══ отрисовка ══ */
-function render(d) {
-  var teachers = d.teachers || [], results = d.results || [],
-      events   = d.events   || [], exams   = d.exams   || [];
+/* ══ отрисовка ══
+   Период применяется здесь, к уже загруженным данным. */
+function draw() {
+  if (!DATA) return;
+  var from = inFrom.value || '2000-01-01',
+      to   = inTo.value   || iso(new Date());
+  /* даты сравниваем как строки «ГГГГ-ММ-ДД» — для этого формата это верно */
+  var inRange = function (row) {
+    var k = String(row.created_at || '').slice(0, 10);
+    return k >= from && k <= to;
+  };
+
+  var teachersAll = DATA.teachers || [], examsAll = DATA.exams || [];
+  var teachersNew = teachersAll.filter(inRange),
+      results     = (DATA.results || []).filter(inRange),
+      events      = (DATA.events  || []).filter(inRange),
+      exams       = examsAll.filter(inRange);
   var now = new Date();
 
   document.getElementById('stamp').textContent =
-    'Обновлено ' + now.toLocaleString('ru-RU', { timeZone: 'Asia/Tashkent' }) + ' (Ташкент)';
+    'Данные на ' + now.toLocaleString('ru-RU', { timeZone: 'Asia/Tashkent' }) + ' (Ташкент)';
 
-  /* KPI */
+  /* ── показатели ── */
   var box = document.getElementById('kpis'); clear(box);
-  var active = exams.filter(function (e) { return !e.active_till || new Date(e.active_till) > now; }).length;
+  var activeNow = examsAll.filter(function (e) {
+    return !e.active_till || new Date(e.active_till) > now;
+  }).length;
   var avg = results.length
     ? Math.round(results.reduce(function (s, r) { return s + (r.percent || 0); }, 0) / results.length) : 0;
-  kpi(box, num(teachers.length), 'Учителей');
-  kpi(box, num(exams.length),    'Экзаменов создано');
-  kpi(box, num(active),          'Из них действующих');
-  kpi(box, num(results.length),  'Тестов сдано');
-  kpi(box, avg + '%',            'Средний результат');
+  var students = {};
+  results.forEach(function (r) { if (r.student) students[String(r.student).trim().toLowerCase()] = 1; });
 
-  /* график сдач по дням */
+  kpi(box, num(results.length), 'Тестов сдано — сколько раз ученики закончили тест');
+  kpi(box, num(Object.keys(students).length), 'Разных учеников — по имени, без повторов');
+  kpi(box, avg + '%', 'Средний результат — какая доля ответов верна');
+  kpi(box, num(exams.length), 'Экзаменов создано учителями');
+  kpi(box, num(activeNow), 'Экзаменов действует прямо сейчас');
+  kpi(box, num(teachersNew.length) + ' / ' + num(teachersAll.length), 'Учителей: новых за период / всего');
+
+  /* ── график сдач по дням ── */
   var chart = document.getElementById('chart'); clear(chart);
-  var byDay = {}, days = [];
-  for (var i = 29; i >= 0; i--) {
-    var dt = new Date(now.getTime() - i * 864e5), k = dayKey(dt);
-    byDay[k] = 0; days.push({ k: k, d: dt });
-  }
+  /* начало графика — не раньше первой реальной записи, иначе «Всё время»
+     нарисовало бы тысячи пустых столбиков */
+  var firstData = results.reduce(function (m, r) {
+    var k = String(r.created_at || '').slice(0, 10);
+    return (k && (!m || k < m)) ? k : m;
+  }, null);
+  var start = (firstData && firstData > from) ? firstData : from;
+
+  var d0 = new Date(start + 'T00:00:00Z'), d1 = new Date(to + 'T00:00:00Z');
+  var totalDays = Math.max(1, Math.round((d1 - d0) / 864e5) + 1);
+  var step = totalDays > 120 ? 7 : 1;          // длинный период — считаем по неделям
+  var buckets = [];
+  for (var t0 = d0.getTime(); t0 <= d1.getTime(); t0 += step * 864e5) buckets.push({ d: new Date(t0), v: 0 });
   results.forEach(function (r) {
     var k = String(r.created_at || '').slice(0, 10);
-    if (k in byDay) byDay[k]++;
+    if (k < start || k > to) return;
+    var idx = Math.floor((new Date(k + 'T00:00:00Z') - d0) / (step * 864e5));
+    if (buckets[idx]) buckets[idx].v++;
   });
-  var maxDay = Math.max.apply(null, days.map(function (x) { return byDay[x.k]; }).concat([1]));
-  days.forEach(function (x, i) {
+
+  document.getElementById('chart-note').textContent = step === 7
+    ? 'Период длинный, поэтому один столбик = одна неделя.'
+    : 'Один столбик = один день.';
+
+  if (!results.length) chart.appendChild(el('div', 'empty', 'За выбранный период тестов не сдавали'));
+  var maxBucket = Math.max.apply(null, buckets.map(function (b) { return b.v; }).concat([1]));
+  var every = Math.max(1, Math.ceil(buckets.length / 12));
+  buckets.forEach(function (bk, i) {
     var col = el('div', 'col'), b = el('div', 'bar');
-    b.style.height = Math.round(byDay[x.k] / maxDay * 100) + '%';
-    b.title = x.d.toLocaleDateString('ru-RU') + ' — ' + byDay[x.k];
+    b.style.height = Math.round(bk.v / maxBucket * 100) + '%';
+    b.title = (step === 7 ? 'Неделя с ' : '') + bk.d.toLocaleDateString('ru-RU')
+      + ' — сдано тестов: ' + bk.v;
     col.appendChild(b);
-    col.appendChild(el('div', 'cap', i % 5 === 0 ? x.d.getDate() + '.' + (x.d.getMonth() + 1) : ''));
+    col.appendChild(el('div', 'cap',
+      i % every === 0 ? bk.d.getDate() + '.' + (bk.d.getMonth() + 1) : ''));
     chart.appendChild(col);
   });
 
-  /* самые активные учителя: считаем сдачи по их экзаменам */
+  /* ── самые активные учителя: считаем сдачи по их экзаменам ── */
   var nameById = {}, codeToTeacher = {}, perTeacher = {};
-  teachers.forEach(function (t) { nameById[t.id] = t.name || ('id ' + t.id); });
-  exams.forEach(function (e) { codeToTeacher[e.code] = e.teacher_id; });
+  teachersAll.forEach(function (t) { nameById[t.id] = t.name || ('id ' + t.id); });
+  examsAll.forEach(function (e) { codeToTeacher[e.code] = e.teacher_id; });
   results.forEach(function (r) {
     var tid = codeToTeacher[r.exam_code];
     if (tid != null) perTeacher[tid] = (perTeacher[tid] || 0) + 1;
@@ -301,15 +426,16 @@ function render(d) {
   var tp = Object.keys(perTeacher)
     .map(function (id) { return { k: nameById[id] || ('id ' + id), v: perTeacher[id] }; })
     .sort(function (a, b) { return b.v - a.v; }).slice(0, 8);
-  fillBars(document.getElementById('top-teachers'), tp, 'Пока нет сдач по экзаменам учителей');
+  fillBars(document.getElementById('top-teachers'), tp,
+    'За выбранный период сдач не было', ['сдача', 'сдачи', 'сдач']);
 
-  /* распределение оценок */
+  /* ── распределение оценок ── */
   var gbox = document.getElementById('grades'); clear(gbox);
   var scale = [
-    ['5 — отлично',     90, 101, '#059669'],
-    ['4 — хорошо',      70,  90, '#1D4ED8'],
-    ['3 — удовл.',      50,  70, '#B8860B'],
-    ['2 — неудовл.',     0,  50, '#DC2626']
+    ['5 — отлично (90-100%)',   90, 101, '#059669'],
+    ['4 — хорошо (70-89%)',     70,  90, '#1D4ED8'],
+    ['3 — удовлетв. (50-69%)',  50,  70, '#B8860B'],
+    ['2 — неудовлетв. (0-49%)',  0,  50, '#DC2626']
   ];
   var counts = scale.map(function (g) {
     return results.filter(function (r) {
@@ -317,16 +443,23 @@ function render(d) {
     }).length;
   });
   var gmax = Math.max.apply(null, counts.concat([1]));
-  if (!results.length) gbox.appendChild(el('div', 'empty', 'Пока нет результатов'));
-  else scale.forEach(function (g, i) { bar(gbox, g[0], counts[i], gmax, g[3]); });
+  if (!results.length) gbox.appendChild(el('div', 'empty', 'За выбранный период работ не было'));
+  else scale.forEach(function (g, i) {
+    var share = Math.round(counts[i] / results.length * 100) + '%';
+    bar(gbox, g[0], counts[i], gmax, g[3], ['работа', 'работы', 'работ'], share);
+  });
 
-  /* устройства и география — из журнала событий */
+  /* ── устройства и география — из журнала событий ── */
   fillBars(document.getElementById('devices'),
-    topCounts(events.map(function (e) { return e.device; }), 6), 'Нет данных');
+    topCounts(events.map(function (e) {
+      return e.device === 'mobile' ? 'Телефон'
+           : e.device === 'tablet' ? 'Планшет'
+           : e.device === 'desktop' ? 'Компьютер' : e.device;
+    }), 6), 'За выбранный период заходов не было', ['заход', 'захода', 'заходов']);
   fillBars(document.getElementById('geo'),
     topCounts(events.map(function (e) {
       return e.country ? (e.country + (e.city ? ' · ' + e.city : '')) : null;
-    }), 8), 'Нет данных');
+    }), 8), 'За выбранный период заходов не было', ['заход', 'захода', 'заходов']);
 
   /* последние события */
   var LABEL = {
@@ -345,7 +478,7 @@ function render(d) {
 
   var tb = el('tbody');
   if (!events.length) {
-    var tr0 = el('tr'), td0 = el('td', 'empty', 'Событий пока нет');
+    var tr0 = el('tr'), td0 = el('td', 'empty', 'За выбранный период событий не было');
     td0.colSpan = 7; tr0.appendChild(td0); tb.appendChild(tr0);
   }
   events.slice(0, 60).forEach(function (e) {
@@ -367,6 +500,11 @@ function render(d) {
   });
   tbl.appendChild(tb);
 }
+
+/* период по умолчанию — с 1 июля 2026 по сегодня */
+inFrom.value = '2026-07-01';
+inTo.value = iso(new Date());
+document.querySelector('.chip[data-preset="july"]').classList.add('on');
 
 /* уже входили в этой вкладке — заходим молча */
 if (KEY) enter(true); else document.getElementById('key').focus();
