@@ -364,44 +364,231 @@ async function checkWidget(env, d) {
 
 const auth = async (env, b) => readToken(env, b && b.token);
 
-// ── результат ученика ──
-async function postResult(req, env, ctx) {
+// ── пропуск ученика: тот же формат, но другой ключ подписи,
+//    чтобы пропуск учителя нельзя было использовать как ученический и наоборот ──
+const stuKey = env => ENC.encode('eduquiz-student:' + env.SUPABASE_SERVICE_KEY);
+
+async function mkStuToken(env, id) {
+  const body = `${id}.${Date.now() + 180 * 864e5}`;   // полгода
+  return `${body}.${b64(await hmac(stuKey(env), body))}`;
+}
+
+async function readStuToken(env, t) {
+  if (!t || typeof t !== 'string') return null;
+  const i = t.lastIndexOf('.');
+  if (i < 0) return null;
+  const body = t.slice(0, i), sig = t.slice(i + 1);
+  const [id, exp] = body.split('.');
+  if (!id || !exp || +exp < Date.now()) return null;
+  if (!same(sig, b64(await hmac(stuKey(env), body)))) return null;
+  return +id;
+}
+
+// ══════════ ЗАПЕЧАТАННЫЙ КОНВЕРТ ══════════
+// Правильные ответы больше не уходят в браузер. Сервер кладёт их в конверт,
+// зашифрованный ключом, которого у браузера нет, и отдаёт конверт ученику.
+// Ученик возвращает конверт с каждым ответом — сервер его вскрывает и считает сам.
+const b64u = b => btoa(String.fromCharCode(...new Uint8Array(b)))
+  .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+const ub64 = s => {
+  const bin = atob(String(s).replace(/-/g, '+').replace(/_/g, '/'));
+  const u = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+  return u;
+};
+
+async function sealKey(env) {
+  const raw = await crypto.subtle.digest('SHA-256', ENC.encode('eduquiz-seal:' + env.SUPABASE_SERVICE_KEY));
+  return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+}
+
+async function seal(env, obj) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await sealKey(env), ENC.encode(JSON.stringify(obj)));
+  return b64u(iv) + '.' + b64u(ct);
+}
+
+async function unseal(env, s) {
+  const parts = String(s || '').split('.');
+  if (parts.length !== 2) return null;
+  try {
+    const pt = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: ub64(parts[0]) }, await sealKey(env), ub64(parts[1]));
+    return JSON.parse(new TextDecoder().decode(pt));
+  } catch (e) { return null; }   // подделали или испортили — молча отказываем
+}
+
+// ── вход ученика через Telegram: личность настоящая, ФИО не выдумать ──
+async function studentAuth(req, env, ctx) {
   const b = await req.json();
-  const total = Math.max(0, Math.min(200, +b.total || 0));
-  const correct = Math.max(0, Math.min(total, +b.correct || 0));
-  const percent = total ? Math.round(correct / total * 100) : 0;
-  const row = {
-    exam_code: b.exam_code ? String(b.exam_code).slice(0, 16) : null,
-    student: String(b.student || '').trim().slice(0, 80) || '—',
-    subject: String(b.subject || 'math').slice(0, 40),
-    lang: 'uz',
-    total,
-    correct,
-    percent,
-    // та же шкала, что показывается ученику на экране результата
-    grade_mark: percent >= 90 ? 5 : percent >= 70 ? 4 : percent >= 50 ? 3 : 2,
-    duration_s: b.duration_s != null ? +b.duration_s : null,
-    answers: b.answers ?? null
-  };
-  // защита: экзамен просрочен или ученик уже сдавал
-  let teacherIdForLog = null;
-  if (row.exam_code) {
+  const u = b.initData ? await checkInitData(env, b.initData)
+          : b.widget   ? await checkWidget(env, b.widget)
+          : null;
+  if (!u || !u.id) return J({ error: 'bad_auth' }, 401);
+
+  const tgid = String(u.id);
+  const name = [u.first_name, u.last_name].filter(Boolean).join(' ').slice(0, 80) || 'id ' + tgid;
+  const info = { name, username: u.username || null, photo_url: u.photo_url || null };
+
+  let rows = await sb(env, `students?tg_id=eq.${tgid}&select=id,name,username,photo_url&limit=1`);
+  let s;
+  if (rows.length) {
+    s = rows[0];
+    if (s.name !== info.name || s.username !== info.username) {
+      const up = await sb(env, `students?id=eq.${s.id}`, {
+        method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify(info)
+      });
+      s = up[0];
+    }
+  } else {
+    const saved = await sb(env, 'students', {
+      method: 'POST', headers: { Prefer: 'return=representation' },
+      body: JSON.stringify({ tg_id: tgid, ...info })
+    });
+    s = saved[0];
+  }
+  return J({ ok: true, token: await mkStuToken(env, s.id), me: pub(s) });
+}
+
+// ── начало экзамена: вопросы уходят БЕЗ правильных ответов ──
+async function examStart(req, env, ctx) {
+  const b = await req.json();
+  const sid = await readStuToken(env, b.token);
+  if (!sid) return J({ error: 'auth' }, 401);
+  const code = String(b.code || '').slice(0, 16);
+  if (!code) return J({ error: 'code' }, 400);
+
+  const exs = await sb(env, `exams?code=eq.${encodeURIComponent(code)}`
+    + '&select=code,title,q_count,time_per_q,show_expl,active_till,pack_id,teacher_id&limit=1');
+  const ex = exs && exs[0];
+  if (!ex) return J({ error: 'not_found' }, 404);
+  if (ex.active_till && new Date(ex.active_till) < new Date()) return J({ error: 'expired' }, 410);
+
+  const dup = await sb(env,
+    `results?exam_code=eq.${encodeURIComponent(code)}&student_id=eq.${sid}&select=id&limit=1`);
+  if (dup && dup.length) return J({ error: 'already_taken' }, 409);
+
+  const all = await sb(env, `questions?pack_id=eq.${encodeURIComponent(ex.pack_id)}&status=eq.approved`
+    + '&select=id,question_uz,question_ru,options_uz,options_ru,correct,svg,image_url,image_box&limit=200');
+  if (!all || !all.length) return J({ error: 'no_questions' }, 404);
+  for (let i = all.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [all[i], all[j]] = [all[j], all[i]];
+  }
+  const take = all.slice(0, Math.max(1, Math.min(+ex.q_count || 10, all.length)));
+
+  // конверт: что спросили, где правильный ответ, что ученик уже ответил
+  const sealed = await seal(env, {
+    c: code, s: sid, e: Date.now() + 6 * 3600e3,
+    k: take.map(q => q.id),
+    a: take.map(q => (+q.correct || 1) - 1),
+    g: take.map(() => null),
+    x: !!ex.show_expl
+  });
+
+  ctx.waitUntil(logEvent(env, req, {
+    event_type: 'exam_started', role: 'student', teacher_id: ex.teacher_id ?? null, exam_code: code,
+  }));
+
+  return J({
+    ok: true, sealed,
+    exam: { title: ex.title, time_per_q: ex.time_per_q, show_expl: !!ex.show_expl },
+    questions: take.map(q => ({
+      q: q.question_uz || q.question_ru,
+      opts: q.options_uz || q.options_ru,
+      svg: q.svg || null, img: q.image_url || null, box: q.image_box || null
+    }))
+  });
+}
+
+// ── ответ на один вопрос: правильный вариант раскрывается только ПОСЛЕ ответа ──
+async function answerOne(req, env) {
+  const b = await req.json();
+  const sid = await readStuToken(env, b.token);
+  if (!sid) return J({ error: 'auth' }, 401);
+  const st = await unseal(env, b.sealed);
+  if (!st || st.s !== sid || st.e < Date.now()) return J({ error: 'session' }, 400);
+
+  const i = +b.i;
+  if (!(i >= 0 && i < st.a.length)) return J({ error: 'index' }, 400);
+
+  // первый ответ фиксируется навсегда, иначе можно было бы перебирать варианты
+  if (st.g[i] == null) st.g[i] = (b.chosen == null ? -1 : +b.chosen);
+
+  let expl = null;
+  if (st.x) {
     try {
-      const ex0 = await sb(env, `exams?code=eq.${encodeURIComponent(row.exam_code)}&select=active_till,teacher_id&limit=1`);
-      if (ex0 && ex0[0] && ex0[0].active_till && new Date(ex0[0].active_till) < new Date())
-        return J({ error: 'expired' }, 410);
-      if (ex0 && ex0[0]) teacherIdForLog = ex0[0].teacher_id ?? null;
-      const dup = await sb(env,
-        `results?exam_code=eq.${encodeURIComponent(row.exam_code)}&student=eq.${encodeURIComponent(row.student)}&select=id&limit=1`);
-      if (dup && dup.length) return J({ error: 'already_taken' }, 409);
-    } catch (e) { /* проверка не удалась — пропускаем */ }
+      const r = await sb(env,
+        `questions?id=eq.${encodeURIComponent(st.k[i])}&select=explanation_uz,explanation_ru&limit=1`);
+      if (r && r[0]) expl = r[0].explanation_uz || r[0].explanation_ru || null;
+    } catch (e) { /* без пояснения тест всё равно продолжается */ }
   }
 
-  const saved = await sb(env, 'results', {
-    method: 'POST',
-    headers: { Prefer: 'return=representation' },
-    body: JSON.stringify(row)
+  return J({
+    ok: true, correct: st.a[i], right: st.g[i] === st.a[i],
+    explanation: expl, sealed: await seal(env, st)
   });
+}
+
+// ── результат: считает сервер, из зафиксированных в конверте ответов ──
+async function postResult(req, env, ctx) {
+  const b = await req.json();
+  const sid = await readStuToken(env, b.token);
+  if (!sid) return J({ error: 'auth' }, 401);
+  const st = await unseal(env, b.sealed);
+  if (!st || st.s !== sid || st.e < Date.now()) return J({ error: 'session' }, 400);
+
+  const stus = await sb(env, `students?id=eq.${sid}&select=id,name&limit=1`);
+  if (!stus || !stus.length) return J({ error: 'auth' }, 401);
+
+  // тексты вопросов нужны для разбора у учителя — тянем одним запросом
+  let texts = {};
+  try {
+    const list = '(' + st.k.map(id => `"${String(id).replace(/"/g, '')}"`).join(',') + ')';
+    const qs = await sb(env, `questions?id=in.${encodeURIComponent(list)}&select=id,question_uz,question_ru`);
+    (qs || []).forEach(q => { texts[q.id] = q.question_uz || q.question_ru; });
+  } catch (e) { /* тексты не критичны */ }
+
+  const total = st.a.length;
+  const answers = st.a.map((c, i) => ({ q: texts[st.k[i]] || ('Savol ' + (i + 1)), ok: st.g[i] === c }));
+  const correct = answers.filter(a => a.ok).length;
+  const percent = total ? Math.round(correct / total * 100) : 0;
+
+  const row = {
+    exam_code: st.c,
+    student_id: sid,
+    student: String(stus[0].name || '').trim().slice(0, 80) || '—',
+    subject: String(b.subject || 'math').slice(0, 40),
+    lang: 'uz',
+    total, correct, percent,
+    grade_mark: percent >= 90 ? 5 : percent >= 70 ? 4 : percent >= 50 ? 3 : 2,
+    duration_s: b.duration_s != null ? Math.max(0, Math.min(86400, +b.duration_s)) : null,
+    answers
+  };
+
+  let teacherIdForLog = null;
+  try {
+    const ex0 = await sb(env, `exams?code=eq.${encodeURIComponent(st.c)}&select=active_till,teacher_id&limit=1`);
+    if (ex0 && ex0[0]) {
+      if (ex0[0].active_till && new Date(ex0[0].active_till) < new Date())
+        return J({ error: 'expired' }, 410);
+      teacherIdForLog = ex0[0].teacher_id ?? null;
+    }
+  } catch (e) { /* проверка не удалась — результат всё равно сохраняем */ }
+
+  let saved;
+  try {
+    saved = await sb(env, 'results', {
+      method: 'POST',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify(row)
+    });
+  } catch (e) {
+    // 23505 — сработал уникальный индекс: этот ученик уже сдавал этот экзамен
+    if (String(e.message || '').includes('23505')) return J({ error: 'already_taken' }, 409);
+    throw e;
+  }
 
   const id = saved?.[0]?.id ?? null;
 
@@ -437,7 +624,8 @@ async function postResult(req, env, ctx) {
     lang: row.lang,
   }));
 
-  return J({ ok: true, id });
+  // отдаём посчитанное сервером — браузер только показывает эти цифры
+  return J({ ok: true, id, total, correct, percent, grade_mark: row.grade_mark });
 }
 
 // ── вход через Telegram: и из бота, и из браузера ──
@@ -923,22 +1111,6 @@ async function packs(req, env) {
   return J({ ok: true, packs: out });
 }
 
-// ── вопросы пакета для ученика: случайные N из approved ──
-async function packQuestions(env, packId, n) {
-  if (!packId) return J({ error: 'pack' }, 400);
-  const rows = await sb(env,
-    `questions?pack_id=eq.${encodeURIComponent(packId)}&status=eq.approved`
-    + '&select=question_ru,question_uz,options_ru,options_uz,correct,explanation_ru,explanation_uz,svg,image_url,image_box&limit=200');
-  if (!rows || !rows.length) return J({ ok: true, questions: [] });
-  // перемешиваем и берём N
-  for (let i = rows.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [rows[i], rows[j]] = [rows[j], rows[i]];
-  }
-  const take = n > 0 ? Math.min(n, rows.length) : rows.length;
-  return J({ ok: true, questions: rows.slice(0, take) });
-}
-
 // ── черновики пакета (для проверки учителем) ──
 async function draftQuestions(req, env) {
   const b = await req.json();
@@ -1169,6 +1341,9 @@ export default {
     try {
       const p = url.pathname, m = req.method;
       if (m === 'POST' && p === '/api/result') return await postResult(req, env, ctx);
+      if (m === 'POST' && p === '/api/student-auth') return await studentAuth(req, env, ctx);
+      if (m === 'POST' && p === '/api/exam-start') return await examStart(req, env, ctx);
+      if (m === 'POST' && p === '/api/answer') return await answerOne(req, env);
       if (m === 'POST' && p === '/api/tg-auth') return await tgAuth(req, env, ctx);
       if (m === 'POST' && p === '/api/me') return await me(req, env);
       if (m === 'POST' && p === '/api/exam') return await createExam(req, env, ctx);
@@ -1183,8 +1358,9 @@ export default {
       if (m === 'POST' && p === '/api/pack-delete') return await deletePack(req, env);
       if (m === 'POST' && p === '/api/drafts') return await draftQuestions(req, env);
       if (m === 'POST' && p === '/api/question') return await editQuestion(req, env);
-      if (m === 'GET'  && p === '/api/pack-questions')
-        return await packQuestions(env, url.searchParams.get('pack'), +url.searchParams.get('n') || 0);
+      // /api/pack-questions удалён: он отдавал в браузер поле correct,
+      // то есть ученик видел правильные ответы до того, как отвечал.
+      // Вопросы теперь выдаёт /api/exam-start — без ответов.
       if (m === 'POST' && p === '/api/analytics') return await analyticsDashboard(req, env);
       if (m === 'POST' && p === '/api/answers') return await answerDetail(req, env);
       // диагностика ИИ — только для вошедшего учителя,

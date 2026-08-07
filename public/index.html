@@ -648,13 +648,22 @@
         <div class="text-center" style="margin-bottom:28px;">
           <div style="font-size:3rem;margin-bottom:12px;">✏️</div>
           <h2 class="page-title" style="margin-bottom:4px;" data-t="q.welcome">Xush kelibsiz!</h2>
-          <p style="color:var(--muted);">Testni boshlash uchun ismingizni kiriting</p>
+          <p style="color:var(--muted);" id="stu-hint">Testni boshlash uchun Telegram orqali kiring</p>
         </div>
-        <div class="form-group">
-          <label>Ismingiz</label>
-          <input type="text" id="student-name-input" placeholder="Masalan: Kamila Rashidova">
+        <!-- имя больше не вводится руками: его даёт Telegram -->
+        <div id="stu-login">
+          <div id="stu-widget" style="display:flex;justify-content:center"></div>
+          <button class="btn btn-gold btn-full btn-lg mt-8" id="stu-mini" style="display:none"
+                  onclick="studentMiniLogin()">Telegram orqali kirish</button>
         </div>
-        <button class="btn btn-gold btn-full btn-lg mt-8" onclick="startQuiz()" data-t="q.start">Testni boshlash →</button>
+        <div id="stu-ready" style="display:none">
+          <div class="form-group">
+            <label>Ismingiz</label>
+            <input type="text" id="student-name-input" readonly>
+          </div>
+          <button class="btn btn-gold btn-full btn-lg mt-8" onclick="startQuiz()" data-t="q.start">Testni boshlash →</button>
+        </div>
+        <div id="stu-err" style="display:none;color:var(--danger);text-align:center;margin-top:12px;font-size:0.88rem"></div>
       </div>
     </div>
   </div>
@@ -1163,23 +1172,75 @@ const UI = {
         loadErr:"Savollarni yuklab bo'lmadi. Internetni tekshiring." }
 };
 
-// вопросы берём из пакета экзамена через воркер (случайные N уже перемешаны сервером)
-async function loadBank(){
-  if (!EXAM || !EXAM.pack_id) { quizData = []; return; }
-  const n = EXAM.q_count || 10;
-  const res = await fetch("/api/pack-questions?pack=" + encodeURIComponent(EXAM.pack_id) + "&n=" + n);
-  if(!res.ok) throw new Error("load failed");
-  const out = await res.json();
-  const rows = (out && out.questions) ? out.questions : [];
-  quizData = rows.map(r => ({
-    q:    LANG==='ru' ? (r.question_ru||r.question_uz) : (r.question_uz||r.question_ru),
-    opts: LANG==='ru' ? (r.options_ru||r.options_uz) : (r.options_uz||r.options_ru),
-    correct: r.correct - 1,
-    expl: LANG==='ru' ? (r.explanation_ru||r.explanation_uz) : (r.explanation_uz||r.explanation_ru),
-    svg:  r.svg || null,
-    img:  r.image_url || null,
-    box:  r.image_box || null
-  }));
+// ── вход ученика через Telegram ──
+// Имя больше не вводится руками: у ученика теперь настоящий аккаунт,
+// поэтому выдуманное ФИО и повторная сдача под другим именем невозможны.
+let STU_TOKEN = '', SEALED = '';
+
+function stuErr(m){
+  const e = document.getElementById('stu-err');
+  e.textContent = m || ''; e.style.display = m ? 'block' : 'none';
+}
+
+function stuReady(name){
+  document.getElementById('stu-login').style.display = 'none';
+  document.getElementById('stu-ready').style.display = 'block';
+  document.getElementById('student-name-input').value = name || '';
+  document.getElementById('stu-hint').textContent = "Ismingiz Telegram'dan olindi";
+  stuErr('');
+}
+
+async function studentLogin(payload, silent){
+  try {
+    const r = await api('/api/student-auth', payload);
+    if (r.ok) {
+      STU_TOKEN = r.token;
+      try { localStorage.setItem('eq_stu', JSON.stringify({ t: r.token, n: r.me.name })); } catch(e) {}
+      stuReady(r.me.name);
+      return;
+    }
+    if (!silent) stuErr("Telegram tekshiruvi o'tmadi");
+  } catch(e) { if (!silent) stuErr("Internet bilan bog'lanib bo'lmadi"); }
+}
+
+window.onStudentAuth = u => studentLogin({ widget: u });
+
+function studentMiniLogin(){
+  let initData = '';
+  try { initData = Telegram.WebApp.initData || ''; } catch(e) {}
+  if (!initData) { stuErr("Telegram ma'lumoti topilmadi"); return; }
+  studentLogin({ initData });
+}
+
+function mountStudentWidget(){
+  const box = document.getElementById('stu-widget');
+  if (!box || box.dataset.done) return;
+  box.dataset.done = '1';
+  const sc = document.createElement('script');
+  sc.async = true;
+  sc.src = 'https://telegram.org/js/telegram-widget.js?22';
+  sc.setAttribute('data-telegram-login', BOT);
+  sc.setAttribute('data-size', 'large');
+  sc.setAttribute('data-radius', '10');
+  sc.setAttribute('data-userpic', 'false');
+  sc.setAttribute('data-request-access', 'write');
+  sc.setAttribute('data-onauth', 'onStudentAuth(user)');
+  sc.onerror = () => stuErr("Telegram tugmasi yuklanmadi");
+  box.appendChild(sc);
+}
+
+function initStudentLogin(){
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem('eq_stu') || 'null'); } catch(e) {}
+  if (s && s.t) { STU_TOKEN = s.t; stuReady(s.n); return; }   // уже входил раньше
+  let initData = '';
+  try { initData = Telegram.WebApp.initData || ''; } catch(e) {}
+  if (initData) {                                             // открыт внутри Telegram
+    document.getElementById('stu-mini').style.display = 'block';
+    studentLogin({ initData }, true);
+    return;
+  }
+  mountStudentWidget();                                       // обычный браузер
 }
 
 // ── QUIZ STATE ────────────────────────────
@@ -1195,24 +1256,27 @@ let answerLog = [];
 const letters = ['A', 'B', 'C', 'D', 'E'];
 
 async function startQuiz() {
-  const nameInput = document.getElementById('student-name-input').value.trim();
-  if (!nameInput) {
-    document.getElementById('student-name-input').focus();
-    document.getElementById('student-name-input').style.borderColor = 'var(--danger)';
-    return;
+  if (!STU_TOKEN) { stuErr("Avval Telegram orqali kiring"); return; }
+  stuErr('');
+  // вопросы приходят с сервера БЕЗ правильных ответов, вместе с запечатанным конвертом
+  let out;
+  try {
+    out = await api('/api/exam-start', { token: STU_TOKEN, code: window.EXAM_CODE });
+  } catch(e) { alert(UI[LANG].loadErr); return; }
+
+  if (out.error === 'already_taken') { alert("Siz bu imtihonni allaqachon topshirgansiz."); return; }
+  if (out.error === 'expired')       { alert("Imtihon muddati tugagan"); return; }
+  if (out.error === 'no_questions')  { alert("Bu imtihonda savollar yo'q."); return; }
+  if (out.error === 'auth') {
+    try { localStorage.removeItem('eq_stu'); } catch(e) {}
+    stuErr("Kirish muddati tugagan — qaytadan kiring"); location.reload(); return;
   }
-  // один ученик — одна попытка
-  if (window.EXAM_CODE) {
-    try {
-      const c = await fetch('/api/check-attempt?code='+encodeURIComponent(window.EXAM_CODE)+'&student='+encodeURIComponent(nameInput));
-      const cj = await c.json();
-      if (cj.taken) { alert("Siz bu imtihonni allaqachon topshirgansiz."); return; }
-    } catch(e) {}
-  }
-  try { await loadBank(); }
-  catch(e){ alert(UI[LANG].loadErr); return; }
+  if (!out.ok || !out.questions || !out.questions.length) { alert(UI[LANG].loadErr); return; }
+
+  SEALED = out.sealed;
+  if (out.exam) EXAM = Object.assign(EXAM || {}, out.exam);
+  quizData = out.questions;
   answerLog = [];
-  if (quizData.length === 0) { alert("Bu imtihonda savollar yo'q."); return; }
   currentQ = 0;
   score = 0;
   totalElapsed = 0;
@@ -1277,7 +1341,7 @@ function showQuestion() {
     ltr.textContent = letters[i];
     btn.appendChild(ltr);
     btn.appendChild(document.createTextNode(opt));
-    btn.onclick = () => selectAnswer(i, data.correct, btn);
+    btn.onclick = () => selectAnswer(i, btn);
     container.appendChild(btn);
   });
 
@@ -1303,50 +1367,42 @@ function updateTimer() {
   badge.className = 'timer-badge' + (timeLeft <= 10 ? ' warning' : '');
 }
 
-function showExplanation() {
-  if (EXAM && !EXAM.show_expl) return;
-  const data = quizData[currentQ];
-  if (data.expl) {
-    const box = document.getElementById('explanation-box');
-    box.textContent = '💡 ' + data.expl;
-    box.style.display = 'block';
-  }
-}
-
-function selectAnswer(chosen, correct, clickedBtn) {
+// Правильный вариант известен только серверу. Отправляем выбор и получаем
+// в ответ, где верный, — уже после того, как ученик ответил.
+// Первый ответ сервер запоминает навсегда: перебирать варианты бесполезно.
+async function selectAnswer(chosen, clickedBtn) {
   if (answered) return;
   answered = true;
   clearInterval(timerInterval);
 
   const allBtns = document.querySelectorAll('.option-btn');
-  allBtns.forEach((b, i) => {
-    b.disabled = true;
-    if (i === correct) b.classList.add('correct');
-  });
+  allBtns.forEach(b => { b.disabled = true; });
 
-  if (chosen === correct) {
-    score++;
-    clickedBtn.classList.remove('wrong');
+  let res = null;
+  try {
+    res = await api('/api/answer', { token: STU_TOKEN, sealed: SEALED, i: currentQ, chosen });
+  } catch(e) { /* сеть подвела — ниже покажем нейтрально */ }
+
+  if (res && res.ok) {
+    SEALED = res.sealed;
+    allBtns.forEach((b, i) => { if (i === res.correct) b.classList.add('correct'); });
+    if (res.right) score++;
+    else if (clickedBtn) clickedBtn.classList.add('wrong');
+    answerLog.push({ ok: !!res.right });
+    if (res.explanation) {
+      const box = document.getElementById('explanation-box');
+      box.textContent = '💡 ' + res.explanation;
+      box.style.display = 'block';
+    }
   } else {
-    clickedBtn.classList.add('wrong');
+    // счёт всё равно посчитает сервер в конце — здесь просто идём дальше
+    answerLog.push({ ok: false });
   }
-  answerLog.push({ q: quizData[currentQ].q, ok: chosen === correct });
-
-  showExplanation();
   document.getElementById('next-btn-wrap').style.display = 'block';
 }
 
-function autoExpire() {
-  answered = true;
-  const allBtns = document.querySelectorAll('.option-btn');
-  allBtns.forEach((b, i) => {
-    b.disabled = true;
-    if (i === quizData[currentQ].correct) b.classList.add('correct');
-  });
-  answerLog.push({ q: quizData[currentQ].q, ok: false });
-  showExplanation();
-  document.getElementById('next-btn-wrap').style.display = 'block';
-}
+// время вышло: засчитываем как «не отвечено» тем же путём
+function autoExpire() { selectAnswer(-1, null); }
 
 function nextQuestion() {
   currentQ++;
@@ -1362,14 +1418,21 @@ function finishExam(){
   location.href = '/';
 }
 
-function showResult() {
+async function showResult() {
   clearInterval(timerInterval);
   const elapsed = Math.round((Date.now() - startTime) / 1000);
   const mins = Math.floor(elapsed / 60);
   const secs = elapsed % 60;
-  const pct = Math.round(score / quizData.length * 100);
 
-  const grade = pct >= 90 ? 5 : pct >= 70 ? 4 : pct >= 50 ? 3 : 2;
+  go('s-student-result');
+
+  // окончательный счёт считает сервер — показываем его цифры, а не свои
+  const out = await saveResult(elapsed);
+  const tot = (out && out.ok) ? out.total   : quizData.length;
+  const cor = (out && out.ok) ? out.correct : score;
+  const pct = (out && out.ok) ? out.percent : (tot ? Math.round(cor / tot * 100) : 0);
+  const grade = (out && out.ok) ? out.grade_mark
+              : (pct >= 90 ? 5 : pct >= 70 ? 4 : pct >= 50 ? 3 : 2);
   const msgs = {
     5: "A'lo! Ajoyib natija 🌟",
     4: "Yaxshi! Ko'p savollarga to'g'ri javob berding 👍",
@@ -1378,14 +1441,14 @@ function showResult() {
   };
   const gradeClasses = { 5:'grade-5', 4:'grade-4', 3:'grade-3', 2:'grade-2' };
 
-  document.getElementById('result-score').textContent = score;
-  document.getElementById('result-total').textContent = `${quizData.length} dan`;
+  document.getElementById('result-score').textContent = cor;
+  document.getElementById('result-total').textContent = `${tot} dan`;
   document.getElementById('result-msg').textContent = msgs[grade];
   document.getElementById('res-percent').textContent = pct + '%';
   document.getElementById('res-time').textContent = `${mins}:${String(secs).padStart(2,'0')}`;
-  document.getElementById('rs-total').textContent = quizData.length;
-  document.getElementById('rs-ok').textContent = score;
-  document.getElementById('rs-bad').textContent = quizData.length - score;
+  document.getElementById('rs-total').textContent = tot;
+  document.getElementById('rs-ok').textContent = cor;
+  document.getElementById('rs-bad').textContent = tot - cor;
   var ce=document.getElementById('result-emoji'), cc=document.getElementById('result-circle');
   if(pct>=90){ce.textContent='🏆';cc.style.background='linear-gradient(135deg,#0E7A5F,#12A87E)'}
   else if(pct>=70){ce.textContent='👏';cc.style.background='linear-gradient(135deg,#1B3A6B,#2A5298)'}
@@ -1400,28 +1463,18 @@ function showResult() {
   const badge = document.getElementById('grade-badge');
   badge.textContent = `Baho: ${grade}`;
   badge.className = 'grade-badge ' + gradeClasses[grade];
-
-  go('s-student-result');
-  saveResult(elapsed, pct, grade);
 }
 
-async function saveResult(elapsed, pct, grade){
+// шлём только конверт и время: что и как ученик отвечал, сервер помнит сам
+async function saveResult(elapsed){
   try {
-    const rr = await fetch("/api/result", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        exam_code: window.EXAM_CODE || null,
-        student: document.getElementById('student-name-input').value.trim(),
-        subject: SUBJECT, lang: LANG,
-        total: quizData.length, correct: score, percent: pct,
-        grade_mark: grade, duration_s: elapsed, answers: answerLog
-      })
+    const rj = await api("/api/result", {
+      token: STU_TOKEN, sealed: SEALED, subject: SUBJECT, duration_s: elapsed
     });
-    const rj = await rr.json();
     if (rj && rj.error === 'expired') alert("Imtihon muddati tugagan — natija saqlanmadi.");
     if (rj && rj.error === 'already_taken') alert("Siz allaqachon topshirgansiz — natija saqlanmadi.");
-  } catch(e) { /* нет сети — результат просто не запишется */ }
+    return rj;
+  } catch(e) { return null; }   // нет сети — покажем свой подсчёт
 }
 
 let EXAM = null;
@@ -1440,6 +1493,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (code) {                        // ученик пришёл по ссылке
     go('s-student-name');
     loadExam(code).catch(()=>{});
+    initStudentLogin();
     return;
   }
 
