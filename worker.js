@@ -1039,7 +1039,10 @@ export default {
       if (m === 'GET'  && p === '/api/pack-questions')
         return await packQuestions(env, url.searchParams.get('pack'), +url.searchParams.get('n') || 0);
       if (m === 'GET' && p === '/api/analytics') return await analyticsDashboard(req, env);
-      if (m === 'GET' && p === '/api/ai-test') {
+      // диагностика ИИ — только для вошедшего учителя,
+      // иначе посторонние жгут платную квоту Gemini
+      if (m === 'POST' && p === '/api/ai-test') {
+        if (!await auth(env, await req.json())) return J({ error: 'auth' }, 401);
         try {
           const out = await callGemini(env, 'Ответь одним словом: работает', null);
           return J({ ok: true, out });
