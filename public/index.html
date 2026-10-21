@@ -554,6 +554,20 @@
         <p style="color:var(--muted);font-size:0.88rem;" data-t="d.statsD">O'quvchilar natijalarini ko'rish</p>
       </div>
     </div>
+
+    <div class="card" style="margin-top:20px;padding:22px;">
+      <h3 style="color:var(--lapis);font-size:1.05rem;margin-bottom:4px;" data-t="n.title">Telegram bildirishnomalari</h3>
+      <p style="color:var(--muted);font-size:0.86rem;margin-bottom:14px;" data-t="n.sub">Natijalar botdan sizga shu yerda boshqariladi</p>
+      <label style="display:flex;gap:10px;align-items:center;margin-bottom:10px;cursor:pointer;">
+        <input type="checkbox" id="n-results" onchange="saveNotify()" checked>
+        <span data-t="n.results">Har bir natija darhol yuborilsin</span>
+      </label>
+      <label style="display:flex;gap:10px;align-items:center;cursor:pointer;">
+        <input type="checkbox" id="n-daily" onchange="saveNotify()" checked>
+        <span data-t="n.daily">Har kuni soat 20:00 da umumiy hisobot</span>
+      </label>
+      <div id="n-msg" style="font-size:0.82rem;color:var(--muted);margin-top:10px;min-height:1.1em;"></div>
+    </div>
   </div>
   <div class="ornament-footer"></div>
 </div>
@@ -757,6 +771,9 @@ var MT_RU = {
 "d.review":"2. Проверка","d.reviewD":"Подтверждение вопросов",
 "d.exam":"3. Новый экзамен","d.examD":"Создать экзамен из пакета",
 "d.stats":"4. Статистика","d.statsD":"Просмотр результатов учеников",
+"n.title":"Уведомления в Telegram","n.sub":"Здесь вы управляете сообщениями от бота",
+"n.results":"Присылать каждый результат сразу","n.daily":"Ежедневный сводный отчёт в 20:00",
+"n.saved":"Сохранено","n.fail":"Не удалось сохранить",
 "c.title":"Создание экзамена","c.sub":"Настройте и получите ссылку для класса",
 "c.name":"Название экзамена","c.time":"Секунд на вопрос (0 = без таймера)",
 "c.till":"Срок действия (пусто = бессрочно)","c.expl":" Показывать пояснение после ответа",
@@ -833,6 +850,34 @@ function enterDashboard(){
   document.getElementById('me-name').textContent = ME ? ME.name : '';
   document.getElementById('login-error').classList.remove('show');
   go('s-teacher-dashboard');
+  loadNotify();
+}
+
+// ── Telegram-рассылки учителя ──
+function nText(k, uz){ return (window.MT_L === 'ru' && MT_RU[k]) || uz; }
+async function loadNotify(){
+  try {
+    const r = await api('/api/notify', { token: TOKEN });
+    if (!r.ok) return;
+    document.getElementById('n-results').checked = r.results;
+    document.getElementById('n-daily').checked = r.daily;
+  } catch(e) { /* переключатели остаются во включённом положении */ }
+}
+async function saveNotify(){
+  const msg = document.getElementById('n-msg');
+  msg.textContent = '';
+  try {
+    const r = await api('/api/notify', {
+      token: TOKEN,
+      results: document.getElementById('n-results').checked,
+      daily: document.getElementById('n-daily').checked
+    });
+    if (!r.ok) throw 0;
+    msg.textContent = nText('n.saved', 'Saqlandi');
+  } catch(e) {
+    msg.textContent = nText('n.fail', 'Saqlab bo\'lmadi');
+    loadNotify();
+  }
 }
 
 // открыть статистику + загрузить свежие результаты

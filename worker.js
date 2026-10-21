@@ -69,6 +69,15 @@ async function logEvent(env, request, data) {
   }
 }
 
+// учителя, отключившие рассылку (col: notify_results | notify_daily).
+// Если колонки в БД ещё нет или запрос упал — никого не считаем отключившим.
+async function mutedTeachers(env, col) {
+  try {
+    const rows = await sb(env, `teachers?${col}=eq.false&select=id&limit=2000`);
+    return new Set(rows.map(r => r.id));
+  } catch (e) { return new Set(); }
+}
+
 // отправка в конкретный чат
 async function tg(env, chat, text) {
   if (!env.TG_BOT_TOKEN || !chat) return;
@@ -593,15 +602,16 @@ async function postResult(req, env, ctx) {
   const id = saved?.[0]?.id ?? null;
 
   // куда слать и что показать: название экзамена, телеграм учителя, место в классе
-  let chat = env.TG_CHAT_ID;
+  let chat = null;
   const c = {};
   if (row.exam_code) {
     try {
       const ex = await sb(env,
-        `exams?code=eq.${encodeURIComponent(row.exam_code)}&select=title,teacher_chat_id&limit=1`);
+        `exams?code=eq.${encodeURIComponent(row.exam_code)}&select=title,teacher_chat_id,teacher_id&limit=1`);
       if (ex && ex[0]) {
         c.title = ex[0].title;
         if (ex[0].teacher_chat_id) chat = ex[0].teacher_chat_id;
+        if (chat && ex[0].teacher_id && (await mutedTeachers(env, 'notify_results')).has(ex[0].teacher_id)) chat = null;
       }
       // место среди всех, кто прошёл этот экзамен: выше % → выше; при равенстве быстрее → выше
       const all = await sb(env,
@@ -682,6 +692,23 @@ async function me(req, env) {
   const rows = await sb(env, `teachers?id=eq.${id}&select=name,username,photo_url&limit=1`);
   if (!rows.length) return J({ error: 'auth' }, 401);
   return J({ ok: true, me: pub(rows[0]) });
+}
+
+// ── учитель включает/выключает Telegram-рассылки ──
+// без полей results/daily просто возвращает текущие настройки
+async function notifySettings(req, env) {
+  const b = await req.json();
+  const id = await auth(env, b);
+  if (!id) return J({ error: 'auth' }, 401);
+  const patch = {};
+  if (typeof b.results === 'boolean') patch.notify_results = b.results;
+  if (typeof b.daily === 'boolean') patch.notify_daily = b.daily;
+  if (Object.keys(patch).length) {
+    await sb(env, `teachers?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify(patch) });
+  }
+  const rows = await sb(env, `teachers?id=eq.${id}&select=notify_results,notify_daily&limit=1`);
+  const r = rows[0] || {};
+  return J({ ok: true, results: r.notify_results !== false, daily: r.notify_daily !== false });
 }
 
 // ── учитель создаёт экзамен ──
@@ -1272,12 +1299,14 @@ async function checkAttempt(env, code, student, req, ctx) {
 async function dailySummary(env) {
   // было limit=50: действующие экзамены старше 50-го молча оставались без отчёта
   const exams = await sb(env,
-    'exams?select=code,title,active_till,teacher_chat_id&order=created_at.desc&limit=500');
+    'exams?select=code,title,active_till,teacher_chat_id,teacher_id&order=created_at.desc&limit=500');
   const now = new Date();
+  const muted = await mutedTeachers(env, 'notify_daily');
   for (const ex of exams) {
     if (ex.active_till && new Date(ex.active_till) < now) continue;  // экзамен закончился
-    const chat = ex.teacher_chat_id || env.TG_CHAT_ID;
+    const chat = ex.teacher_chat_id;
     if (!chat) continue;
+    if (ex.teacher_id && muted.has(ex.teacher_id)) continue;         // учитель отключил рассылку
     const rows = await sb(env,
       `results?exam_code=eq.${encodeURIComponent(ex.code)}`
       + '&select=student,correct,total,percent,grade_mark,duration_s&order=percent.desc&limit=500');
@@ -1347,6 +1376,7 @@ export default {
       if (m === 'POST' && p === '/api/tg-auth') return await tgAuth(req, env, ctx);
       if (m === 'POST' && p === '/api/me') return await me(req, env);
       if (m === 'POST' && p === '/api/exam') return await createExam(req, env, ctx);
+      if (m === 'POST' && p === '/api/notify') return await notifySettings(req, env);
       if (m === 'GET' && p === '/api/exam') return await getExam(env, url.searchParams.get('code'), req, ctx);
       if (m === 'GET' && p === '/api/check-attempt')
         return await checkAttempt(env, url.searchParams.get('code'), url.searchParams.get('student'), req, ctx);
